@@ -6,6 +6,7 @@ interface Props {
 }
 
 const { title = 'QS 學術與雇主問卷聯絡人提報系統' } = Astro.props;
+const base = import.meta.env.BASE_URL;
 ---
 
 <!doctype html>
@@ -14,10 +15,10 @@ const { title = 'QS 學術與雇主問卷聯絡人提報系統' } = Astro.props;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="佛光大學 QS Academic & Employer Survey 聯絡人提報系統" />
-    <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
+    <link rel="icon" type="image/png" href={`${base}images/fgu-logo.png`} />
     <title>{title}</title>
   </head>
-  <body class="min-h-screen bg-slate-50 text-slate-800 antialiased">
+  <body class="min-h-screen text-slate-800 antialiased">
     <slot />
   </body>
 </html>

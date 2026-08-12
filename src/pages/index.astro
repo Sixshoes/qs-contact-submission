@@ -1,38 +1,65 @@
 ---
 import Layout from '../layouts/Layout.astro';
+const base = import.meta.env.BASE_URL;
 ---
 
 <Layout>
   <div class="min-h-screen">
     <!-- Header -->
-    <header class="border-b border-slate-200 bg-white shadow-sm">
-      <div class="mx-auto max-w-5xl px-4 py-6 sm:px-6">
-        <p class="text-sm font-medium text-blue-600">佛光大學 · Fo Guang University</p>
-        <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-          QS 學術與雇主問卷聯絡人提報系統
-        </h1>
-        <p class="mt-2 max-w-2xl text-sm text-slate-500">
+    <header class="relative overflow-hidden border-b border-fgu/20 bg-gradient-to-br from-fgu via-[#8a1e4c] to-[#6b1639] text-white shadow-lg">
+      <div class="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-qs/20 blur-3xl" aria-hidden="true"></div>
+      <div class="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-white/5 blur-2xl" aria-hidden="true"></div>
+      <div class="relative mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex items-center gap-4">
+            <img
+              src={`${base}images/fgu-logo.png`}
+              alt="佛光大學校徽"
+              class="h-16 w-16 shrink-0 rounded-full bg-white p-0.5 shadow-md ring-2 ring-white/30 sm:h-20 sm:w-20"
+              width="80"
+              height="80"
+            />
+            <div>
+              <p class="text-sm font-medium text-white/80">Fo Guang University</p>
+              <h1 class="mt-0.5 text-xl font-bold tracking-tight sm:text-2xl lg:text-3xl">
+                QS 學術與雇主問卷聯絡人提報系統
+              </h1>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 self-start sm:self-center">
+            <span class="hidden text-xs font-medium uppercase tracking-wider text-white/60 sm:inline">Powered by</span>
+            <img
+              src={`${base}images/qs-logo.png`}
+              alt="QS Logo"
+              class="h-12 w-12 shrink-0 rounded-lg shadow-md ring-2 ring-white/20 sm:h-14 sm:w-14"
+              width="56"
+              height="56"
+            />
+          </div>
+        </div>
+        <p class="mt-5 max-w-3xl text-sm leading-relaxed text-white/85 sm:text-base">
           依 QS Global Academic and Employer Survey Guidelines 填寫聯絡人資料，系統將自動拆分為學術／雇主 Excel 檔供上傳。
         </p>
+        <div class="mt-4 h-1 w-24 rounded-full bg-qs shadow-sm" aria-hidden="true"></div>
       </div>
     </header>
 
     <main class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <!-- Step indicator -->
-      <nav aria-label="進度" class="mb-8">
-        <ol class="flex flex-wrap items-center gap-2 text-sm sm:gap-4">
-          <li id="step-indicator-1" class="flex items-center gap-2 font-semibold text-blue-700">
-            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white">1</span>
+      <nav aria-label="進度" class="card-panel mb-8">
+        <ol class="flex flex-wrap items-center justify-center gap-3 text-sm sm:gap-6">
+          <li id="step-indicator-1" class="flex items-center gap-2 font-semibold text-fgu">
+            <span class="step-badge flex h-9 w-9 items-center justify-center rounded-full bg-fgu text-sm font-bold text-white shadow-md">1</span>
             <span>填寫</span>
           </li>
-          <li class="hidden text-slate-300 sm:block" aria-hidden="true">→</li>
+          <li class="hidden h-px w-8 bg-slate-200 sm:block" aria-hidden="true"></li>
           <li id="step-indicator-2" class="flex items-center gap-2 text-slate-400">
-            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-slate-600">2</span>
+            <span class="step-badge flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600">2</span>
             <span>確認下載</span>
           </li>
-          <li class="hidden text-slate-300 sm:block" aria-hidden="true">→</li>
+          <li class="hidden h-px w-8 bg-slate-200 sm:block" aria-hidden="true"></li>
           <li id="step-indicator-3" class="flex items-center gap-2 text-slate-400">
-            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-slate-600">3</span>
+            <span class="step-badge flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600">3</span>
             <span>寄信完成</span>
           </li>
         </ol>
@@ -40,132 +67,100 @@ import Layout from '../layouts/Layout.astro';
 
       <!-- ========== STEP 1 ========== -->
       <section id="step-1" class="space-y-6">
-        <div class="sticky top-0 z-20 space-y-4 rounded-xl border border-slate-200 bg-white/95 p-5 shadow-md backdrop-blur">
-          <h2 class="text-lg font-semibold text-slate-900">提報資訊（全域）</h2>
+        <div class="card-panel sticky top-0 z-20 space-y-4 backdrop-blur supports-[backdrop-filter]:bg-white/95">
+          <div class="flex items-center gap-2">
+            <span class="inline-block h-5 w-1 rounded-full bg-fgu" aria-hidden="true"></span>
+            <h2 class="text-lg font-semibold text-slate-900">提報資訊（全域）</h2>
+          </div>
           <div class="grid gap-4 sm:grid-cols-2">
             <div>
               <label for="submitter-unit" class="mb-1.5 block text-sm font-medium text-slate-700">
                 提報單位 (Department / Unit) <span class="text-red-500">*</span>
               </label>
-              <input
-                id="submitter-unit"
-                type="text"
-                required
-                placeholder="例如：歷史學系、永續辦公室、國際處..."
-                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              />
+              <input id="submitter-unit" type="text" required placeholder="例如：歷史學系、永續辦公室、國際處..." class="input-field" />
             </div>
             <div>
               <label for="submitter-name" class="mb-1.5 block text-sm font-medium text-slate-700">
                 提報人姓名 (Submitter Name) <span class="text-red-500">*</span>
               </label>
-              <input
-                id="submitter-name"
-                type="text"
-                required
-                placeholder="請輸入您的姓名"
-                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              />
+              <input id="submitter-name" type="text" required placeholder="請輸入您的姓名" class="input-field" />
             </div>
           </div>
         </div>
 
         <!-- 學術聯絡人 -->
-        <section class="rounded-xl border border-blue-200 bg-blue-50/40 p-5 shadow-sm">
+        <section class="section-academic">
           <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 class="text-lg font-semibold text-slate-900">學術聯絡人 (Academic)</h2>
-              <p class="mt-1 text-sm text-slate-500">含 Subject 等 11 個 QS 欄位，最多 10 筆</p>
+            <div class="flex items-start gap-3">
+              <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-fgu/10 text-sm font-bold text-fgu">A</span>
+              <div>
+                <h2 class="text-lg font-semibold text-fgu-dark">學術聯絡人 (Academic)</h2>
+                <p class="mt-1 text-sm text-slate-600">含 Subject 等 11 個 QS 欄位，最多 10 筆</p>
+              </div>
             </div>
             <div class="flex items-center gap-3">
-              <span id="academic-count" class="text-sm text-slate-500">(0 / 10)</span>
-              <button
-                type="button"
-                id="btn-add-academic"
-                class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
+              <span id="academic-count" class="rounded-full bg-white px-2.5 py-0.5 text-sm font-medium text-fgu shadow-sm">(0 / 10)</span>
+              <button type="button" id="btn-add-academic" class="btn-primary">
                 <span aria-hidden="true">＋</span> 新增學術聯絡人
               </button>
             </div>
           </div>
           <div id="academic-contacts-container" class="space-y-5"></div>
-          <p id="academic-empty-hint" class="hidden rounded-lg border border-dashed border-blue-200 bg-white/60 px-4 py-6 text-center text-sm text-slate-500">
+          <p id="academic-empty-hint" class="hidden rounded-xl border border-dashed border-fgu/30 bg-white/70 px-4 py-8 text-center text-sm text-slate-500">
             尚未新增學術聯絡人，請點上方按鈕新增。
           </p>
         </section>
 
         <!-- 雇主聯絡人 -->
-        <section class="rounded-xl border border-violet-200 bg-violet-50/40 p-5 shadow-sm">
+        <section class="section-employer">
           <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 class="text-lg font-semibold text-slate-900">雇主聯絡人 (Employer)</h2>
-              <p class="mt-1 text-sm text-slate-500">含 Position、Industry 等 10 個 QS 欄位，最多 10 筆</p>
+            <div class="flex items-start gap-3">
+              <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-qs/15 text-sm font-bold text-qs-dark">E</span>
+              <div>
+                <h2 class="text-lg font-semibold text-amber-900">雇主聯絡人 (Employer)</h2>
+                <p class="mt-1 text-sm text-slate-600">含 Position、Industry 等 10 個 QS 欄位，最多 10 筆</p>
+              </div>
             </div>
             <div class="flex items-center gap-3">
-              <span id="employer-count" class="text-sm text-slate-500">(0 / 10)</span>
-              <button
-                type="button"
-                id="btn-add-employer"
-                class="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
+              <span id="employer-count" class="rounded-full bg-white px-2.5 py-0.5 text-sm font-medium text-amber-800 shadow-sm">(0 / 10)</span>
+              <button type="button" id="btn-add-employer" class="btn-qs">
                 <span aria-hidden="true">＋</span> 新增雇主聯絡人
               </button>
             </div>
           </div>
           <div id="employer-contacts-container" class="space-y-5"></div>
-          <p id="employer-empty-hint" class="hidden rounded-lg border border-dashed border-violet-200 bg-white/60 px-4 py-6 text-center text-sm text-slate-500">
+          <p id="employer-empty-hint" class="hidden rounded-xl border border-dashed border-qs/40 bg-white/70 px-4 py-8 text-center text-sm text-slate-500">
             尚未新增雇主聯絡人，請點上方按鈕新增。
           </p>
         </section>
 
-        <p id="form-error" class="hidden rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert"></p>
+        <p id="form-error" class="hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-sm" role="alert"></p>
 
         <div class="flex justify-end pt-2">
-          <button
-            type="button"
-            id="btn-preview"
-            class="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
-          >
-            預覽與確認名單
+          <button type="button" id="btn-preview" class="btn-primary px-6 py-3 text-base shadow-lg">
+            預覽與確認名單 →
           </button>
         </div>
       </section>
 
       <!-- ========== STEP 2 ========== -->
       <section id="step-2" class="hidden space-y-6">
-        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-md">
+        <div class="card-panel shadow-md">
           <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 class="text-lg font-semibold text-slate-900">確認提報名單</h2>
-            <button
-              type="button"
-              id="btn-back"
-              class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
-            >
-              ← 返回修改
-            </button>
+            <button type="button" id="btn-back" class="btn-secondary">← 返回修改</button>
           </div>
-          <p id="preview-meta" class="mb-4 text-sm text-slate-500"></p>
+          <p id="preview-meta" class="mb-4 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600"></p>
           <div id="preview-list" class="space-y-4"></div>
         </div>
 
-        <div class="rounded-xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
-          <label for="confirm-unlock" class="mb-2 block text-sm font-medium text-amber-900">
+        <div class="rounded-2xl border border-qs/40 bg-qs-light p-5 shadow-sm">
+          <label for="confirm-unlock" class="mb-2 block text-sm font-medium text-amber-950">
             防呆解鎖：請輸入「我確定提交」以解鎖下載按鈕
           </label>
-          <input
-            id="confirm-unlock"
-            type="text"
-            autocomplete="off"
-            placeholder="我確定提交"
-            class="w-full max-w-md rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-          />
+          <input id="confirm-unlock" type="text" autocomplete="off" placeholder="我確定提交" class="input-field max-w-md" />
           <div class="mt-4">
-            <button
-              type="button"
-              id="btn-download"
-              disabled
-              class="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
-            >
+            <button type="button" id="btn-download" disabled class="btn-qs px-6 disabled:bg-slate-300 disabled:text-slate-500">
               拆分下載 Excel（學術／雇主）
             </button>
           </div>
@@ -174,17 +169,15 @@ import Layout from '../layouts/Layout.astro';
 
       <!-- ========== STEP 3 ========== -->
       <section id="step-3" class="hidden space-y-6">
-        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-6 text-center shadow-md">
-          <p class="text-4xl" aria-hidden="true">✅</p>
-          <h2 class="mt-3 text-xl font-bold text-emerald-900">
-            Excel 檔案已成功下載至您的電腦！
-          </h2>
+        <div class="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-8 text-center shadow-md">
+          <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-3xl" aria-hidden="true">✓</div>
+          <h2 class="text-xl font-bold text-emerald-900">Excel 檔案已成功下載至您的電腦！</h2>
           <p class="mt-2 text-sm text-emerald-800">
             （最多 2 個檔案；雇主檔含「中文」「English」「合併說明」分頁，表頭已設篩選方便合併）
           </p>
         </div>
 
-        <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-md">
+        <div class="card-panel shadow-md">
           <h3 class="text-lg font-semibold text-slate-900">Mail2000 寄信指示</h3>
           <p class="mt-2 text-sm leading-relaxed text-slate-600">
             請自行登入 Mail2000，並將剛才下載的 Excel 檔作為附件寄給我們。下方提供收件人、主旨與內文，可一鍵複製。
@@ -194,7 +187,7 @@ import Layout from '../layouts/Layout.astro';
             <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <div class="mb-2 flex items-center justify-between gap-2">
                 <span class="text-sm font-medium text-slate-700">收件人</span>
-                <button type="button" data-copy-target="copy-to" class="copy-btn rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100">
+                <button type="button" data-copy-target="copy-to" class="copy-btn rounded-md border border-fgu/20 bg-white px-2.5 py-1 text-xs font-medium text-fgu transition hover:bg-fgu-light">
                   複製
                 </button>
               </div>
@@ -204,7 +197,7 @@ import Layout from '../layouts/Layout.astro';
             <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <div class="mb-2 flex items-center justify-between gap-2">
                 <span class="text-sm font-medium text-slate-700">信件主旨</span>
-                <button type="button" data-copy-target="copy-subject" class="copy-btn rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100">
+                <button type="button" data-copy-target="copy-subject" class="copy-btn rounded-md border border-fgu/20 bg-white px-2.5 py-1 text-xs font-medium text-fgu transition hover:bg-fgu-light">
                   複製
                 </button>
               </div>
@@ -214,7 +207,7 @@ import Layout from '../layouts/Layout.astro';
             <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <div class="mb-2 flex items-center justify-between gap-2">
                 <span class="text-sm font-medium text-slate-700">信件內文</span>
-                <button type="button" data-copy-target="copy-body" class="copy-btn rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100">
+                <button type="button" data-copy-target="copy-body" class="copy-btn rounded-md border border-fgu/20 bg-white px-2.5 py-1 text-xs font-medium text-fgu transition hover:bg-fgu-light">
                   複製
                 </button>
               </div>
@@ -227,31 +220,30 @@ import Layout from '../layouts/Layout.astro';
         </div>
 
         <div class="flex justify-center">
-          <button
-            type="button"
-            id="btn-reset"
-            class="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
-          >
+          <button type="button" id="btn-reset" class="btn-secondary px-6 py-2.5 font-semibold">
             重新填寫一份新表單
           </button>
         </div>
       </section>
     </main>
 
-    <footer class="border-t border-slate-200 py-6 text-center text-xs text-slate-400">
-      Fo Guang University · QS Academic &amp; Employer Survey Contact Submission
+    <footer class="mt-8 border-t border-slate-200 bg-white/80 py-8">
+      <div class="mx-auto flex max-w-5xl flex-col items-center gap-4 px-4 sm:flex-row sm:justify-between sm:px-6">
+        <div class="flex items-center gap-3">
+          <img src={`${base}images/fgu-logo.png`} alt="" class="h-10 w-10 rounded-full" width="40" height="40" aria-hidden="true" />
+          <p class="text-xs text-slate-500">Fo Guang University · QS Contact Submission</p>
+        </div>
+        <img src={`${base}images/qs-logo.png`} alt="QS" class="h-8 w-8 rounded opacity-80" width="32" height="32" />
+      </div>
     </footer>
   </div>
 
   <!-- Contact card template -->
   <template id="contact-card-template">
-    <article class="contact-card rounded-xl border border-slate-200 bg-white p-5 shadow-md" data-contact-id="">
+    <article class="contact-card border-slate-200" data-contact-id="">
       <div class="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-3">
         <h3 class="contact-card-title text-base font-semibold text-slate-900">聯絡人 #1</h3>
-        <button
-          type="button"
-          class="btn-remove-contact rounded-md border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
-        >
+        <button type="button" class="btn-remove-contact rounded-md border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700 transition hover:bg-red-100">
           刪除
         </button>
       </div>
@@ -262,10 +254,10 @@ import Layout from '../layouts/Layout.astro';
           <label class="mb-1.5 block text-sm font-medium text-slate-700">
             Title <span class="text-red-500">*</span>
           </label>
-          <select class="field-title w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required>
+          <select class="input-field" required>
             <option value="">請選擇</option>
           </select>
-          <input type="text" class="field-title-other mt-2 hidden w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="請填寫其他稱謂" />
+          <input type="text" class="field-title-other input-field mt-2 hidden" placeholder="請填寫其他稱謂" />
         </div>
 
         <!-- First Name -->
@@ -273,7 +265,7 @@ import Layout from '../layouts/Layout.astro';
           <label class="mb-1.5 block text-sm font-medium text-slate-700">
             First Name <span class="text-red-500">*</span>
           </label>
-          <input type="text" class="field-first-name w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required placeholder="名字（不含空白前後）" />
+          <input type="text" class="field-first-name input-field" required placeholder="名字（不含空白前後）" />
         </div>
 
         <!-- Last Name -->
@@ -281,7 +273,7 @@ import Layout from '../layouts/Layout.astro';
           <label class="mb-1.5 block text-sm font-medium text-slate-700">
             Last Name <span class="text-red-500">*</span>
           </label>
-          <input type="text" class="field-last-name w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required placeholder="姓氏（不含空白前後）" />
+          <input type="text" class="field-last-name input-field" required placeholder="姓氏（不含空白前後）" />
         </div>
 
         <!-- Job Title / Position -->
@@ -289,10 +281,10 @@ import Layout from '../layouts/Layout.astro';
           <label class="label-job-title mb-1.5 block text-sm font-medium text-slate-700">
             Job Title <span class="text-red-500">*</span>
           </label>
-          <select class="field-job-title w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required>
+          <select class="field-job-title input-field" required>
             <option value="">請選擇</option>
           </select>
-          <input type="text" class="field-job-other mt-2 hidden w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="請填寫具體職稱（將輸出為 Others (xxx)）" />
+          <input type="text" class="field-job-other input-field mt-2 hidden" placeholder="請填寫具體職稱（將輸出為 Others (xxx)）" />
         </div>
 
         <!-- Department / Industry -->
@@ -300,11 +292,11 @@ import Layout from '../layouts/Layout.astro';
           <label class="label-dept-industry mb-1.5 block text-sm font-medium text-slate-700">
             Department <span class="text-red-500">*</span>
           </label>
-          <input type="text" class="field-department w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="請填寫完整系所名稱" />
-          <select class="field-industry hidden w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+          <input type="text" class="field-department input-field" placeholder="請填寫完整系所名稱" />
+          <select class="field-industry input-field hidden">
             <option value="">請選擇產業</option>
           </select>
-          <input type="text" class="field-industry-other mt-2 hidden w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="請填寫具體產業（將輸出為 Other (xxx)）" />
+          <input type="text" class="field-industry-other input-field mt-2 hidden" placeholder="請填寫具體產業（將輸出為 Other (xxx)）" />
         </div>
 
         <!-- Institution / Company Name -->
@@ -312,7 +304,7 @@ import Layout from '../layouts/Layout.astro';
           <label class="label-institution mb-1.5 block text-sm font-medium text-slate-700">
             Institution <span class="text-red-500">*</span>
           </label>
-          <input type="text" class="field-institution w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required placeholder="機構正式名稱" />
+          <input type="text" class="field-institution input-field" required placeholder="機構正式名稱" />
         </div>
 
         <!-- Country -->
@@ -320,9 +312,9 @@ import Layout from '../layouts/Layout.astro';
           <label class="mb-1.5 block text-sm font-medium text-slate-700">
             Country or Territory <span class="text-red-500">*</span>
           </label>
-          <select class="field-country w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required>
+          <select class="field-country input-field" required>
           </select>
-          <input type="text" class="field-country-other mt-2 hidden w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="請填寫其他國家／地區名稱" />
+          <input type="text" class="field-country-other input-field mt-2 hidden" placeholder="請填寫其他國家／地區名稱" />
         </div>
 
         <!-- Email -->
@@ -330,7 +322,7 @@ import Layout from '../layouts/Layout.astro';
           <label class="mb-1.5 block text-sm font-medium text-slate-700">
             Email <span class="text-red-500">*</span>
           </label>
-          <input type="email" class="field-email w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required placeholder="專業／公務信箱（每格僅一組）" />
+          <input type="email" class="field-email input-field" required placeholder="專業／公務信箱（每格僅一組）" />
         </div>
 
         <!-- Subject (academic only) -->
@@ -338,10 +330,10 @@ import Layout from '../layouts/Layout.astro';
           <label class="mb-1.5 block text-sm font-medium text-slate-700">
             Subject <span class="text-red-500">*</span>
           </label>
-          <select class="field-subject w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+          <select class="field-subject input-field">
             <option value="">請選擇學術領域</option>
           </select>
-          <input type="text" class="field-subject-other mt-2 hidden w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="請填寫具體學術領域（將輸出為 Others (xxx)）" />
+          <input type="text" class="field-subject-other input-field mt-2 hidden" placeholder="請填寫具體學術領域（將輸出為 Others (xxx)）" />
         </div>
 
         <!-- Phone -->
@@ -349,7 +341,7 @@ import Layout from '../layouts/Layout.astro';
           <label class="mb-1.5 block text-sm font-medium text-slate-700">
             Phone <span class="text-slate-400">(選填)</span>
           </label>
-          <input type="tel" class="field-phone w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="含國際碼，例如 +886..." />
+          <input type="tel" class="field-phone input-field" placeholder="含國際碼，例如 +886..." />
         </div>
       </div>
     </article>
@@ -567,16 +559,16 @@ import Layout from '../layouts/Layout.astro';
     function setStepIndicators(step) {
       for (let i = 1; i <= 3; i++) {
         const el = $(`#step-indicator-${i}`);
-        const badge = el.querySelector('span');
+        const badge = el.querySelector('.step-badge');
         if (i === step) {
-          el.className = 'flex items-center gap-2 font-semibold text-blue-700';
-          badge.className = 'flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white';
+          el.className = 'flex items-center gap-2 font-semibold text-fgu';
+          badge.className = 'step-badge flex h-9 w-9 items-center justify-center rounded-full bg-fgu text-sm font-bold text-white shadow-md';
         } else if (i < step) {
           el.className = 'flex items-center gap-2 font-medium text-emerald-700';
-          badge.className = 'flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-white';
+          badge.className = 'step-badge flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500 text-sm font-bold text-white shadow-sm';
         } else {
           el.className = 'flex items-center gap-2 text-slate-400';
-          badge.className = 'flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-slate-600';
+          badge.className = 'step-badge flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600';
         }
       }
     }
@@ -680,9 +672,9 @@ import Layout from '../layouts/Layout.astro';
       node.dataset.contactId = contact.id;
       node.dataset.contactType = type;
       if (type === 'academic') {
-        node.classList.add('border-blue-100');
+        node.classList.add('border-fgu/25', 'ring-1', 'ring-fgu/5');
       } else {
-        node.classList.add('border-violet-100');
+        node.classList.add('border-qs/30', 'ring-1', 'ring-qs/10');
       }
 
       const typeLabel = type === 'academic' ? '學術' : '雇主';
@@ -896,12 +888,12 @@ import Layout from '../layouts/Layout.astro';
       const card = document.createElement('article');
       card.className =
         type === 'academic'
-          ? 'rounded-lg border border-blue-200 bg-blue-50/50 p-4'
-          : 'rounded-lg border border-violet-200 bg-violet-50/50 p-4';
+          ? 'rounded-xl border border-fgu/20 bg-fgu-light/50 p-4 shadow-sm'
+          : 'rounded-xl border border-qs/30 bg-qs-light/50 p-4 shadow-sm';
       const badge =
         type === 'academic'
-          ? '<span class="inline-flex rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-800">學術 Academic</span>'
-          : '<span class="inline-flex rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-semibold text-violet-800">雇主 Employer</span>';
+          ? '<span class="inline-flex rounded-full bg-fgu/10 px-2.5 py-0.5 text-xs font-semibold text-fgu">學術 Academic</span>'
+          : '<span class="inline-flex rounded-full bg-qs/15 px-2.5 py-0.5 text-xs font-semibold text-amber-900">雇主 Employer</span>';
 
       card.innerHTML = `
         <div class="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2">
@@ -933,7 +925,7 @@ import Layout from '../layouts/Layout.astro';
 
       if (academicContacts.length) {
         const heading = document.createElement('h3');
-        heading.className = 'text-base font-semibold text-blue-800';
+        heading.className = 'text-base font-semibold text-fgu';
         heading.textContent = `學術聯絡人 (${academicContacts.length} 筆)`;
         list.appendChild(heading);
         const group = document.createElement('div');
@@ -944,7 +936,7 @@ import Layout from '../layouts/Layout.astro';
 
       if (employerContacts.length) {
         const heading = document.createElement('h3');
-        heading.className = 'text-base font-semibold text-violet-800';
+        heading.className = 'text-base font-semibold text-amber-900';
         heading.textContent = `雇主聯絡人 (${employerContacts.length} 筆)`;
         list.appendChild(heading);
         const group = document.createElement('div');
