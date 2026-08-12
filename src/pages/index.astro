@@ -113,26 +113,7 @@ import Layout from '../layouts/Layout.astro';
             </button>
           </div>
           <p id="preview-meta" class="mb-4 text-sm text-slate-500"></p>
-          <div class="overflow-x-auto rounded-lg border border-slate-200">
-            <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
-              <thead class="bg-slate-100 text-xs font-semibold uppercase tracking-wide text-slate-600">
-                <tr>
-                  <th class="whitespace-nowrap px-3 py-3">類別</th>
-                  <th class="whitespace-nowrap px-3 py-3">Title</th>
-                  <th class="whitespace-nowrap px-3 py-3">First Name</th>
-                  <th class="whitespace-nowrap px-3 py-3">Last Name</th>
-                  <th class="whitespace-nowrap px-3 py-3">Job Title / Position</th>
-                  <th class="whitespace-nowrap px-3 py-3">Department / Industry</th>
-                  <th class="whitespace-nowrap px-3 py-3">Institution / Company Name</th>
-                  <th class="whitespace-nowrap px-3 py-3">Country or Territory</th>
-                  <th class="whitespace-nowrap px-3 py-3">Email</th>
-                  <th class="whitespace-nowrap px-3 py-3">Subject</th>
-                  <th class="whitespace-nowrap px-3 py-3">Phone (Optional)</th>
-                </tr>
-              </thead>
-              <tbody id="preview-tbody" class="divide-y divide-slate-100 bg-white"></tbody>
-            </table>
-          </div>
+          <div id="preview-list" class="space-y-4"></div>
         </div>
 
         <div class="rounded-xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
@@ -832,53 +813,86 @@ import Layout from '../layouts/Layout.astro';
       const employerCount = contacts.filter((c) => c.type === 'employer').length;
       $('#preview-meta').textContent = `提報單位：${unit}　｜　提報人：${submitter}　｜　學術 ${academicCount} 筆、雇主 ${employerCount} 筆（雇主檔將含中文／English 兩個分頁）`;
 
-      const tbody = $('#preview-tbody');
-      tbody.innerHTML = '';
-      for (const c of contacts) {
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50';
-        const typeBadge =
-          c.type === 'academic'
-            ? '<span class="inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800">學術</span>'
-            : '<span class="inline-flex rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-800">雇主</span>';
+      const list = $('#preview-list');
+      list.innerHTML = '';
+
+      contacts.forEach((c, index) => {
         const jobList = c.type === 'academic' ? ACADEMIC_JOB_TITLES : EMPLOYER_JOB_TITLES;
-        const cells = [
-          typeBadge,
+        const titleText =
           c.title === 'Other'
             ? formatSimpleOther(c.titleOther, 'zh') + ' / ' + formatSimpleOther(c.titleOther, 'en')
-            : displayOpt(TITLES, c.title),
-          trimVal(c.firstName),
-          trimVal(c.lastName),
-          c.jobTitle === 'Other' ? formatOther(c.jobOther, 'zh') + ' / ' + formatOther(c.jobOther, 'en') : displayOpt(jobList, c.jobTitle),
+            : displayOpt(TITLES, c.title);
+        const jobText =
+          c.jobTitle === 'Other'
+            ? formatOther(c.jobOther, 'zh') + ' / ' + formatOther(c.jobOther, 'en')
+            : displayOpt(jobList, c.jobTitle);
+        const deptText =
           c.type === 'academic'
             ? trimVal(c.department)
             : c.industry === 'Other'
               ? formatIndustryOther(c.industryOther, 'zh') + ' / ' + formatIndustryOther(c.industryOther, 'en')
-              : displayOpt(INDUSTRIES, c.industry),
-          trimVal(c.institution),
+              : displayOpt(INDUSTRIES, c.industry);
+        const countryText =
           c.country === 'Other'
             ? formatSimpleOther(c.countryOther, 'zh') + ' / ' + formatSimpleOther(c.countryOther, 'en')
-            : displayOpt(COUNTRIES, c.country),
-          trimVal(c.email),
+            : displayOpt(COUNTRIES, c.country);
+        const subjectText =
           c.type === 'academic'
             ? c.subject === 'Other'
               ? formatOther(c.subjectOther, 'zh') + ' / ' + formatOther(c.subjectOther, 'en')
               : displayOpt(SUBJECTS, c.subject)
-            : '—',
-          trimVal(c.phone) || '—',
+            : '—';
+
+        const fields = [
+          ['Title', titleText],
+          ['First Name', trimVal(c.firstName)],
+          ['Last Name', trimVal(c.lastName)],
+          [c.type === 'academic' ? 'Job Title' : 'Position', jobText],
+          [c.type === 'academic' ? 'Department' : 'Industry', deptText],
+          [c.type === 'academic' ? 'Institution' : 'Company Name', trimVal(c.institution)],
+          ['Country or Territory', countryText],
+          ['Email', trimVal(c.email)],
+          ...(c.type === 'academic' ? [['Subject', subjectText]] : []),
+          ['Phone (Optional)', trimVal(c.phone) || '—'],
         ];
-        cells.forEach((html, idx) => {
-          const td = document.createElement('td');
-          td.className = 'whitespace-nowrap px-3 py-2.5 text-slate-700';
-          if (idx === 0) td.innerHTML = html;
-          else td.textContent = html;
-          tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-      }
+
+        const card = document.createElement('article');
+        card.className = 'rounded-lg border border-slate-200 bg-slate-50/80 p-4';
+        const badge =
+          c.type === 'academic'
+            ? '<span class="inline-flex rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-800">學術 Academic</span>'
+            : '<span class="inline-flex rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-semibold text-violet-800">雇主 Employer</span>';
+
+        card.innerHTML = `
+          <div class="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2">
+            <h3 class="text-sm font-semibold text-slate-900">聯絡人 #${index + 1}</h3>
+            ${badge}
+          </div>
+          <dl class="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+            ${fields
+              .map(
+                ([label, value]) => `
+              <div class="min-w-0">
+                <dt class="text-xs font-medium text-slate-500">${label}</dt>
+                <dd class="mt-0.5 break-words text-sm text-slate-800">${escapeHtml(value)}</dd>
+              </div>`,
+              )
+              .join('')}
+          </dl>
+        `;
+        list.appendChild(card);
+      });
 
       $('#confirm-unlock').value = '';
       $('#btn-download').disabled = true;
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
     }
 
     function safeFilePart(name) {
