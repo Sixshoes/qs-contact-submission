@@ -175,16 +175,15 @@ const base = import.meta.env.BASE_URL;
 
         <div class="rounded-2xl border border-sage/25 bg-gradient-to-br from-sage-light/80 to-white p-5 shadow-sm">
           <label for="confirm-unlock" class="mb-2 block text-sm font-medium text-fgu-dark">
-            防呆解鎖：請輸入「我確定提交」以解鎖下載按鈕
+            防呆解鎖：請輸入「我確定提交」以解鎖提交按鈕
           </label>
           <input id="confirm-unlock" type="text" autocomplete="off" placeholder="我確定提交" class="input-field max-w-md" />
           <div class="mt-4">
-            <button type="button" id="btn-download" disabled class="btn-qs px-6 disabled:bg-slate-300 disabled:text-slate-500">
-              下載 Excel（學術／雇主）
+            <button type="button" id="btn-submit" disabled class="btn-qs px-6 disabled:bg-slate-300 disabled:text-slate-500">
+              提交並匯出 Excel
             </button>
             <p class="mt-2 text-xs leading-relaxed text-slate-500">
-              下載前將自動正規化：去除前後空白、合併多餘空格、Email 轉小寫且移除空白、Phone 移除空白，並清除未使用的 Other 補充欄位。
-              若同時有學術與雇主名單，瀏覽器會<strong>連續下載 2 個檔案</strong>，請允許多重下載；若被阻擋，完成後可在下一步補下載。
+              提交後將自動正規化資料並產生 Excel 檔，於下一步分別下載後再寄信即可。
             </p>
           </div>
         </div>
@@ -194,17 +193,17 @@ const base = import.meta.env.BASE_URL;
       <section id="step-3" class="hidden space-y-6">
         <div class="rounded-2xl border border-sage/30 bg-gradient-to-br from-sage-light to-white p-8 text-center shadow-md">
           <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-sage/15 text-3xl text-sage" aria-hidden="true">✓</div>
-          <h2 class="text-xl font-bold text-fgu-dark">Excel 檔案已成功下載至您的電腦！</h2>
+          <h2 class="text-xl font-bold text-fgu-dark">提交成功！</h2>
           <p class="mt-3 text-base leading-relaxed text-slate-700">
-            請將剛才下載的 Excel 檔案以 Email 寄給<strong>奕廷</strong>：
+            請先下載下方 Excel 檔案，再以 Email 寄給<strong>奕廷</strong>：
             <code class="mt-1 block rounded-lg bg-white px-3 py-2 text-sm font-medium text-fgu shadow-sm">yitingchen@mail.fgu.edu.tw</code>
           </p>
           <p class="mt-2 text-sm text-slate-500">
-            （最多 2 個檔案；學術／雇主檔均含「中文」「English」「合併說明」分頁）
+            （學術／雇主檔均含「中文」「English」「合併說明」分頁；資料已正規化）
           </p>
-          <div id="redownload-panel" class="mt-5 hidden rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-4 text-left">
-            <p class="text-sm font-medium text-amber-900">若瀏覽器只下載到其中一個檔案，請在此補下載：</p>
-            <div id="redownload-buttons" class="mt-3 flex flex-wrap gap-2"></div>
+          <div id="download-panel" class="mt-6 hidden rounded-xl border border-fgu/20 bg-white/90 px-4 py-4 text-left shadow-sm">
+            <p class="text-sm font-semibold text-fgu-dark">下載 Excel 檔案</p>
+            <div id="download-buttons" class="mt-3 flex flex-wrap gap-2"></div>
           </div>
         </div>
 
@@ -1160,7 +1159,7 @@ const base = import.meta.env.BASE_URL;
       }
 
       $('#confirm-unlock').value = '';
-      $('#btn-download').disabled = true;
+      $('#btn-submit').disabled = true;
     }
 
     function escapeHtml(str) {
@@ -1186,26 +1185,36 @@ const base = import.meta.env.BASE_URL;
     /** @type {{ filename: string, blob: Blob }[]} */
     let downloadArtifacts = [];
 
-    function renderRedownloadPanel() {
-      const panel = $('#redownload-panel');
-      const btns = $('#redownload-buttons');
+    function renderDownloadPanel() {
+      const panel = $('#download-panel');
+      const btns = $('#download-buttons');
       btns.innerHTML = '';
-      if (!downloadArtifacts.length || downloadArtifacts.length <= 1) {
+      if (!downloadArtifacts.length) {
         panel.classList.add('hidden');
         return;
       }
       panel.classList.remove('hidden');
+
       downloadArtifacts.forEach(({ filename, blob }) => {
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'btn-secondary text-xs';
+        btn.className = 'btn-primary text-sm';
         btn.textContent = `⬇ ${filename}`;
         btn.addEventListener('click', () => downloadBlob(blob, filename));
         btns.appendChild(btn);
       });
+
+      if (downloadArtifacts.length > 1) {
+        const allBtn = document.createElement('button');
+        allBtn.type = 'button';
+        allBtn.className = 'btn-secondary text-sm';
+        allBtn.textContent = `⬇ 一次下載全部（${downloadArtifacts.length} 個檔案）`;
+        allBtn.addEventListener('click', () => downloadBlobsSequential(downloadArtifacts));
+        btns.appendChild(allBtn);
+      }
     }
 
-    async function handleDownload() {
+    async function handleSubmit() {
       normalizeAllData();
       const unit = safeFilePart($('#submitter-unit').value);
       const ts = fileTimestamp();
@@ -1239,17 +1248,10 @@ const base = import.meta.env.BASE_URL;
 
         downloadArtifacts = queue;
         downloadedFiles = queue.map((item) => item.filename);
-
-        if (queue.length === 1) {
-          await downloadBlob(queue[0].blob, queue[0].filename);
-        } else if (queue.length > 1) {
-          await downloadBlobsSequential(queue);
-        }
-
         goToStep3();
       } catch (err) {
         console.error(err);
-        alert('下載 Excel 時發生錯誤，請再試一次。');
+        alert('匯出 Excel 時發生錯誤，請再試一次。');
       }
     }
 
@@ -1323,10 +1325,10 @@ ${unit}
           attachList.appendChild(li);
         });
       } else {
-        attachList.innerHTML = '<li class="text-slate-500">（尚無附件紀錄，請確認已下載）</li>';
+        attachList.innerHTML = '<li class="text-slate-500">（請先下載上方 Excel 檔案）</li>';
       }
 
-      renderRedownloadPanel();
+      renderDownloadPanel();
       showStep(3);
     }
 
@@ -1353,12 +1355,12 @@ ${unit}
       $('#btn-back').addEventListener('click', () => showStep(1));
 
       $('#confirm-unlock').addEventListener('input', (e) => {
-        $('#btn-download').disabled = e.target.value.trim() !== UNLOCK_PHRASE;
+        $('#btn-submit').disabled = e.target.value.trim() !== UNLOCK_PHRASE;
       });
 
-      $('#btn-download').addEventListener('click', () => {
+      $('#btn-submit').addEventListener('click', () => {
         if ($('#confirm-unlock').value.trim() !== UNLOCK_PHRASE) return;
-        handleDownload();
+        handleSubmit();
       });
 
       $$('.copy-btn').forEach((btn) => {
