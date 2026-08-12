@@ -140,17 +140,17 @@ const base = import.meta.env.BASE_URL;
                 <h2 class="text-lg font-semibold text-fgu-dark">學術聯絡人 (Academic)</h2>
               </div>
             </div>
-            <div class="flex items-center gap-3">
-              <span id="academic-count" class="rounded-full bg-white px-2.5 py-0.5 text-sm font-medium text-fgu shadow-sm">(0 / 10)</span>
-              <button type="button" id="btn-add-academic" class="btn-primary">
-                <span aria-hidden="true">＋</span> 新增學術聯絡人
-              </button>
-            </div>
+            <span id="academic-count" class="rounded-full bg-white px-2.5 py-0.5 text-sm font-medium text-fgu shadow-sm">(0 / 10)</span>
           </div>
           <div id="academic-contacts-container" class="space-y-5"></div>
           <p id="academic-empty-hint" class="hidden rounded-xl border border-dashed border-fgu/30 bg-white/70 px-4 py-8 text-center text-sm text-slate-500">
-            尚未新增學術聯絡人，請點上方按鈕新增。
+            尚未新增學術聯絡人，請點下方按鈕新增。
           </p>
+          <div class="mt-4 flex justify-end">
+            <button type="button" id="btn-add-academic" class="btn-primary">
+              <span aria-hidden="true">＋</span> 新增學術聯絡人
+            </button>
+          </div>
         </section>
 
         <!-- 雇主聯絡人 -->
@@ -162,17 +162,17 @@ const base = import.meta.env.BASE_URL;
                 <h2 class="text-lg font-semibold text-amber-900">雇主聯絡人 (Employer)</h2>
               </div>
             </div>
-            <div class="flex items-center gap-3">
-              <span id="employer-count" class="rounded-full bg-white px-2.5 py-0.5 text-sm font-medium text-amber-800 shadow-sm">(0 / 10)</span>
-              <button type="button" id="btn-add-employer" class="btn-qs">
-                <span aria-hidden="true">＋</span> 新增雇主聯絡人
-              </button>
-            </div>
+            <span id="employer-count" class="rounded-full bg-white px-2.5 py-0.5 text-sm font-medium text-amber-800 shadow-sm">(0 / 10)</span>
           </div>
           <div id="employer-contacts-container" class="space-y-5"></div>
           <p id="employer-empty-hint" class="hidden rounded-xl border border-dashed border-qs/40 bg-white/70 px-4 py-8 text-center text-sm text-slate-500">
-            尚未新增雇主聯絡人，請點上方按鈕新增。
+            尚未新增雇主聯絡人，請點下方按鈕新增。
           </p>
+          <div class="mt-4 flex justify-end">
+            <button type="button" id="btn-add-employer" class="btn-qs">
+              <span aria-hidden="true">＋</span> 新增雇主聯絡人
+            </button>
+          </div>
         </section>
 
         <p id="form-error" class="hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-sm" role="alert"></p>
@@ -690,6 +690,8 @@ const base = import.meta.env.BASE_URL;
       $('#employer-count').textContent = `(${employerContacts.length} / ${MAX_CONTACTS})`;
       $('#btn-add-academic').disabled = academicContacts.length >= MAX_CONTACTS;
       $('#btn-add-employer').disabled = employerContacts.length >= MAX_CONTACTS;
+      $('#btn-add-academic').closest('div')?.classList.toggle('hidden', academicContacts.length >= MAX_CONTACTS);
+      $('#btn-add-employer').closest('div')?.classList.toggle('hidden', employerContacts.length >= MAX_CONTACTS);
       $('#academic-empty-hint').classList.toggle('hidden', academicContacts.length > 0);
       $('#employer-empty-hint').classList.toggle('hidden', employerContacts.length > 0);
     }
