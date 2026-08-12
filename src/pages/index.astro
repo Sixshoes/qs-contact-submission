@@ -70,21 +70,53 @@ import Layout from '../layouts/Layout.astro';
           </div>
         </div>
 
-        <div class="flex items-center justify-between gap-3">
-          <h2 class="text-lg font-semibold text-slate-900">
-            聯絡人名單
-            <span id="contact-count" class="ml-2 text-sm font-normal text-slate-500">(0 / 10)</span>
-          </h2>
-          <button
-            type="button"
-            id="btn-add-contact"
-            class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <span aria-hidden="true">＋</span> 新增聯絡人
-          </button>
-        </div>
+        <!-- 學術聯絡人 -->
+        <section class="rounded-xl border border-blue-200 bg-blue-50/40 p-5 shadow-sm">
+          <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-semibold text-slate-900">學術聯絡人 (Academic)</h2>
+              <p class="mt-1 text-sm text-slate-500">含 Subject 等 11 個 QS 欄位，最多 10 筆</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <span id="academic-count" class="text-sm text-slate-500">(0 / 10)</span>
+              <button
+                type="button"
+                id="btn-add-academic"
+                class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <span aria-hidden="true">＋</span> 新增學術聯絡人
+              </button>
+            </div>
+          </div>
+          <div id="academic-contacts-container" class="space-y-5"></div>
+          <p id="academic-empty-hint" class="hidden rounded-lg border border-dashed border-blue-200 bg-white/60 px-4 py-6 text-center text-sm text-slate-500">
+            尚未新增學術聯絡人，請點上方按鈕新增。
+          </p>
+        </section>
 
-        <div id="contacts-container" class="space-y-5"></div>
+        <!-- 雇主聯絡人 -->
+        <section class="rounded-xl border border-violet-200 bg-violet-50/40 p-5 shadow-sm">
+          <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-semibold text-slate-900">雇主聯絡人 (Employer)</h2>
+              <p class="mt-1 text-sm text-slate-500">含 Position、Industry 等 10 個 QS 欄位，最多 10 筆</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <span id="employer-count" class="text-sm text-slate-500">(0 / 10)</span>
+              <button
+                type="button"
+                id="btn-add-employer"
+                class="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <span aria-hidden="true">＋</span> 新增雇主聯絡人
+              </button>
+            </div>
+          </div>
+          <div id="employer-contacts-container" class="space-y-5"></div>
+          <p id="employer-empty-hint" class="hidden rounded-lg border border-dashed border-violet-200 bg-white/60 px-4 py-6 text-center text-sm text-slate-500">
+            尚未新增雇主聯絡人，請點上方按鈕新增。
+          </p>
+        </section>
 
         <p id="form-error" class="hidden rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert"></p>
 
@@ -225,23 +257,6 @@ import Layout from '../layouts/Layout.astro';
       </div>
 
       <div class="grid gap-4 sm:grid-cols-2">
-        <!-- Contact Type -->
-        <div class="sm:col-span-2">
-          <span class="mb-1.5 block text-sm font-medium text-slate-700">
-            聯絡人類別 (Contact Type) <span class="text-red-500">*</span>
-          </span>
-          <div class="flex flex-wrap gap-4">
-            <label class="inline-flex cursor-pointer items-center gap-2 text-sm">
-              <input type="radio" name="contact-type" value="academic" class="field-type h-4 w-4 border-slate-300 text-blue-600 focus:ring-blue-500" checked />
-              學術 (Academic)
-            </label>
-            <label class="inline-flex cursor-pointer items-center gap-2 text-sm">
-              <input type="radio" name="contact-type" value="employer" class="field-type h-4 w-4 border-slate-300 text-blue-600 focus:ring-blue-500" />
-              雇主 (Employer)
-            </label>
-          </div>
-        </div>
-
         <!-- Title -->
         <div>
           <label class="mb-1.5 block text-sm font-medium text-slate-700">
@@ -363,13 +378,15 @@ import Layout from '../layouts/Layout.astro';
       findOption,
     } from '../data/qs-options.js';
 
-    const STORAGE_KEY = 'qs-contact-form-v2';
+    const STORAGE_KEY = 'qs-contact-form-v3';
     const MAX_CONTACTS = 10;
     const UNLOCK_PHRASE = '我確定提交';
     const EMAIL_FORBIDDEN = /[\[\]{}();:,<>'#~=+"¬`!]/;
 
     /** @type {{ id: string, type: string, title: string, titleOther: string, firstName: string, lastName: string, jobTitle: string, jobOther: string, department: string, industry: string, industryOther: string, institution: string, country: string, countryOther: string, email: string, subject: string, subjectOther: string, phone: string }[]} */
-    let contacts = [];
+    let academicContacts = [];
+    /** @type {typeof academicContacts} */
+    let employerContacts = [];
     let currentStep = 1;
 
     const $ = (sel, root = document) => root.querySelector(sel);
@@ -379,10 +396,11 @@ import Layout from '../layouts/Layout.astro';
       return `c_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     }
 
-    function emptyContact() {
+    /** @param {'academic'|'employer'} type */
+    function emptyContact(type) {
       return {
         id: uid(),
-        type: 'academic',
+        type,
         title: '',
         titleOther: '',
         firstName: '',
@@ -400,6 +418,20 @@ import Layout from '../layouts/Layout.astro';
         subjectOther: '',
         phone: '',
       };
+    }
+
+    /** @param {'academic'|'employer'} type */
+    function getList(type) {
+      return type === 'academic' ? academicContacts : employerContacts;
+    }
+
+    /** @param {'academic'|'employer'} type */
+    function setList(type, list) {
+      if (type === 'academic') academicContacts = list;
+      else employerContacts = list;
+    }
+
+      return academicContacts.find((c) => c.id === id) || employerContacts.find((c) => c.id === id) || null;
     }
 
     function fillSelect(select, options, { placeholder, selected } = {}) {
@@ -496,7 +528,8 @@ import Layout from '../layouts/Layout.astro';
         step: currentStep,
         unit: trimVal($('#submitter-unit')?.value),
         submitter: trimVal($('#submitter-name')?.value),
-        contacts,
+        academicContacts,
+        employerContacts,
       };
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -509,15 +542,25 @@ import Layout from '../layouts/Layout.astro';
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return null;
-        return JSON.parse(raw);
+        const parsed = JSON.parse(raw);
+        // migrate v2 single-list format
+        if (parsed.contacts?.length && !parsed.academicContacts && !parsed.employerContacts) {
+          parsed.academicContacts = parsed.contacts.filter((c) => c.type === 'academic');
+          parsed.employerContacts = parsed.contacts.filter((c) => c.type === 'employer');
+        }
+        return parsed;
       } catch {
         return null;
       }
     }
 
     function updateContactCount() {
-      $('#contact-count').textContent = `(${contacts.length} / ${MAX_CONTACTS})`;
-      $('#btn-add-contact').disabled = contacts.length >= MAX_CONTACTS;
+      $('#academic-count').textContent = `(${academicContacts.length} / ${MAX_CONTACTS})`;
+      $('#employer-count').textContent = `(${employerContacts.length} / ${MAX_CONTACTS})`;
+      $('#btn-add-academic').disabled = academicContacts.length >= MAX_CONTACTS;
+      $('#btn-add-employer').disabled = employerContacts.length >= MAX_CONTACTS;
+      $('#academic-empty-hint').classList.toggle('hidden', academicContacts.length > 0);
+      $('#employer-empty-hint').classList.toggle('hidden', employerContacts.length > 0);
     }
 
     function setStepIndicators(step) {
@@ -605,11 +648,11 @@ import Layout from '../layouts/Layout.astro';
 
     function syncCardToModel(card) {
       const id = card.dataset.contactId;
-      const c = contacts.find((x) => x.id === id);
+      const type = card.dataset.contactType;
+      const c = findContact(id);
       if (!c) return;
 
-      const typeRadio = $$('.field-type', card).find((r) => r.checked);
-      c.type = typeRadio?.value || 'academic';
+      c.type = type;
       c.title = $('.field-title', card).value;
       c.titleOther = $('.field-title-other', card).value;
       c.firstName = $('.field-first-name', card).value;
@@ -629,18 +672,20 @@ import Layout from '../layouts/Layout.astro';
       saveState();
     }
 
-    function renderContactCard(contact, index) {
+    /** @param {'academic'|'employer'} type */
+    function renderContactCard(contact, index, type) {
       const tpl = $('#contact-card-template');
       const node = tpl.content.firstElementChild.cloneNode(true);
       node.dataset.contactId = contact.id;
+      node.dataset.contactType = type;
+      if (type === 'academic') {
+        node.classList.add('border-blue-100');
+      } else {
+        node.classList.add('border-violet-100');
+      }
 
-      // Unique radio name per card
-      $$('.field-type', node).forEach((radio) => {
-        radio.name = `contact-type-${contact.id}`;
-        radio.checked = radio.value === contact.type;
-      });
-
-      $('.contact-card-title', node).textContent = `聯絡人 #${index + 1}`;
+      const typeLabel = type === 'academic' ? '學術' : '雇主';
+      $('.contact-card-title', node).textContent = `${typeLabel}聯絡人 #${index + 1}`;
 
       fillSelect($('.field-title', node), TITLES, { placeholder: '請選擇', selected: contact.title });
       fillSelect($('.field-industry', node), INDUSTRIES, { placeholder: '請選擇產業', selected: contact.industry });
@@ -654,10 +699,9 @@ import Layout from '../layouts/Layout.astro';
       $('.field-email', node).value = contact.email;
       $('.field-phone', node).value = contact.phone;
 
-      applyTypeUI(node, contact.type);
+      applyTypeUI(node, type);
       $('.field-job-title', node).value = contact.jobTitle;
 
-      // Restore "Other" free-text after selects are ready
       const otherPairs = [
         ['.field-title', '.field-title-other', contact.titleOther],
         ['.field-job-title', '.field-job-other', contact.jobOther],
@@ -672,13 +716,9 @@ import Layout from '../layouts/Layout.astro';
         if (selectEl?.value === 'Other' && saved) otherEl.value = saved;
       }
 
-      // Events
       node.addEventListener('input', () => syncCardToModel(node));
       node.addEventListener('change', (e) => {
         const t = e.target;
-        if (t.classList.contains('field-type')) {
-          applyTypeUI(node, t.value);
-        }
         if (t.classList.contains('field-title')) {
           toggleOtherInput(t, $('.field-title-other', node));
         }
@@ -698,11 +738,7 @@ import Layout from '../layouts/Layout.astro';
       });
 
       $('.btn-remove-contact', node).addEventListener('click', () => {
-        if (contacts.length <= 1) {
-          showError('至少需保留一筆聯絡人。');
-          return;
-        }
-        contacts = contacts.filter((c) => c.id !== contact.id);
+        setList(type, getList(type).filter((c) => c.id !== contact.id));
         renderAllCards();
         saveState();
       });
@@ -711,9 +747,12 @@ import Layout from '../layouts/Layout.astro';
     }
 
     function renderAllCards() {
-      const container = $('#contacts-container');
-      container.innerHTML = '';
-      contacts.forEach((c, i) => container.appendChild(renderContactCard(c, i)));
+      const academicContainer = $('#academic-contacts-container');
+      const employerContainer = $('#employer-contacts-container');
+      academicContainer.innerHTML = '';
+      employerContainer.innerHTML = '';
+      academicContacts.forEach((c, i) => academicContainer.appendChild(renderContactCard(c, i, 'academic')));
+      employerContacts.forEach((c, i) => employerContainer.appendChild(renderContactCard(c, i, 'employer')));
       updateContactCount();
     }
 
@@ -738,40 +777,46 @@ import Layout from '../layouts/Layout.astro';
       return null;
     }
 
+    /** @param {typeof academicContacts} list @param {'academic'|'employer'} type */
+    function validateContactList(list, type) {
+      const label = type === 'academic' ? '學術聯絡人' : '雇主聯絡人';
+      for (let i = 0; i < list.length; i++) {
+        const c = list[i];
+        const n = i + 1;
+        if (!trimVal(c.title)) return `${label} #${n}：請選擇 Title。`;
+        if (c.title === 'Other' && !trimVal(c.titleOther)) return `${label} #${n}：請填寫其他稱謂。`;
+        if (!trimVal(c.firstName)) return `${label} #${n}：請填寫 First Name。`;
+        if (!trimVal(c.lastName)) return `${label} #${n}：請填寫 Last Name。`;
+        if (!trimVal(c.jobTitle)) return `${label} #${n}：請選擇 ${type === 'academic' ? 'Job Title' : 'Position'}。`;
+        if (c.jobTitle === 'Other' && !trimVal(c.jobOther)) return `${label} #${n}：請填寫其他職稱說明。`;
+        if (type === 'academic') {
+          if (!trimVal(c.department)) return `${label} #${n}：請填寫 Department。`;
+          if (!trimVal(c.subject)) return `${label} #${n}：請選擇 Subject。`;
+          if (c.subject === 'Other' && !trimVal(c.subjectOther)) return `${label} #${n}：請填寫其他學術領域說明。`;
+        } else {
+          if (!trimVal(c.industry)) return `${label} #${n}：請選擇 Industry。`;
+          if (c.industry === 'Other' && !trimVal(c.industryOther)) return `${label} #${n}：請填寫其他產業說明。`;
+        }
+        if (!trimVal(c.institution)) {
+          return `${label} #${n}：請填寫 ${type === 'academic' ? 'Institution' : 'Company Name'}。`;
+        }
+        if (!trimVal(c.country)) return `${label} #${n}：請選擇 Country or Territory。`;
+        if (c.country === 'Other' && !trimVal(c.countryOther)) return `${label} #${n}：請填寫其他國家／地區。`;
+        const emailErr = validateEmail(c.email);
+        if (emailErr) return `${label} #${n}：${emailErr}。`;
+      }
+      return null;
+    }
+
     function validateAll() {
       const unit = trimVal($('#submitter-unit').value);
       const submitter = trimVal($('#submitter-name').value);
       if (!unit) return '請填寫提報單位。';
       if (!submitter) return '請填寫提報人姓名。';
-      if (!contacts.length) return '請至少新增一筆聯絡人。';
-
-      for (let i = 0; i < contacts.length; i++) {
-        const c = contacts[i];
-        const n = i + 1;
-        if (!c.type) return `聯絡人 #${n}：請選擇類別。`;
-        if (!trimVal(c.title)) return `聯絡人 #${n}：請選擇 Title。`;
-        if (c.title === 'Other' && !trimVal(c.titleOther)) return `聯絡人 #${n}：請填寫其他稱謂。`;
-        if (!trimVal(c.firstName)) return `聯絡人 #${n}：請填寫 First Name。`;
-        if (!trimVal(c.lastName)) return `聯絡人 #${n}：請填寫 Last Name。`;
-        if (!trimVal(c.jobTitle)) return `聯絡人 #${n}：請選擇 ${c.type === 'academic' ? 'Job Title' : 'Position'}。`;
-        if (c.jobTitle === 'Other' && !trimVal(c.jobOther)) return `聯絡人 #${n}：請填寫其他職稱說明。`;
-        if (c.type === 'academic') {
-          if (!trimVal(c.department)) return `聯絡人 #${n}：請填寫 Department。`;
-          if (!trimVal(c.subject)) return `聯絡人 #${n}：請選擇 Subject。`;
-          if (c.subject === 'Other' && !trimVal(c.subjectOther)) return `聯絡人 #${n}：請填寫其他學術領域說明。`;
-        } else {
-          if (!trimVal(c.industry)) return `聯絡人 #${n}：請選擇 Industry。`;
-          if (c.industry === 'Other' && !trimVal(c.industryOther)) return `聯絡人 #${n}：請填寫其他產業說明。`;
-        }
-        if (!trimVal(c.institution)) {
-          return `聯絡人 #${n}：請填寫 ${c.type === 'academic' ? 'Institution' : 'Company Name'}。`;
-        }
-        if (!trimVal(c.country)) return `聯絡人 #${n}：請選擇 Country or Territory。`;
-        if (c.country === 'Other' && !trimVal(c.countryOther)) return `聯絡人 #${n}：請填寫其他國家／地區。`;
-        const emailErr = validateEmail(c.email);
-        if (emailErr) return `聯絡人 #${n}：${emailErr}。`;
+      if (!academicContacts.length && !employerContacts.length) {
+        return '請至少新增一筆學術或雇主聯絡人。';
       }
-      return null;
+      return validateContactList(academicContacts, 'academic') || validateContactList(employerContacts, 'employer');
     }
 
     function toAcademicExcelRow(c) {
@@ -806,82 +851,106 @@ import Layout from '../layouts/Layout.astro';
       ];
     }
 
+    function buildPreviewCard(c, index, type) {
+      const jobList = type === 'academic' ? ACADEMIC_JOB_TITLES : EMPLOYER_JOB_TITLES;
+      const typeLabel = type === 'academic' ? '學術' : '雇主';
+      const titleText =
+        c.title === 'Other'
+          ? formatSimpleOther(c.titleOther, 'zh') + ' / ' + formatSimpleOther(c.titleOther, 'en')
+          : displayOpt(TITLES, c.title);
+      const jobText =
+        c.jobTitle === 'Other'
+          ? formatOther(c.jobOther, 'zh') + ' / ' + formatOther(c.jobOther, 'en')
+          : displayOpt(jobList, c.jobTitle);
+      const deptText =
+        type === 'academic'
+          ? trimVal(c.department)
+          : c.industry === 'Other'
+            ? formatIndustryOther(c.industryOther, 'zh') + ' / ' + formatIndustryOther(c.industryOther, 'en')
+            : displayOpt(INDUSTRIES, c.industry);
+      const countryText =
+        c.country === 'Other'
+          ? formatSimpleOther(c.countryOther, 'zh') + ' / ' + formatSimpleOther(c.countryOther, 'en')
+          : displayOpt(COUNTRIES, c.country);
+      const subjectText =
+        type === 'academic'
+          ? c.subject === 'Other'
+            ? formatOther(c.subjectOther, 'zh') + ' / ' + formatOther(c.subjectOther, 'en')
+            : displayOpt(SUBJECTS, c.subject)
+          : '—';
+
+      const fields = [
+        ['Title', titleText],
+        ['First Name', trimVal(c.firstName)],
+        ['Last Name', trimVal(c.lastName)],
+        [type === 'academic' ? 'Job Title' : 'Position', jobText],
+        [type === 'academic' ? 'Department' : 'Industry', deptText],
+        [type === 'academic' ? 'Institution' : 'Company Name', trimVal(c.institution)],
+        ['Country or Territory', countryText],
+        ['Email', trimVal(c.email)],
+        ...(type === 'academic' ? [['Subject', subjectText]] : []),
+        ['Phone (Optional)', trimVal(c.phone) || '—'],
+      ];
+
+      const card = document.createElement('article');
+      card.className =
+        type === 'academic'
+          ? 'rounded-lg border border-blue-200 bg-blue-50/50 p-4'
+          : 'rounded-lg border border-violet-200 bg-violet-50/50 p-4';
+      const badge =
+        type === 'academic'
+          ? '<span class="inline-flex rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-800">學術 Academic</span>'
+          : '<span class="inline-flex rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-semibold text-violet-800">雇主 Employer</span>';
+
+      card.innerHTML = `
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2">
+          <h3 class="text-sm font-semibold text-slate-900">${typeLabel}聯絡人 #${index + 1}</h3>
+          ${badge}
+        </div>
+        <dl class="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+          ${fields
+            .map(
+              ([label, value]) => `
+            <div class="min-w-0">
+              <dt class="text-xs font-medium text-slate-500">${label}</dt>
+              <dd class="mt-0.5 break-words text-sm text-slate-800">${escapeHtml(value)}</dd>
+            </div>`,
+            )
+            .join('')}
+        </dl>
+      `;
+      return card;
+    }
+
     function renderPreview() {
       const unit = trimVal($('#submitter-unit').value);
       const submitter = trimVal($('#submitter-name').value);
-      const academicCount = contacts.filter((c) => c.type === 'academic').length;
-      const employerCount = contacts.filter((c) => c.type === 'employer').length;
-      $('#preview-meta').textContent = `提報單位：${unit}　｜　提報人：${submitter}　｜　學術 ${academicCount} 筆、雇主 ${employerCount} 筆（雇主檔將含中文／English 兩個分頁）`;
+      $('#preview-meta').textContent = `提報單位：${unit}　｜　提報人：${submitter}　｜　學術 ${academicContacts.length} 筆、雇主 ${employerContacts.length} 筆（雇主檔將含中文／English 兩個分頁）`;
 
       const list = $('#preview-list');
       list.innerHTML = '';
 
-      contacts.forEach((c, index) => {
-        const jobList = c.type === 'academic' ? ACADEMIC_JOB_TITLES : EMPLOYER_JOB_TITLES;
-        const titleText =
-          c.title === 'Other'
-            ? formatSimpleOther(c.titleOther, 'zh') + ' / ' + formatSimpleOther(c.titleOther, 'en')
-            : displayOpt(TITLES, c.title);
-        const jobText =
-          c.jobTitle === 'Other'
-            ? formatOther(c.jobOther, 'zh') + ' / ' + formatOther(c.jobOther, 'en')
-            : displayOpt(jobList, c.jobTitle);
-        const deptText =
-          c.type === 'academic'
-            ? trimVal(c.department)
-            : c.industry === 'Other'
-              ? formatIndustryOther(c.industryOther, 'zh') + ' / ' + formatIndustryOther(c.industryOther, 'en')
-              : displayOpt(INDUSTRIES, c.industry);
-        const countryText =
-          c.country === 'Other'
-            ? formatSimpleOther(c.countryOther, 'zh') + ' / ' + formatSimpleOther(c.countryOther, 'en')
-            : displayOpt(COUNTRIES, c.country);
-        const subjectText =
-          c.type === 'academic'
-            ? c.subject === 'Other'
-              ? formatOther(c.subjectOther, 'zh') + ' / ' + formatOther(c.subjectOther, 'en')
-              : displayOpt(SUBJECTS, c.subject)
-            : '—';
+      if (academicContacts.length) {
+        const heading = document.createElement('h3');
+        heading.className = 'text-base font-semibold text-blue-800';
+        heading.textContent = `學術聯絡人 (${academicContacts.length} 筆)`;
+        list.appendChild(heading);
+        const group = document.createElement('div');
+        group.className = 'mb-6 space-y-4';
+        academicContacts.forEach((c, i) => group.appendChild(buildPreviewCard(c, i, 'academic')));
+        list.appendChild(group);
+      }
 
-        const fields = [
-          ['Title', titleText],
-          ['First Name', trimVal(c.firstName)],
-          ['Last Name', trimVal(c.lastName)],
-          [c.type === 'academic' ? 'Job Title' : 'Position', jobText],
-          [c.type === 'academic' ? 'Department' : 'Industry', deptText],
-          [c.type === 'academic' ? 'Institution' : 'Company Name', trimVal(c.institution)],
-          ['Country or Territory', countryText],
-          ['Email', trimVal(c.email)],
-          ...(c.type === 'academic' ? [['Subject', subjectText]] : []),
-          ['Phone (Optional)', trimVal(c.phone) || '—'],
-        ];
-
-        const card = document.createElement('article');
-        card.className = 'rounded-lg border border-slate-200 bg-slate-50/80 p-4';
-        const badge =
-          c.type === 'academic'
-            ? '<span class="inline-flex rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-800">學術 Academic</span>'
-            : '<span class="inline-flex rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-semibold text-violet-800">雇主 Employer</span>';
-
-        card.innerHTML = `
-          <div class="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2">
-            <h3 class="text-sm font-semibold text-slate-900">聯絡人 #${index + 1}</h3>
-            ${badge}
-          </div>
-          <dl class="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
-            ${fields
-              .map(
-                ([label, value]) => `
-              <div class="min-w-0">
-                <dt class="text-xs font-medium text-slate-500">${label}</dt>
-                <dd class="mt-0.5 break-words text-sm text-slate-800">${escapeHtml(value)}</dd>
-              </div>`,
-              )
-              .join('')}
-          </dl>
-        `;
-        list.appendChild(card);
-      });
+      if (employerContacts.length) {
+        const heading = document.createElement('h3');
+        heading.className = 'text-base font-semibold text-violet-800';
+        heading.textContent = `雇主聯絡人 (${employerContacts.length} 筆)`;
+        list.appendChild(heading);
+        const group = document.createElement('div');
+        group.className = 'space-y-4';
+        employerContacts.forEach((c, i) => group.appendChild(buildPreviewCard(c, i, 'employer')));
+        list.appendChild(group);
+      }
 
       $('#confirm-unlock').value = '';
       $('#btn-download').disabled = true;
@@ -901,8 +970,6 @@ import Layout from '../layouts/Layout.astro';
 
     async function handleDownload() {
       const unit = safeFilePart($('#submitter-unit').value);
-      const academicContacts = contacts.filter((c) => c.type === 'academic');
-      const employerContacts = contacts.filter((c) => c.type === 'employer');
       const academicList = academicContacts.map(toAcademicExcelRow);
 
       try {
@@ -915,7 +982,6 @@ import Layout from '../layouts/Layout.astro';
           });
         }
         if (employerContacts.length) {
-          // slight delay so browsers allow a second download
           await new Promise((r) => setTimeout(r, academicList.length ? 400 : 0));
           await downloadEmployerStyledWorkbook({
             headersZh: EMPLOYER_EXCEL_HEADERS_ZH,
@@ -943,9 +1009,16 @@ import Layout from '../layouts/Layout.astro';
       $('#submitter-unit').addEventListener('input', saveState);
       $('#submitter-name').addEventListener('input', saveState);
 
-      $('#btn-add-contact').addEventListener('click', () => {
-        if (contacts.length >= MAX_CONTACTS) return;
-        contacts.push(emptyContact());
+      $('#btn-add-academic').addEventListener('click', () => {
+        if (academicContacts.length >= MAX_CONTACTS) return;
+        academicContacts.push(emptyContact('academic'));
+        renderAllCards();
+        saveState();
+      });
+
+      $('#btn-add-employer').addEventListener('click', () => {
+        if (employerContacts.length >= MAX_CONTACTS) return;
+        employerContacts.push(emptyContact('employer'));
         renderAllCards();
         saveState();
       });
@@ -1005,12 +1078,22 @@ import Layout from '../layouts/Layout.astro';
     function init() {
       bindGlobal();
       const saved = loadState();
-      if (saved?.contacts?.length) {
+      if (saved && (saved.academicContacts?.length || saved.employerContacts?.length)) {
         $('#submitter-unit').value = saved.unit || '';
         $('#submitter-name').value = saved.submitter || '';
-        contacts = saved.contacts.map((c) => ({ ...emptyContact(), ...c, id: c.id || uid() }));
+        academicContacts = (saved.academicContacts || []).map((c) => ({
+          ...emptyContact('academic'),
+          ...c,
+          id: c.id || uid(),
+          type: 'academic',
+        }));
+        employerContacts = (saved.employerContacts || []).map((c) => ({
+          ...emptyContact('employer'),
+          ...c,
+          id: c.id || uid(),
+          type: 'employer',
+        }));
         renderAllCards();
-        // Don't auto-jump to step 2/3 after download unless still mid-flow on step 1/2
         if (saved.step === 2) {
           const err = validateAll();
           if (!err) {
@@ -1021,7 +1104,8 @@ import Layout from '../layouts/Layout.astro';
         }
         showStep(1);
       } else {
-        contacts = [emptyContact()];
+        academicContacts = [];
+        employerContacts = [];
         renderAllCards();
         showStep(1);
       }
