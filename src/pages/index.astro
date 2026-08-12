@@ -84,7 +84,6 @@ const base = import.meta.env.BASE_URL;
             <li>• 每位聯絡人僅填<strong>一組</strong> email。</li>
             <li>• 不同聯絡人請使用<strong>不同信箱</strong>；多人共用同一信箱時，QS 僅會寄送一次問卷邀請。</li>
             <li>• 不可含空白，亦不可含 <code class="rounded bg-white px-1">[ ] { } ( ) ; : , &lt; &gt; ' # ~ = +</code> 等符號。</li>
-            <li>• 問卷邀請信由 <code class="rounded bg-white px-1">rankings@qs.com</code> 寄出（§3），建議請聯絡人加入安全寄件者／白名單，並留意垃圾郵件匣。</li>
           </ul>
         </details>
 
@@ -1134,7 +1133,7 @@ const base = import.meta.env.BASE_URL;
     function renderPreview() {
       const unit = trimVal($('#submitter-unit').value);
       const submitter = trimVal($('#submitter-name').value);
-      $('#preview-meta').textContent = `提報單位：${unit}　｜　提報人：${submitter}　｜　學術 ${academicContacts.length} 筆、雇主 ${employerContacts.length} 筆（資料已正規化；Excel 均含中文／English 分頁）`;
+      $('#preview-meta').textContent = `提交單位：${unit}　｜　提交人姓名：${submitter}　｜　學術 ${academicContacts.length} 筆、雇主 ${employerContacts.length} 筆（資料已正規化；Excel 均含中文／English 分頁）`;
 
       const list = $('#preview-list');
       list.innerHTML = '';
@@ -1276,9 +1275,9 @@ const base = import.meta.env.BASE_URL;
 
 謹此提報本單位 QS 世界大學排名學術／雇主問卷聯絡人名單，請查收協助後續作業，謝謝。
 
-■ 提報單位：${unit}
-■ 提報人：${submitter}
-■ 提報內容：${summary}
+■ 提交單位：${unit}
+■ 提交人姓名：${submitter}
+■ 提交內容：${summary}
 ■ 附件檔案${attachmentNote}：
 ${fileLines}
 
