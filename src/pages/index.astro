@@ -193,7 +193,7 @@ const base = import.meta.env.BASE_URL;
         <div class="card-panel text-center shadow-md">
           <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-sage/15 text-2xl text-sage" aria-hidden="true">✓</div>
           <h2 class="text-xl font-bold text-fgu-dark">寄件完成</h2>
-          <p class="mt-2 text-sm text-slate-600">請依下方步驟下載 Excel 並寄信給奕廷即可完成提交。</p>
+          <p class="mt-2 text-sm text-slate-600">請依下方步驟下載 Excel 並寄信給下列收件人即可完成提交。</p>
         </div>
 
         <!-- 下載 -->
@@ -217,7 +217,9 @@ const base = import.meta.env.BASE_URL;
             <h3 class="text-lg font-semibold text-slate-900">回信範本</h3>
           </div>
           <p class="mt-3 text-sm leading-relaxed text-slate-600">
-            下載完成後，請將 Excel 以 Email 寄給<strong>奕廷</strong>（<code class="rounded bg-slate-100 px-1 text-fgu">yitingchen@mail.fgu.edu.tw</code>）。
+            下載完成後，請將 Excel 以 Email 寄給
+            <code class="rounded bg-slate-100 px-1 text-fgu">yitingchen@mail.fgu.edu.tw</code>、
+            <code class="rounded bg-slate-100 px-1 text-fgu">chlchang@mail.fgu.edu.tw</code>。
             若需要，可複製下方<strong>收件人、主旨、內文</strong>作為寄信參考。主旨、內文、附件檔名皆可依需要自行修改。
           </p>
 
@@ -244,7 +246,7 @@ const base = import.meta.env.BASE_URL;
                   複製
                 </button>
               </div>
-              <pre id="copy-to" class="whitespace-pre-wrap break-all font-sans text-sm text-slate-800">yitingchen@mail.fgu.edu.tw</pre>
+              <pre id="copy-to" class="whitespace-pre-wrap break-all font-sans text-sm text-slate-800">yitingchen@mail.fgu.edu.tw; chlchang@mail.fgu.edu.tw</pre>
             </div>
 
             <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
@@ -264,7 +266,7 @@ const base = import.meta.env.BASE_URL;
                   複製
                 </button>
               </div>
-              <pre id="copy-body" class="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-800">奕廷 您好：
+              <pre id="copy-body" class="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-800">您好：
 
 謹此提報本單位 QS 世界大學排名學術／雇主問卷聯絡人名單，請查收協助後續作業，謝謝。
 
@@ -1271,7 +1273,7 @@ const base = import.meta.env.BASE_URL;
               ? '（雇主聯絡人名單含「中文」「English」「合併說明」分頁）'
               : '';
 
-      return `奕廷 您好：
+      return `您好：
 
 謹此提報本單位 QS 世界大學排名學術／雇主問卷聯絡人名單，請查收協助後續作業，謝謝。
 
