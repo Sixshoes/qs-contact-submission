@@ -121,13 +121,13 @@ import Layout from '../layouts/Layout.astro';
                   <th class="whitespace-nowrap px-3 py-3">Title</th>
                   <th class="whitespace-nowrap px-3 py-3">First Name</th>
                   <th class="whitespace-nowrap px-3 py-3">Last Name</th>
-                  <th class="whitespace-nowrap px-3 py-3">Job Title</th>
-                  <th class="whitespace-nowrap px-3 py-3">Dept / Industry</th>
-                  <th class="whitespace-nowrap px-3 py-3">Institution / Company</th>
-                  <th class="whitespace-nowrap px-3 py-3">Country</th>
+                  <th class="whitespace-nowrap px-3 py-3">Job Title / Position</th>
+                  <th class="whitespace-nowrap px-3 py-3">Department / Industry</th>
+                  <th class="whitespace-nowrap px-3 py-3">Institution / Company Name</th>
+                  <th class="whitespace-nowrap px-3 py-3">Country or Territory</th>
                   <th class="whitespace-nowrap px-3 py-3">Email</th>
                   <th class="whitespace-nowrap px-3 py-3">Subject</th>
-                  <th class="whitespace-nowrap px-3 py-3">Phone</th>
+                  <th class="whitespace-nowrap px-3 py-3">Phone (Optional)</th>
                 </tr>
               </thead>
               <tbody id="preview-tbody" class="divide-y divide-slate-100 bg-white"></tbody>
@@ -167,7 +167,7 @@ import Layout from '../layouts/Layout.astro';
             Excel 檔案已成功下載至您的電腦！
           </h2>
           <p class="mt-2 text-sm text-emerald-800">
-            （依據您填寫的類別，最多會下載 2 個檔案）
+            （最多 2 個檔案；雇主檔含「中文」「English」「合併說明」分頁，表頭已設篩選方便合併）
           </p>
         </div>
 
@@ -287,9 +287,9 @@ import Layout from '../layouts/Layout.astro';
           <input type="text" class="field-last-name w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required placeholder="姓氏（不含空白前後）" />
         </div>
 
-        <!-- Job Title -->
+        <!-- Job Title / Position -->
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700">
+          <label class="label-job-title mb-1.5 block text-sm font-medium text-slate-700">
             Job Title <span class="text-red-500">*</span>
           </label>
           <select class="field-job-title w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required>
@@ -310,12 +310,12 @@ import Layout from '../layouts/Layout.astro';
           <input type="text" class="field-industry-other mt-2 hidden w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="請填寫 Other 具體產業（將輸出為 Other (xxx)）" />
         </div>
 
-        <!-- Institution / Company -->
+        <!-- Institution / Company Name -->
         <div>
           <label class="label-institution mb-1.5 block text-sm font-medium text-slate-700">
-            Institution / Company Name <span class="text-red-500">*</span>
+            Institution <span class="text-red-500">*</span>
           </label>
-          <input type="text" class="field-institution w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required placeholder="機構或公司正式名稱" />
+          <input type="text" class="field-institution w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required placeholder="機構正式名稱" />
         </div>
 
         <!-- Country -->
@@ -358,7 +358,10 @@ import Layout from '../layouts/Layout.astro';
   </template>
 
   <script>
-    import * as XLSX from 'xlsx';
+    import {
+      downloadStyledSheet,
+      downloadEmployerStyledWorkbook,
+    } from '../scripts/excel-export.js';
     import {
       TITLES,
       ACADEMIC_JOB_TITLES,
@@ -367,11 +370,17 @@ import Layout from '../layouts/Layout.astro';
       COUNTRIES,
       DEFAULT_COUNTRY,
       SUBJECTS,
-      EXCEL_HEADERS,
-      SOURCE,
+      ACADEMIC_EXCEL_HEADERS,
+      EMPLOYER_EXCEL_HEADERS_EN,
+      EMPLOYER_EXCEL_HEADERS_ZH,
+      SOURCE_EN,
+      SOURCE_ZH,
+      bilingualLabel,
+      optionText,
+      findOption,
     } from '../data/qs-options.js';
 
-    const STORAGE_KEY = 'qs-contact-form-v1';
+    const STORAGE_KEY = 'qs-contact-form-v2';
     const MAX_CONTACTS = 10;
     const UNLOCK_PHRASE = '我確定提交';
     const EMAIL_FORBIDDEN = /[\[\]{}();:,<>'#~=+"¬`!]/;
@@ -416,45 +425,75 @@ import Layout from '../layouts/Layout.astro';
         opt.textContent = placeholder;
         select.appendChild(opt);
       }
-      for (const value of options) {
+      for (const item of options) {
+        const en = typeof item === 'string' ? item : item.en;
+        const label = typeof item === 'string' ? item : bilingualLabel(item);
         const opt = document.createElement('option');
-        opt.value = value;
-        opt.textContent = value;
-        if (value === selected) opt.selected = true;
+        opt.value = en;
+        opt.textContent = label;
+        if (en === selected) opt.selected = true;
         select.appendChild(opt);
       }
+    }
+
+    function optionEns(list) {
+      return list.map((item) => (typeof item === 'string' ? item : item.en));
+    }
+
+    function displayOpt(list, en) {
+      const found = findOption(list, en);
+      return found ? bilingualLabel(found) : trimVal(en);
     }
 
     function trimVal(v) {
       return String(v ?? '').trim();
     }
 
-    function formatOther(baseLabel, otherText) {
+    function formatOther(otherText, lang = 'en') {
       const detail = trimVal(otherText);
-      if (!detail) return baseLabel === 'Other' ? 'Others' : baseLabel;
-      // Guidelines examples: Others (xyz) for job/subject; Other (xxx) also acceptable for industry
-      if (baseLabel === 'Other') return `Others (${detail})`;
-      return `${baseLabel} (${detail})`;
-    }
-
-    function resolveJobTitle(c) {
-      if (c.jobTitle === 'Other') return formatOther('Other', c.jobOther);
-      return trimVal(c.jobTitle);
-    }
-
-    function resolveDeptIndustry(c) {
-      if (c.type === 'academic') return trimVal(c.department);
-      if (c.industry === 'Other') {
-        const detail = trimVal(c.industryOther);
-        return detail ? `Other (${detail})` : 'Other';
+      if (lang === 'zh') {
+        return detail ? `其他 (${detail})` : '其他';
       }
-      return trimVal(c.industry);
+      return detail ? `Others (${detail})` : 'Others';
     }
 
-    function resolveSubject(c) {
+    function formatIndustryOther(otherText, lang = 'en') {
+      const detail = trimVal(otherText);
+      if (lang === 'zh') {
+        return detail ? `其他 (${detail})` : '其他';
+      }
+      return detail ? `Other (${detail})` : 'Other';
+    }
+
+    /** @param {'en'|'zh'} lang */
+    function resolveJobTitle(c, lang = 'en') {
+      const list = c.type === 'academic' ? ACADEMIC_JOB_TITLES : EMPLOYER_JOB_TITLES;
+      if (c.jobTitle === 'Other') return formatOther(c.jobOther, lang);
+      return optionText(list, c.jobTitle, lang) || trimVal(c.jobTitle);
+    }
+
+    /** @param {'en'|'zh'} lang */
+    function resolveDeptIndustry(c, lang = 'en') {
+      if (c.type === 'academic') return trimVal(c.department);
+      if (c.industry === 'Other') return formatIndustryOther(c.industryOther, lang);
+      return optionText(INDUSTRIES, c.industry, lang) || trimVal(c.industry);
+    }
+
+    /** @param {'en'|'zh'} lang */
+    function resolveSubject(c, lang = 'en') {
       if (c.type !== 'academic') return '';
-      if (c.subject === 'Other') return formatOther('Other', c.subjectOther);
-      return trimVal(c.subject);
+      if (c.subject === 'Other') return formatOther(c.subjectOther, lang);
+      return optionText(SUBJECTS, c.subject, lang) || trimVal(c.subject);
+    }
+
+    /** @param {'en'|'zh'} lang */
+    function resolveTitle(c, lang = 'en') {
+      return optionText(TITLES, c.title, lang) || trimVal(c.title);
+    }
+
+    /** @param {'en'|'zh'} lang */
+    function resolveCountry(c, lang = 'en') {
+      return optionText(COUNTRIES, c.country, lang) || trimVal(c.country);
     }
 
     function saveState() {
@@ -515,11 +554,14 @@ import Layout from '../layouts/Layout.astro';
 
     function applyTypeUI(card, type) {
       const label = $('.label-dept-industry', card);
+      const labelJob = $('.label-job-title', card);
+      const labelInst = $('.label-institution', card);
       const dept = $('.field-department', card);
       const industry = $('.field-industry', card);
       const industryOther = $('.field-industry-other', card);
       const subjectWrap = $('.subject-wrap', card);
       const jobSelect = $('.field-job-title', card);
+      const instInput = $('.field-institution', card);
       const prevJob = jobSelect.value;
 
       fillSelect(jobSelect, type === 'academic' ? ACADEMIC_JOB_TITLES : EMPLOYER_JOB_TITLES, {
@@ -527,18 +569,25 @@ import Layout from '../layouts/Layout.astro';
         selected: prevJob,
       });
       // If previous value not in new list, clear
-      if (![...(type === 'academic' ? ACADEMIC_JOB_TITLES : EMPLOYER_JOB_TITLES)].includes(jobSelect.value)) {
+      const jobEns = optionEns(type === 'academic' ? ACADEMIC_JOB_TITLES : EMPLOYER_JOB_TITLES);
+      if (!jobEns.includes(jobSelect.value)) {
         jobSelect.value = '';
       }
 
       if (type === 'academic') {
+        labelJob.innerHTML = 'Job Title <span class="text-red-500">*</span>';
         label.innerHTML = 'Department <span class="text-red-500">*</span>';
+        labelInst.innerHTML = 'Institution <span class="text-red-500">*</span>';
+        instInput.placeholder = '機構正式名稱（聯絡人所屬大學）';
         dept.classList.remove('hidden');
         industry.classList.add('hidden');
         industryOther.classList.add('hidden');
         subjectWrap.classList.remove('hidden');
       } else {
+        labelJob.innerHTML = 'Position <span class="text-red-500">*</span>';
         label.innerHTML = 'Industry <span class="text-red-500">*</span>';
+        labelInst.innerHTML = 'Company Name <span class="text-red-500">*</span>';
+        instInput.placeholder = '公司正式名稱';
         dept.classList.add('hidden');
         industry.classList.remove('hidden');
         subjectWrap.classList.add('hidden');
@@ -695,7 +744,7 @@ import Layout from '../layouts/Layout.astro';
         if (!trimVal(c.title)) return `聯絡人 #${n}：請選擇 Title。`;
         if (!trimVal(c.firstName)) return `聯絡人 #${n}：請填寫 First Name。`;
         if (!trimVal(c.lastName)) return `聯絡人 #${n}：請填寫 Last Name。`;
-        if (!trimVal(c.jobTitle)) return `聯絡人 #${n}：請選擇 Job Title。`;
+        if (!trimVal(c.jobTitle)) return `聯絡人 #${n}：請選擇 ${c.type === 'academic' ? 'Job Title' : 'Position'}。`;
         if (c.jobTitle === 'Other' && !trimVal(c.jobOther)) return `聯絡人 #${n}：請填寫 Other 職稱說明。`;
         if (c.type === 'academic') {
           if (!trimVal(c.department)) return `聯絡人 #${n}：請填寫 Department。`;
@@ -705,7 +754,9 @@ import Layout from '../layouts/Layout.astro';
           if (!trimVal(c.industry)) return `聯絡人 #${n}：請選擇 Industry。`;
           if (c.industry === 'Other' && !trimVal(c.industryOther)) return `聯絡人 #${n}：請填寫 Other 產業說明。`;
         }
-        if (!trimVal(c.institution)) return `聯絡人 #${n}：請填寫 Institution / Company Name。`;
+        if (!trimVal(c.institution)) {
+          return `聯絡人 #${n}：請填寫 ${c.type === 'academic' ? 'Institution' : 'Company Name'}。`;
+        }
         if (!trimVal(c.country)) return `聯絡人 #${n}：請選擇 Country or Territory。`;
         const emailErr = validateEmail(c.email);
         if (emailErr) return `聯絡人 #${n}：${emailErr}。`;
@@ -713,18 +764,34 @@ import Layout from '../layouts/Layout.astro';
       return null;
     }
 
-    function toExcelRow(c) {
+    function toAcademicExcelRow(c) {
       return [
-        SOURCE,
-        trimVal(c.title),
+        SOURCE_EN,
+        resolveTitle(c, 'en'),
         trimVal(c.firstName),
         trimVal(c.lastName),
-        resolveJobTitle(c),
-        resolveDeptIndustry(c),
+        resolveJobTitle(c, 'en'),
+        trimVal(c.department),
         trimVal(c.institution),
-        trimVal(c.country),
+        resolveCountry(c, 'en'),
         trimVal(c.email),
-        resolveSubject(c),
+        resolveSubject(c, 'en'),
+        trimVal(c.phone),
+      ];
+    }
+
+    /** @param {'en'|'zh'} lang */
+    function toEmployerExcelRow(c, lang = 'en') {
+      return [
+        lang === 'zh' ? SOURCE_ZH : SOURCE_EN,
+        resolveTitle(c, lang),
+        trimVal(c.firstName),
+        trimVal(c.lastName),
+        resolveJobTitle(c, lang),
+        resolveDeptIndustry(c, lang),
+        trimVal(c.institution),
+        resolveCountry(c, lang),
+        trimVal(c.email),
         trimVal(c.phone),
       ];
     }
@@ -734,7 +801,7 @@ import Layout from '../layouts/Layout.astro';
       const submitter = trimVal($('#submitter-name').value);
       const academicCount = contacts.filter((c) => c.type === 'academic').length;
       const employerCount = contacts.filter((c) => c.type === 'employer').length;
-      $('#preview-meta').textContent = `提報單位：${unit}　｜　提報人：${submitter}　｜　學術 ${academicCount} 筆、雇主 ${employerCount} 筆`;
+      $('#preview-meta').textContent = `提報單位：${unit}　｜　提報人：${submitter}　｜　學術 ${academicCount} 筆、雇主 ${employerCount} 筆（雇主檔將含中文／English 兩個分頁）`;
 
       const tbody = $('#preview-tbody');
       tbody.innerHTML = '';
@@ -745,17 +812,26 @@ import Layout from '../layouts/Layout.astro';
           c.type === 'academic'
             ? '<span class="inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800">學術</span>'
             : '<span class="inline-flex rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-800">雇主</span>';
+        const jobList = c.type === 'academic' ? ACADEMIC_JOB_TITLES : EMPLOYER_JOB_TITLES;
         const cells = [
           typeBadge,
-          trimVal(c.title),
+          displayOpt(TITLES, c.title),
           trimVal(c.firstName),
           trimVal(c.lastName),
-          resolveJobTitle(c),
-          resolveDeptIndustry(c),
+          c.jobTitle === 'Other' ? formatOther(c.jobOther, 'zh') + ' / ' + formatOther(c.jobOther, 'en') : displayOpt(jobList, c.jobTitle),
+          c.type === 'academic'
+            ? trimVal(c.department)
+            : c.industry === 'Other'
+              ? formatIndustryOther(c.industryOther, 'zh') + ' / ' + formatIndustryOther(c.industryOther, 'en')
+              : displayOpt(INDUSTRIES, c.industry),
           trimVal(c.institution),
-          trimVal(c.country),
+          displayOpt(COUNTRIES, c.country),
           trimVal(c.email),
-          c.type === 'academic' ? resolveSubject(c) : '—',
+          c.type === 'academic'
+            ? c.subject === 'Other'
+              ? formatOther(c.subjectOther, 'zh') + ' / ' + formatOther(c.subjectOther, 'en')
+              : displayOpt(SUBJECTS, c.subject)
+            : '—',
           trimVal(c.phone) || '—',
         ];
         cells.forEach((html, idx) => {
@@ -776,31 +852,37 @@ import Layout from '../layouts/Layout.astro';
       return trimVal(name).replace(/[\\/:*?"<>|]/g, '_').slice(0, 80) || '未命名單位';
     }
 
-    function downloadWorkbook(rows, filename) {
-      const aoa = [EXCEL_HEADERS, ...rows];
-      const ws = XLSX.utils.aoa_to_sheet(aoa);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Contacts');
-      XLSX.writeFile(wb, filename);
-    }
-
-    function handleDownload() {
+    async function handleDownload() {
       const unit = safeFilePart($('#submitter-unit').value);
-      const academicList = contacts.filter((c) => c.type === 'academic').map(toExcelRow);
-      const employerList = contacts.filter((c) => c.type === 'employer').map(toExcelRow);
+      const academicContacts = contacts.filter((c) => c.type === 'academic');
+      const employerContacts = contacts.filter((c) => c.type === 'employer');
+      const academicList = academicContacts.map(toAcademicExcelRow);
 
-      if (academicList.length) {
-        downloadWorkbook(academicList, `QS_學術聯絡人名單_${unit}.xlsx`);
+      try {
+        if (academicList.length) {
+          await downloadStyledSheet({
+            headers: ACADEMIC_EXCEL_HEADERS,
+            rows: academicList,
+            filename: `QS_學術聯絡人名單_${unit}.xlsx`,
+            sheetName: 'Academic',
+          });
+        }
+        if (employerContacts.length) {
+          // slight delay so browsers allow a second download
+          await new Promise((r) => setTimeout(r, academicList.length ? 400 : 0));
+          await downloadEmployerStyledWorkbook({
+            headersZh: EMPLOYER_EXCEL_HEADERS_ZH,
+            headersEn: EMPLOYER_EXCEL_HEADERS_EN,
+            rowsZh: employerContacts.map((c) => toEmployerExcelRow(c, 'zh')),
+            rowsEn: employerContacts.map((c) => toEmployerExcelRow(c, 'en')),
+            filename: `QS_雇主聯絡人名單_${unit}.xlsx`,
+          });
+        }
+        goToStep3();
+      } catch (err) {
+        console.error(err);
+        alert('下載 Excel 時發生錯誤，請再試一次。');
       }
-      if (employerList.length) {
-        // slight delay so browsers allow a second download
-        setTimeout(() => {
-          downloadWorkbook(employerList, `QS_雇主聯絡人名單_${unit}.xlsx`);
-          goToStep3();
-        }, academicList.length ? 400 : 0);
-        return;
-      }
-      goToStep3();
     }
 
     function goToStep3() {
