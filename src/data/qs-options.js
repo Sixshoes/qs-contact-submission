@@ -33,6 +33,7 @@ export const TITLES = [
   { en: 'Dr', zh: '博士' },
   { en: 'Professor', zh: '教授' },
   { en: 'Prof', zh: '教授' },
+  { en: 'Ven', zh: '法師' },
   { en: 'Mx', zh: '不特定稱謂' },
   { en: 'Other', zh: '其他' },
 ];
