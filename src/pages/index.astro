@@ -309,7 +309,10 @@ const base = import.meta.env.BASE_URL;
           </p>
         </div>
 
-        <div class="flex justify-center">
+        <div class="flex flex-wrap justify-center gap-3">
+          <button type="button" id="btn-back-to-form" class="btn-primary px-6 py-2.5 font-semibold">
+            回到原填寫內容
+          </button>
           <button type="button" id="btn-reset" class="btn-secondary px-6 py-2.5 font-semibold">
             重新填寫一份新表單
           </button>
@@ -1406,6 +1409,7 @@ ${unit}
     function bindClearModal() {
       $('#btn-open-clear').addEventListener('click', openClearModal);
       $('#btn-reset').addEventListener('click', openClearModal);
+      $('#btn-back-to-form').addEventListener('click', () => showStep(1));
       $('#btn-clear-cancel').addEventListener('click', closeClearModal);
       $('#clear-modal-backdrop').addEventListener('click', closeClearModal);
 
