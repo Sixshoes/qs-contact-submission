@@ -968,8 +968,15 @@ import Layout from '../layouts/Layout.astro';
       return trimVal(name).replace(/[\\/:*?"<>|]/g, '_').slice(0, 80) || '未命名單位';
     }
 
+    function fileTimestamp() {
+      const d = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+    }
+
     async function handleDownload() {
       const unit = safeFilePart($('#submitter-unit').value);
+      const ts = fileTimestamp();
       const academicList = academicContacts.map(toAcademicExcelRow);
 
       try {
@@ -977,7 +984,7 @@ import Layout from '../layouts/Layout.astro';
           await downloadStyledSheet({
             headers: ACADEMIC_EXCEL_HEADERS,
             rows: academicList,
-            filename: `QS_學術聯絡人名單_${unit}.xlsx`,
+            filename: `QS_學術聯絡人名單_${unit}_${ts}.xlsx`,
             sheetName: 'Academic',
           });
         }
@@ -988,7 +995,7 @@ import Layout from '../layouts/Layout.astro';
             headersEn: EMPLOYER_EXCEL_HEADERS_EN,
             rowsZh: employerContacts.map((c) => toEmployerExcelRow(c, 'zh')),
             rowsEn: employerContacts.map((c) => toEmployerExcelRow(c, 'en')),
-            filename: `QS_雇主聯絡人名單_${unit}.xlsx`,
+            filename: `QS_雇主聯絡人名單_${unit}_${ts}.xlsx`,
           });
         }
         goToStep3();
