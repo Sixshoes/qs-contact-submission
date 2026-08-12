@@ -1,54 +1,180 @@
 @import "tailwindcss";
 
 @theme {
+  /* 佛光大學主色 */
   --color-fgu: #a6245c;
   --color-fgu-dark: #8a1e4c;
+  --color-fgu-deep: #6b1639;
   --color-fgu-light: #fdf2f7;
+  --color-fgu-muted: #f5e6ed;
+
+  /* QS 橘（雇主區塊，暖色系不衝突） */
   --color-qs: #f2a900;
   --color-qs-dark: #d99400;
   --color-qs-light: #fff8e6;
+
+  /* 輔助色：與佛光紅協調 */
+  --color-sage: #5a8a7a;
+  --color-sage-light: #e8f3ef;
+  --color-cream: #faf7f2;
+  --color-warm-gold: #c9a227;
+  --color-warm-gold-light: #fbf6e8;
+
   --font-sans: "Segoe UI", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
 }
 
 body {
   font-family: var(--font-sans);
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, color-mix(in srgb, var(--color-fgu) 8%, transparent), transparent),
-    radial-gradient(ellipse 60% 40% at 100% 0%, color-mix(in srgb, var(--color-qs) 10%, transparent), transparent),
-    #f8fafc;
+  background-color: var(--color-cream);
+  background-image:
+    radial-gradient(ellipse 70% 45% at 10% 0%, color-mix(in srgb, var(--color-fgu) 7%, transparent), transparent),
+    radial-gradient(ellipse 50% 35% at 95% 5%, color-mix(in srgb, var(--color-sage) 10%, transparent), transparent),
+    radial-gradient(ellipse 60% 40% at 50% 100%, color-mix(in srgb, var(--color-fgu) 4%, transparent), transparent),
+    linear-gradient(180deg, var(--color-cream) 0%, #f5f0eb 100%);
+  background-attachment: fixed;
+}
+
+/* 頁面裝飾浮點（佛光紅 + 鼠尾草綠） */
+.page-deco {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.page-deco::before,
+.page-deco::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.35;
+}
+
+.page-deco::before {
+  width: 280px;
+  height: 280px;
+  top: 120px;
+  left: -80px;
+  background: color-mix(in srgb, var(--color-fgu) 25%, transparent);
+}
+
+.page-deco::after {
+  width: 220px;
+  height: 220px;
+  bottom: 80px;
+  right: -60px;
+  background: color-mix(in srgb, var(--color-sage) 30%, transparent);
+}
+
+.page-content {
+  position: relative;
+  z-index: 1;
 }
 
 .input-field {
-  @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm transition;
-  @apply focus:border-fgu focus:outline-none focus:ring-2 focus:ring-fgu/20;
+  @apply w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm transition;
+  @apply focus:border-fgu focus:outline-none focus:ring-2 focus:ring-fgu/15;
 }
 
 .card-panel {
-  @apply rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm;
+  @apply relative overflow-hidden rounded-2xl border border-fgu/10 bg-white/90 p-5 shadow-sm backdrop-blur-sm;
+}
+
+.card-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--color-fgu), var(--color-sage));
+  border-radius: 4px 0 0 4px;
 }
 
 .btn-primary {
-  @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-fgu px-4 py-2.5 text-sm font-semibold text-white shadow-md transition;
-  @apply hover:bg-fgu-dark disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-md transition;
+  background: linear-gradient(135deg, var(--color-fgu) 0%, var(--color-fgu-dark) 100%);
+  @apply hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50;
 }
 
 .btn-qs {
-  @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-qs px-4 py-2.5 text-sm font-semibold text-white shadow-md transition;
-  @apply hover:bg-qs-dark disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-md transition;
+  background: linear-gradient(135deg, var(--color-qs) 0%, var(--color-warm-gold) 100%);
+  @apply hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50;
 }
 
 .btn-secondary {
-  @apply rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50;
+  @apply rounded-lg border border-sage/30 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition;
+  @apply hover:border-fgu/30 hover:bg-fgu-light/50;
 }
 
 .section-academic {
-  @apply rounded-2xl border border-fgu/20 bg-gradient-to-br from-fgu-light to-white p-5 shadow-sm;
+  @apply relative overflow-hidden rounded-2xl border border-fgu/15 p-5 shadow-sm;
+  background: linear-gradient(135deg, var(--color-fgu-light) 0%, white 55%, var(--color-sage-light) 100%);
+}
+
+.section-academic::after {
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-fgu) 8%, transparent);
+  pointer-events: none;
 }
 
 .section-employer {
-  @apply rounded-2xl border border-qs/30 bg-gradient-to-br from-qs-light to-white p-5 shadow-sm;
+  @apply relative overflow-hidden rounded-2xl border border-warm-gold/25 p-5 shadow-sm;
+  background: linear-gradient(135deg, var(--color-qs-light) 0%, white 50%, var(--color-warm-gold-light) 100%);
+}
+
+.section-employer::after {
+  content: "";
+  position: absolute;
+  bottom: -30px;
+  left: -30px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-qs) 10%, transparent);
+  pointer-events: none;
 }
 
 .contact-card {
-  @apply rounded-xl border bg-white p-5 shadow-md transition hover:shadow-lg;
+  @apply relative rounded-xl border bg-white p-5 shadow-md transition hover:shadow-lg;
+}
+
+.contact-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 1rem;
+  right: 1rem;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  opacity: 0.6;
+}
+
+.contact-card.academic-card::before {
+  background: linear-gradient(90deg, var(--color-fgu), var(--color-sage));
+}
+
+.contact-card.employer-card::before {
+  background: linear-gradient(90deg, var(--color-qs), var(--color-warm-gold));
+}
+
+.step-connector {
+  background: linear-gradient(90deg, var(--color-fgu-muted), var(--color-sage-light), var(--color-fgu-muted));
+}
+
+.header-accent-line {
+  background: linear-gradient(90deg, var(--color-qs), var(--color-warm-gold), var(--color-sage));
+}
+
+.footer-bar {
+  background: linear-gradient(90deg, var(--color-fgu-deep), var(--color-fgu), var(--color-sage));
 }

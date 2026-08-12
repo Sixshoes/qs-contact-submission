@@ -4,11 +4,13 @@ const base = import.meta.env.BASE_URL;
 ---
 
 <Layout>
-  <div class="min-h-screen">
+  <div class="page-deco" aria-hidden="true"></div>
+  <div class="page-content min-h-screen">
     <!-- Header -->
-    <header class="relative overflow-hidden border-b border-fgu/20 bg-gradient-to-br from-fgu via-[#8a1e4c] to-[#6b1639] text-white shadow-lg">
-      <div class="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-qs/20 blur-3xl" aria-hidden="true"></div>
-      <div class="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-white/5 blur-2xl" aria-hidden="true"></div>
+    <header class="relative overflow-hidden border-b border-fgu/30 bg-gradient-to-br from-fgu via-fgu-dark to-fgu-deep text-white shadow-lg">
+      <div class="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-qs/15 blur-3xl" aria-hidden="true"></div>
+      <div class="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-sage/20 blur-2xl" aria-hidden="true"></div>
+      <div class="pointer-events-none absolute right-1/4 top-1/2 h-32 w-32 -translate-y-1/2 rounded-full bg-warm-gold/10 blur-2xl" aria-hidden="true"></div>
       <div class="relative mx-auto max-w-5xl px-4 py-8 sm:px-6">
         <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div class="flex items-center gap-4">
@@ -40,7 +42,11 @@ const base = import.meta.env.BASE_URL;
         <p class="mt-5 max-w-3xl text-sm leading-relaxed text-white/85 sm:text-base">
           依 QS Global Academic and Employer Survey Guidelines 填寫聯絡人資料，系統將自動拆分為學術／雇主 Excel 檔供上傳。
         </p>
-        <div class="mt-4 h-1 w-24 rounded-full bg-qs shadow-sm" aria-hidden="true"></div>
+        <div class="mt-4 flex items-center gap-2" aria-hidden="true">
+          <div class="header-accent-line h-1 w-20 rounded-full shadow-sm"></div>
+          <div class="h-1.5 w-1.5 rounded-full bg-sage-light/80"></div>
+          <div class="h-1 w-8 rounded-full bg-white/30"></div>
+        </div>
       </div>
     </header>
 
@@ -52,12 +58,12 @@ const base = import.meta.env.BASE_URL;
             <span class="step-badge flex h-9 w-9 items-center justify-center rounded-full bg-fgu text-sm font-bold text-white shadow-md">1</span>
             <span>填寫</span>
           </li>
-          <li class="hidden h-px w-8 bg-slate-200 sm:block" aria-hidden="true"></li>
+          <li class="step-connector hidden h-px w-10 sm:block" aria-hidden="true"></li>
           <li id="step-indicator-2" class="flex items-center gap-2 text-slate-400">
             <span class="step-badge flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600">2</span>
             <span>確認下載</span>
           </li>
-          <li class="hidden h-px w-8 bg-slate-200 sm:block" aria-hidden="true"></li>
+          <li class="step-connector hidden h-px w-10 sm:block" aria-hidden="true"></li>
           <li id="step-indicator-3" class="flex items-center gap-2 text-slate-400">
             <span class="step-badge flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600">3</span>
             <span>寄信完成</span>
@@ -69,7 +75,7 @@ const base = import.meta.env.BASE_URL;
       <section id="step-1" class="space-y-6">
         <div class="card-panel sticky top-0 z-20 space-y-4 backdrop-blur supports-[backdrop-filter]:bg-white/95">
           <div class="flex items-center gap-2">
-            <span class="inline-block h-5 w-1 rounded-full bg-fgu" aria-hidden="true"></span>
+            <span class="inline-block h-5 w-1 rounded-full bg-gradient-to-b from-fgu to-sage" aria-hidden="true"></span>
             <h2 class="text-lg font-semibold text-slate-900">提報資訊（全域）</h2>
           </div>
           <div class="grid gap-4 sm:grid-cols-2">
@@ -92,7 +98,7 @@ const base = import.meta.env.BASE_URL;
         <section class="section-academic">
           <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-start gap-3">
-              <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-fgu/10 text-sm font-bold text-fgu">A</span>
+              <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-fgu/15 to-sage-light text-sm font-bold text-fgu">A</span>
               <div>
                 <h2 class="text-lg font-semibold text-fgu-dark">學術聯絡人 (Academic)</h2>
                 <p class="mt-1 text-sm text-slate-600">含 Subject 等 11 個 QS 欄位，最多 10 筆</p>
@@ -115,7 +121,7 @@ const base = import.meta.env.BASE_URL;
         <section class="section-employer">
           <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-start gap-3">
-              <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-qs/15 text-sm font-bold text-qs-dark">E</span>
+              <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-qs/20 to-warm-gold-light text-sm font-bold text-amber-900">E</span>
               <div>
                 <h2 class="text-lg font-semibold text-amber-900">雇主聯絡人 (Employer)</h2>
                 <p class="mt-1 text-sm text-slate-600">含 Position、Industry 等 10 個 QS 欄位，最多 10 筆</p>
@@ -154,8 +160,8 @@ const base = import.meta.env.BASE_URL;
           <div id="preview-list" class="space-y-4"></div>
         </div>
 
-        <div class="rounded-2xl border border-qs/40 bg-qs-light p-5 shadow-sm">
-          <label for="confirm-unlock" class="mb-2 block text-sm font-medium text-amber-950">
+        <div class="rounded-2xl border border-sage/25 bg-gradient-to-br from-sage-light/80 to-white p-5 shadow-sm">
+          <label for="confirm-unlock" class="mb-2 block text-sm font-medium text-fgu-dark">
             防呆解鎖：請輸入「我確定提交」以解鎖下載按鈕
           </label>
           <input id="confirm-unlock" type="text" autocomplete="off" placeholder="我確定提交" class="input-field max-w-md" />
@@ -169,10 +175,10 @@ const base = import.meta.env.BASE_URL;
 
       <!-- ========== STEP 3 ========== -->
       <section id="step-3" class="hidden space-y-6">
-        <div class="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-8 text-center shadow-md">
-          <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-3xl" aria-hidden="true">✓</div>
-          <h2 class="text-xl font-bold text-emerald-900">Excel 檔案已成功下載至您的電腦！</h2>
-          <p class="mt-2 text-sm text-emerald-800">
+        <div class="rounded-2xl border border-sage/30 bg-gradient-to-br from-sage-light to-white p-8 text-center shadow-md">
+          <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-sage/15 text-3xl text-sage" aria-hidden="true">✓</div>
+          <h2 class="text-xl font-bold text-fgu-dark">Excel 檔案已成功下載至您的電腦！</h2>
+          <p class="mt-2 text-sm text-slate-600">
             （最多 2 個檔案；雇主檔含「中文」「English」「合併說明」分頁，表頭已設篩選方便合併）
           </p>
         </div>
@@ -227,8 +233,9 @@ const base = import.meta.env.BASE_URL;
       </section>
     </main>
 
-    <footer class="mt-8 border-t border-slate-200 bg-white/80 py-8">
-      <div class="mx-auto flex max-w-5xl flex-col items-center gap-4 px-4 sm:flex-row sm:justify-between sm:px-6">
+    <footer class="relative mt-8 border-t border-fgu/10 bg-white/90 py-8 backdrop-blur-sm">
+      <div class="footer-bar absolute inset-x-0 top-0 h-1" aria-hidden="true"></div>
+      <div class="mx-auto flex max-w-5xl flex-col items-center gap-4 px-4 pt-2 sm:flex-row sm:justify-between sm:px-6">
         <div class="flex items-center gap-3">
           <img src={`${base}images/fgu-logo.png`} alt="" class="h-10 w-10 rounded-full" width="40" height="40" aria-hidden="true" />
           <p class="text-xs text-slate-500">Fo Guang University · QS Contact Submission</p>
@@ -564,8 +571,8 @@ const base = import.meta.env.BASE_URL;
           el.className = 'flex items-center gap-2 font-semibold text-fgu';
           badge.className = 'step-badge flex h-9 w-9 items-center justify-center rounded-full bg-fgu text-sm font-bold text-white shadow-md';
         } else if (i < step) {
-          el.className = 'flex items-center gap-2 font-medium text-emerald-700';
-          badge.className = 'step-badge flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500 text-sm font-bold text-white shadow-sm';
+          el.className = 'flex items-center gap-2 font-medium text-sage';
+          badge.className = 'step-badge flex h-9 w-9 items-center justify-center rounded-full bg-sage text-sm font-bold text-white shadow-sm';
         } else {
           el.className = 'flex items-center gap-2 text-slate-400';
           badge.className = 'step-badge flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600';
@@ -671,10 +678,11 @@ const base = import.meta.env.BASE_URL;
       const node = tpl.content.firstElementChild.cloneNode(true);
       node.dataset.contactId = contact.id;
       node.dataset.contactType = type;
+      node.classList.add(type === 'academic' ? 'academic-card' : 'employer-card');
       if (type === 'academic') {
-        node.classList.add('border-fgu/25', 'ring-1', 'ring-fgu/5');
+        node.classList.add('border-fgu/20');
       } else {
-        node.classList.add('border-qs/30', 'ring-1', 'ring-qs/10');
+        node.classList.add('border-warm-gold/25');
       }
 
       const typeLabel = type === 'academic' ? '學術' : '雇主';
