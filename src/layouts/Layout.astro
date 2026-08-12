@@ -5,7 +5,7 @@ interface Props {
   title?: string;
 }
 
-const { title = 'QS 學術與雇主問卷聯絡人提報系統' } = Astro.props;
+const { title = 'QS 學術與雇主問卷聯絡人提交系統' } = Astro.props;
 const base = import.meta.env.BASE_URL;
 ---
 
@@ -14,7 +14,7 @@ const base = import.meta.env.BASE_URL;
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="佛光大學 QS Academic & Employer Survey 聯絡人提報系統" />
+    <meta name="description" content="佛光大學 QS Academic & Employer Survey 聯絡人提交系統" />
     <link rel="icon" type="image/png" href={`${base}images/fgu-logo.png`} />
     <title>{title}</title>
   </head>
