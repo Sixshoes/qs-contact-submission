@@ -642,9 +642,15 @@ const base = import.meta.env.BASE_URL;
       return optionText(SUBJECTS, c.subject, lang) || trimVal(c.subject);
     }
 
+    /** QS 要求法師稱謂以 Other(Ven) 上傳；下拉仍顯示法師（Ven） */
+    function formatVenTitle(lang = 'en') {
+      return lang === 'zh' ? '其他(Ven)' : 'Other(Ven)';
+    }
+
     /** @param {'en'|'zh'} lang */
     function resolveTitle(c, lang = 'en') {
       if (c.title === 'Other') return formatSimpleOther(c.titleOther, lang);
+      if (c.title === 'Ven') return formatVenTitle(lang);
       return optionText(TITLES, c.title, lang) || trimVal(c.title);
     }
 
@@ -1090,7 +1096,9 @@ const base = import.meta.env.BASE_URL;
       const titleText =
         c.title === 'Other'
           ? formatSimpleOther(c.titleOther, 'zh') + ' / ' + formatSimpleOther(c.titleOther, 'en')
-          : displayOpt(TITLES, c.title);
+          : c.title === 'Ven'
+            ? formatVenTitle('zh') + ' / ' + formatVenTitle('en')
+            : displayOpt(TITLES, c.title);
       const jobText =
         c.jobTitle === 'Other'
           ? formatOther(c.jobOther, 'zh') + ' / ' + formatOther(c.jobOther, 'en')
