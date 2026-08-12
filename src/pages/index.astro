@@ -1,0 +1,903 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout>
+  <div class="min-h-screen">
+    <!-- Header -->
+    <header class="border-b border-slate-200 bg-white shadow-sm">
+      <div class="mx-auto max-w-5xl px-4 py-6 sm:px-6">
+        <p class="text-sm font-medium text-blue-600">佛光大學 · Fo Guang University</p>
+        <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+          QS 學術與雇主問卷聯絡人提報系統
+        </h1>
+        <p class="mt-2 max-w-2xl text-sm text-slate-500">
+          依 QS Global Academic and Employer Survey Guidelines 填寫聯絡人資料，系統將自動拆分為學術／雇主 Excel 檔供上傳。
+        </p>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      <!-- Step indicator -->
+      <nav aria-label="進度" class="mb-8">
+        <ol class="flex flex-wrap items-center gap-2 text-sm sm:gap-4">
+          <li id="step-indicator-1" class="flex items-center gap-2 font-semibold text-blue-700">
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white">1</span>
+            <span>填寫</span>
+          </li>
+          <li class="hidden text-slate-300 sm:block" aria-hidden="true">→</li>
+          <li id="step-indicator-2" class="flex items-center gap-2 text-slate-400">
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-slate-600">2</span>
+            <span>確認下載</span>
+          </li>
+          <li class="hidden text-slate-300 sm:block" aria-hidden="true">→</li>
+          <li id="step-indicator-3" class="flex items-center gap-2 text-slate-400">
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-slate-600">3</span>
+            <span>寄信完成</span>
+          </li>
+        </ol>
+      </nav>
+
+      <!-- ========== STEP 1 ========== -->
+      <section id="step-1" class="space-y-6">
+        <div class="sticky top-0 z-20 space-y-4 rounded-xl border border-slate-200 bg-white/95 p-5 shadow-md backdrop-blur">
+          <h2 class="text-lg font-semibold text-slate-900">提報資訊（全域）</h2>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label for="submitter-unit" class="mb-1.5 block text-sm font-medium text-slate-700">
+                提報單位 (Department / Unit) <span class="text-red-500">*</span>
+              </label>
+              <input
+                id="submitter-unit"
+                type="text"
+                required
+                placeholder="例如：歷史學系、永續辦公室、國際處..."
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              />
+            </div>
+            <div>
+              <label for="submitter-name" class="mb-1.5 block text-sm font-medium text-slate-700">
+                提報人姓名 (Submitter Name) <span class="text-red-500">*</span>
+              </label>
+              <input
+                id="submitter-name"
+                type="text"
+                required
+                placeholder="請輸入您的姓名"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between gap-3">
+          <h2 class="text-lg font-semibold text-slate-900">
+            聯絡人名單
+            <span id="contact-count" class="ml-2 text-sm font-normal text-slate-500">(0 / 10)</span>
+          </h2>
+          <button
+            type="button"
+            id="btn-add-contact"
+            class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <span aria-hidden="true">＋</span> 新增聯絡人
+          </button>
+        </div>
+
+        <div id="contacts-container" class="space-y-5"></div>
+
+        <p id="form-error" class="hidden rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert"></p>
+
+        <div class="flex justify-end pt-2">
+          <button
+            type="button"
+            id="btn-preview"
+            class="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+          >
+            預覽與確認名單
+          </button>
+        </div>
+      </section>
+
+      <!-- ========== STEP 2 ========== -->
+      <section id="step-2" class="hidden space-y-6">
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-md">
+          <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-lg font-semibold text-slate-900">確認提報名單</h2>
+            <button
+              type="button"
+              id="btn-back"
+              class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+            >
+              ← 返回修改
+            </button>
+          </div>
+          <p id="preview-meta" class="mb-4 text-sm text-slate-500"></p>
+          <div class="overflow-x-auto rounded-lg border border-slate-200">
+            <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+              <thead class="bg-slate-100 text-xs font-semibold uppercase tracking-wide text-slate-600">
+                <tr>
+                  <th class="whitespace-nowrap px-3 py-3">類別</th>
+                  <th class="whitespace-nowrap px-3 py-3">Title</th>
+                  <th class="whitespace-nowrap px-3 py-3">First Name</th>
+                  <th class="whitespace-nowrap px-3 py-3">Last Name</th>
+                  <th class="whitespace-nowrap px-3 py-3">Job Title</th>
+                  <th class="whitespace-nowrap px-3 py-3">Dept / Industry</th>
+                  <th class="whitespace-nowrap px-3 py-3">Institution / Company</th>
+                  <th class="whitespace-nowrap px-3 py-3">Country</th>
+                  <th class="whitespace-nowrap px-3 py-3">Email</th>
+                  <th class="whitespace-nowrap px-3 py-3">Subject</th>
+                  <th class="whitespace-nowrap px-3 py-3">Phone</th>
+                </tr>
+              </thead>
+              <tbody id="preview-tbody" class="divide-y divide-slate-100 bg-white"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+          <label for="confirm-unlock" class="mb-2 block text-sm font-medium text-amber-900">
+            防呆解鎖：請輸入「我確定提交」以解鎖下載按鈕
+          </label>
+          <input
+            id="confirm-unlock"
+            type="text"
+            autocomplete="off"
+            placeholder="我確定提交"
+            class="w-full max-w-md rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+          />
+          <div class="mt-4">
+            <button
+              type="button"
+              id="btn-download"
+              disabled
+              class="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
+            >
+              拆分下載 Excel（學術／雇主）
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== STEP 3 ========== -->
+      <section id="step-3" class="hidden space-y-6">
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-6 text-center shadow-md">
+          <p class="text-4xl" aria-hidden="true">✅</p>
+          <h2 class="mt-3 text-xl font-bold text-emerald-900">
+            Excel 檔案已成功下載至您的電腦！
+          </h2>
+          <p class="mt-2 text-sm text-emerald-800">
+            （依據您填寫的類別，最多會下載 2 個檔案）
+          </p>
+        </div>
+
+        <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-md">
+          <h3 class="text-lg font-semibold text-slate-900">Mail2000 寄信指示</h3>
+          <p class="mt-2 text-sm leading-relaxed text-slate-600">
+            請自行登入 Mail2000，並將剛才下載的 Excel 檔作為附件寄給我們。下方提供收件人、主旨與內文，可一鍵複製。
+          </p>
+
+          <div class="mt-6 space-y-4">
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+              <div class="mb-2 flex items-center justify-between gap-2">
+                <span class="text-sm font-medium text-slate-700">收件人</span>
+                <button type="button" data-copy-target="copy-to" class="copy-btn rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100">
+                  複製
+                </button>
+              </div>
+              <pre id="copy-to" class="whitespace-pre-wrap break-all font-sans text-sm text-slate-800">yitingchen@mail.fgu.edu.tw</pre>
+            </div>
+
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+              <div class="mb-2 flex items-center justify-between gap-2">
+                <span class="text-sm font-medium text-slate-700">信件主旨</span>
+                <button type="button" data-copy-target="copy-subject" class="copy-btn rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100">
+                  複製
+                </button>
+              </div>
+              <pre id="copy-subject" class="whitespace-pre-wrap break-all font-sans text-sm text-slate-800"></pre>
+            </div>
+
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+              <div class="mb-2 flex items-center justify-between gap-2">
+                <span class="text-sm font-medium text-slate-700">信件內文</span>
+                <button type="button" data-copy-target="copy-body" class="copy-btn rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100">
+                  複製
+                </button>
+              </div>
+              <pre id="copy-body" class="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-800">您好，
+
+附件為本單位提報之 QS 聯絡人名單，請查收。
+如有需要修改或補充，請再隨時通知，謝謝！</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-center">
+          <button
+            type="button"
+            id="btn-reset"
+            class="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+          >
+            重新填寫一份新表單
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="border-t border-slate-200 py-6 text-center text-xs text-slate-400">
+      Fo Guang University · QS Academic &amp; Employer Survey Contact Submission
+    </footer>
+  </div>
+
+  <!-- Contact card template -->
+  <template id="contact-card-template">
+    <article class="contact-card rounded-xl border border-slate-200 bg-white p-5 shadow-md" data-contact-id="">
+      <div class="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-3">
+        <h3 class="contact-card-title text-base font-semibold text-slate-900">聯絡人 #1</h3>
+        <button
+          type="button"
+          class="btn-remove-contact rounded-md border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
+        >
+          刪除
+        </button>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <!-- Contact Type -->
+        <div class="sm:col-span-2">
+          <span class="mb-1.5 block text-sm font-medium text-slate-700">
+            聯絡人類別 (Contact Type) <span class="text-red-500">*</span>
+          </span>
+          <div class="flex flex-wrap gap-4">
+            <label class="inline-flex cursor-pointer items-center gap-2 text-sm">
+              <input type="radio" name="contact-type" value="academic" class="field-type h-4 w-4 border-slate-300 text-blue-600 focus:ring-blue-500" checked />
+              學術 (Academic)
+            </label>
+            <label class="inline-flex cursor-pointer items-center gap-2 text-sm">
+              <input type="radio" name="contact-type" value="employer" class="field-type h-4 w-4 border-slate-300 text-blue-600 focus:ring-blue-500" />
+              雇主 (Employer)
+            </label>
+          </div>
+        </div>
+
+        <!-- Title -->
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">
+            Title <span class="text-red-500">*</span>
+          </label>
+          <select class="field-title w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required>
+            <option value="">請選擇</option>
+          </select>
+        </div>
+
+        <!-- First Name -->
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">
+            First Name <span class="text-red-500">*</span>
+          </label>
+          <input type="text" class="field-first-name w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required placeholder="名字（不含空白前後）" />
+        </div>
+
+        <!-- Last Name -->
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">
+            Last Name <span class="text-red-500">*</span>
+          </label>
+          <input type="text" class="field-last-name w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required placeholder="姓氏（不含空白前後）" />
+        </div>
+
+        <!-- Job Title -->
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">
+            Job Title <span class="text-red-500">*</span>
+          </label>
+          <select class="field-job-title w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required>
+            <option value="">請選擇</option>
+          </select>
+          <input type="text" class="field-job-other mt-2 hidden w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="請填寫 Other 具體職稱（將輸出為 Others (xxx)）" />
+        </div>
+
+        <!-- Department / Industry -->
+        <div>
+          <label class="label-dept-industry mb-1.5 block text-sm font-medium text-slate-700">
+            Department <span class="text-red-500">*</span>
+          </label>
+          <input type="text" class="field-department w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="請填寫完整系所名稱" />
+          <select class="field-industry hidden w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+            <option value="">請選擇產業</option>
+          </select>
+          <input type="text" class="field-industry-other mt-2 hidden w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="請填寫 Other 具體產業（將輸出為 Other (xxx)）" />
+        </div>
+
+        <!-- Institution / Company -->
+        <div>
+          <label class="label-institution mb-1.5 block text-sm font-medium text-slate-700">
+            Institution / Company Name <span class="text-red-500">*</span>
+          </label>
+          <input type="text" class="field-institution w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required placeholder="機構或公司正式名稱" />
+        </div>
+
+        <!-- Country -->
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">
+            Country or Territory <span class="text-red-500">*</span>
+          </label>
+          <select class="field-country w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required>
+          </select>
+        </div>
+
+        <!-- Email -->
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">
+            Email <span class="text-red-500">*</span>
+          </label>
+          <input type="email" class="field-email w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required placeholder="專業／公務信箱（每格僅一組）" />
+        </div>
+
+        <!-- Subject (academic only) -->
+        <div class="subject-wrap">
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">
+            Subject <span class="text-red-500">*</span>
+          </label>
+          <select class="field-subject w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+            <option value="">請選擇學術領域</option>
+          </select>
+          <input type="text" class="field-subject-other mt-2 hidden w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="請填寫 Other 具體領域（將輸出為 Others (xxx)）" />
+        </div>
+
+        <!-- Phone -->
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">
+            Phone <span class="text-slate-400">(選填)</span>
+          </label>
+          <input type="tel" class="field-phone w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="含國際碼，例如 +886..." />
+        </div>
+      </div>
+    </article>
+  </template>
+
+  <script>
+    import * as XLSX from 'xlsx';
+    import {
+      TITLES,
+      ACADEMIC_JOB_TITLES,
+      EMPLOYER_JOB_TITLES,
+      INDUSTRIES,
+      COUNTRIES,
+      DEFAULT_COUNTRY,
+      SUBJECTS,
+      EXCEL_HEADERS,
+      SOURCE,
+    } from '../data/qs-options.js';
+
+    const STORAGE_KEY = 'qs-contact-form-v1';
+    const MAX_CONTACTS = 10;
+    const UNLOCK_PHRASE = '我確定提交';
+    const EMAIL_FORBIDDEN = /[\[\]{}();:,<>'#~=+"¬`!]/;
+
+    /** @type {{ id: string, type: string, title: string, firstName: string, lastName: string, jobTitle: string, jobOther: string, department: string, industry: string, industryOther: string, institution: string, country: string, email: string, subject: string, subjectOther: string, phone: string }[]} */
+    let contacts = [];
+    let currentStep = 1;
+
+    const $ = (sel, root = document) => root.querySelector(sel);
+    const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+
+    function uid() {
+      return `c_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    function emptyContact() {
+      return {
+        id: uid(),
+        type: 'academic',
+        title: '',
+        firstName: '',
+        lastName: '',
+        jobTitle: '',
+        jobOther: '',
+        department: '',
+        industry: '',
+        industryOther: '',
+        institution: '',
+        country: DEFAULT_COUNTRY,
+        email: '',
+        subject: '',
+        subjectOther: '',
+        phone: '',
+      };
+    }
+
+    function fillSelect(select, options, { placeholder, selected } = {}) {
+      select.innerHTML = '';
+      if (placeholder !== undefined) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = placeholder;
+        select.appendChild(opt);
+      }
+      for (const value of options) {
+        const opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = value;
+        if (value === selected) opt.selected = true;
+        select.appendChild(opt);
+      }
+    }
+
+    function trimVal(v) {
+      return String(v ?? '').trim();
+    }
+
+    function formatOther(baseLabel, otherText) {
+      const detail = trimVal(otherText);
+      if (!detail) return baseLabel === 'Other' ? 'Others' : baseLabel;
+      // Guidelines examples: Others (xyz) for job/subject; Other (xxx) also acceptable for industry
+      if (baseLabel === 'Other') return `Others (${detail})`;
+      return `${baseLabel} (${detail})`;
+    }
+
+    function resolveJobTitle(c) {
+      if (c.jobTitle === 'Other') return formatOther('Other', c.jobOther);
+      return trimVal(c.jobTitle);
+    }
+
+    function resolveDeptIndustry(c) {
+      if (c.type === 'academic') return trimVal(c.department);
+      if (c.industry === 'Other') {
+        const detail = trimVal(c.industryOther);
+        return detail ? `Other (${detail})` : 'Other';
+      }
+      return trimVal(c.industry);
+    }
+
+    function resolveSubject(c) {
+      if (c.type !== 'academic') return '';
+      if (c.subject === 'Other') return formatOther('Other', c.subjectOther);
+      return trimVal(c.subject);
+    }
+
+    function saveState() {
+      const state = {
+        step: currentStep,
+        unit: trimVal($('#submitter-unit')?.value),
+        submitter: trimVal($('#submitter-name')?.value),
+        contacts,
+      };
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch {
+        /* ignore quota */
+      }
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch {
+        return null;
+      }
+    }
+
+    function updateContactCount() {
+      $('#contact-count').textContent = `(${contacts.length} / ${MAX_CONTACTS})`;
+      $('#btn-add-contact').disabled = contacts.length >= MAX_CONTACTS;
+    }
+
+    function setStepIndicators(step) {
+      for (let i = 1; i <= 3; i++) {
+        const el = $(`#step-indicator-${i}`);
+        const badge = el.querySelector('span');
+        if (i === step) {
+          el.className = 'flex items-center gap-2 font-semibold text-blue-700';
+          badge.className = 'flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white';
+        } else if (i < step) {
+          el.className = 'flex items-center gap-2 font-medium text-emerald-700';
+          badge.className = 'flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-white';
+        } else {
+          el.className = 'flex items-center gap-2 text-slate-400';
+          badge.className = 'flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-slate-600';
+        }
+      }
+    }
+
+    function showStep(step) {
+      currentStep = step;
+      $('#step-1').classList.toggle('hidden', step !== 1);
+      $('#step-2').classList.toggle('hidden', step !== 2);
+      $('#step-3').classList.toggle('hidden', step !== 3);
+      setStepIndicators(step);
+      saveState();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function applyTypeUI(card, type) {
+      const label = $('.label-dept-industry', card);
+      const dept = $('.field-department', card);
+      const industry = $('.field-industry', card);
+      const industryOther = $('.field-industry-other', card);
+      const subjectWrap = $('.subject-wrap', card);
+      const jobSelect = $('.field-job-title', card);
+      const prevJob = jobSelect.value;
+
+      fillSelect(jobSelect, type === 'academic' ? ACADEMIC_JOB_TITLES : EMPLOYER_JOB_TITLES, {
+        placeholder: '請選擇',
+        selected: prevJob,
+      });
+      // If previous value not in new list, clear
+      if (![...(type === 'academic' ? ACADEMIC_JOB_TITLES : EMPLOYER_JOB_TITLES)].includes(jobSelect.value)) {
+        jobSelect.value = '';
+      }
+
+      if (type === 'academic') {
+        label.innerHTML = 'Department <span class="text-red-500">*</span>';
+        dept.classList.remove('hidden');
+        industry.classList.add('hidden');
+        industryOther.classList.add('hidden');
+        subjectWrap.classList.remove('hidden');
+      } else {
+        label.innerHTML = 'Industry <span class="text-red-500">*</span>';
+        dept.classList.add('hidden');
+        industry.classList.remove('hidden');
+        subjectWrap.classList.add('hidden');
+        toggleOtherInput(industry, industryOther);
+      }
+
+      toggleOtherInput(jobSelect, $('.field-job-other', card));
+      if (type === 'academic') {
+        toggleOtherInput($('.field-subject', card), $('.field-subject-other', card));
+      }
+    }
+
+    function toggleOtherInput(selectEl, otherInput) {
+      const isOther = selectEl.value === 'Other';
+      otherInput.classList.toggle('hidden', !isOther);
+      if (!isOther) otherInput.value = '';
+    }
+
+    function syncCardToModel(card) {
+      const id = card.dataset.contactId;
+      const c = contacts.find((x) => x.id === id);
+      if (!c) return;
+
+      const typeRadio = $$('.field-type', card).find((r) => r.checked);
+      c.type = typeRadio?.value || 'academic';
+      c.title = $('.field-title', card).value;
+      c.firstName = $('.field-first-name', card).value;
+      c.lastName = $('.field-last-name', card).value;
+      c.jobTitle = $('.field-job-title', card).value;
+      c.jobOther = $('.field-job-other', card).value;
+      c.department = $('.field-department', card).value;
+      c.industry = $('.field-industry', card).value;
+      c.industryOther = $('.field-industry-other', card).value;
+      c.institution = $('.field-institution', card).value;
+      c.country = $('.field-country', card).value;
+      c.email = $('.field-email', card).value;
+      c.subject = $('.field-subject', card).value;
+      c.subjectOther = $('.field-subject-other', card).value;
+      c.phone = $('.field-phone', card).value;
+      saveState();
+    }
+
+    function renderContactCard(contact, index) {
+      const tpl = $('#contact-card-template');
+      const node = tpl.content.firstElementChild.cloneNode(true);
+      node.dataset.contactId = contact.id;
+
+      // Unique radio name per card
+      $$('.field-type', node).forEach((radio) => {
+        radio.name = `contact-type-${contact.id}`;
+        radio.checked = radio.value === contact.type;
+      });
+
+      $('.contact-card-title', node).textContent = `聯絡人 #${index + 1}`;
+
+      fillSelect($('.field-title', node), TITLES, { placeholder: '請選擇', selected: contact.title });
+      fillSelect($('.field-industry', node), INDUSTRIES, { placeholder: '請選擇產業', selected: contact.industry });
+      fillSelect($('.field-country', node), COUNTRIES, { selected: contact.country || DEFAULT_COUNTRY });
+      fillSelect($('.field-subject', node), SUBJECTS, { placeholder: '請選擇學術領域', selected: contact.subject });
+
+      $('.field-first-name', node).value = contact.firstName;
+      $('.field-last-name', node).value = contact.lastName;
+      $('.field-department', node).value = contact.department;
+      $('.field-institution', node).value = contact.institution;
+      $('.field-email', node).value = contact.email;
+      $('.field-phone', node).value = contact.phone;
+      $('.field-job-other', node).value = contact.jobOther;
+      $('.field-industry-other', node).value = contact.industryOther;
+      $('.field-subject-other', node).value = contact.subjectOther;
+
+      applyTypeUI(node, contact.type);
+      $('.field-job-title', node).value = contact.jobTitle;
+      toggleOtherInput($('.field-job-title', node), $('.field-job-other', node));
+      if (contact.jobOther) $('.field-job-other', node).value = contact.jobOther;
+      if (contact.type === 'employer') {
+        toggleOtherInput($('.field-industry', node), $('.field-industry-other', node));
+        if (contact.industryOther) $('.field-industry-other', node).value = contact.industryOther;
+      } else {
+        toggleOtherInput($('.field-subject', node), $('.field-subject-other', node));
+        if (contact.subjectOther) $('.field-subject-other', node).value = contact.subjectOther;
+      }
+
+      // Events
+      node.addEventListener('input', () => syncCardToModel(node));
+      node.addEventListener('change', (e) => {
+        const t = e.target;
+        if (t.classList.contains('field-type')) {
+          applyTypeUI(node, t.value);
+        }
+        if (t.classList.contains('field-job-title')) {
+          toggleOtherInput(t, $('.field-job-other', node));
+        }
+        if (t.classList.contains('field-industry')) {
+          toggleOtherInput(t, $('.field-industry-other', node));
+        }
+        if (t.classList.contains('field-subject')) {
+          toggleOtherInput(t, $('.field-subject-other', node));
+        }
+        syncCardToModel(node);
+      });
+
+      $('.btn-remove-contact', node).addEventListener('click', () => {
+        if (contacts.length <= 1) {
+          showError('至少需保留一筆聯絡人。');
+          return;
+        }
+        contacts = contacts.filter((c) => c.id !== contact.id);
+        renderAllCards();
+        saveState();
+      });
+
+      return node;
+    }
+
+    function renderAllCards() {
+      const container = $('#contacts-container');
+      container.innerHTML = '';
+      contacts.forEach((c, i) => container.appendChild(renderContactCard(c, i)));
+      updateContactCount();
+    }
+
+    function showError(msg) {
+      const el = $('#form-error');
+      if (!msg) {
+        el.classList.add('hidden');
+        el.textContent = '';
+        return;
+      }
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function validateEmail(email) {
+      const e = trimVal(email);
+      if (!e) return 'Email 為必填';
+      if (/\s/.test(e)) return 'Email 不可含空白';
+      if (EMAIL_FORBIDDEN.test(e)) return 'Email 含有不允許的字元';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return 'Email 格式不正確';
+      return null;
+    }
+
+    function validateAll() {
+      const unit = trimVal($('#submitter-unit').value);
+      const submitter = trimVal($('#submitter-name').value);
+      if (!unit) return '請填寫提報單位。';
+      if (!submitter) return '請填寫提報人姓名。';
+      if (!contacts.length) return '請至少新增一筆聯絡人。';
+
+      for (let i = 0; i < contacts.length; i++) {
+        const c = contacts[i];
+        const n = i + 1;
+        if (!c.type) return `聯絡人 #${n}：請選擇類別。`;
+        if (!trimVal(c.title)) return `聯絡人 #${n}：請選擇 Title。`;
+        if (!trimVal(c.firstName)) return `聯絡人 #${n}：請填寫 First Name。`;
+        if (!trimVal(c.lastName)) return `聯絡人 #${n}：請填寫 Last Name。`;
+        if (!trimVal(c.jobTitle)) return `聯絡人 #${n}：請選擇 Job Title。`;
+        if (c.jobTitle === 'Other' && !trimVal(c.jobOther)) return `聯絡人 #${n}：請填寫 Other 職稱說明。`;
+        if (c.type === 'academic') {
+          if (!trimVal(c.department)) return `聯絡人 #${n}：請填寫 Department。`;
+          if (!trimVal(c.subject)) return `聯絡人 #${n}：請選擇 Subject。`;
+          if (c.subject === 'Other' && !trimVal(c.subjectOther)) return `聯絡人 #${n}：請填寫 Other 學術領域說明。`;
+        } else {
+          if (!trimVal(c.industry)) return `聯絡人 #${n}：請選擇 Industry。`;
+          if (c.industry === 'Other' && !trimVal(c.industryOther)) return `聯絡人 #${n}：請填寫 Other 產業說明。`;
+        }
+        if (!trimVal(c.institution)) return `聯絡人 #${n}：請填寫 Institution / Company Name。`;
+        if (!trimVal(c.country)) return `聯絡人 #${n}：請選擇 Country or Territory。`;
+        const emailErr = validateEmail(c.email);
+        if (emailErr) return `聯絡人 #${n}：${emailErr}。`;
+      }
+      return null;
+    }
+
+    function toExcelRow(c) {
+      return [
+        SOURCE,
+        trimVal(c.title),
+        trimVal(c.firstName),
+        trimVal(c.lastName),
+        resolveJobTitle(c),
+        resolveDeptIndustry(c),
+        trimVal(c.institution),
+        trimVal(c.country),
+        trimVal(c.email),
+        resolveSubject(c),
+        trimVal(c.phone),
+      ];
+    }
+
+    function renderPreview() {
+      const unit = trimVal($('#submitter-unit').value);
+      const submitter = trimVal($('#submitter-name').value);
+      const academicCount = contacts.filter((c) => c.type === 'academic').length;
+      const employerCount = contacts.filter((c) => c.type === 'employer').length;
+      $('#preview-meta').textContent = `提報單位：${unit}　｜　提報人：${submitter}　｜　學術 ${academicCount} 筆、雇主 ${employerCount} 筆`;
+
+      const tbody = $('#preview-tbody');
+      tbody.innerHTML = '';
+      for (const c of contacts) {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50';
+        const typeBadge =
+          c.type === 'academic'
+            ? '<span class="inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800">學術</span>'
+            : '<span class="inline-flex rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-800">雇主</span>';
+        const cells = [
+          typeBadge,
+          trimVal(c.title),
+          trimVal(c.firstName),
+          trimVal(c.lastName),
+          resolveJobTitle(c),
+          resolveDeptIndustry(c),
+          trimVal(c.institution),
+          trimVal(c.country),
+          trimVal(c.email),
+          c.type === 'academic' ? resolveSubject(c) : '—',
+          trimVal(c.phone) || '—',
+        ];
+        cells.forEach((html, idx) => {
+          const td = document.createElement('td');
+          td.className = 'whitespace-nowrap px-3 py-2.5 text-slate-700';
+          if (idx === 0) td.innerHTML = html;
+          else td.textContent = html;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      }
+
+      $('#confirm-unlock').value = '';
+      $('#btn-download').disabled = true;
+    }
+
+    function safeFilePart(name) {
+      return trimVal(name).replace(/[\\/:*?"<>|]/g, '_').slice(0, 80) || '未命名單位';
+    }
+
+    function downloadWorkbook(rows, filename) {
+      const aoa = [EXCEL_HEADERS, ...rows];
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Contacts');
+      XLSX.writeFile(wb, filename);
+    }
+
+    function handleDownload() {
+      const unit = safeFilePart($('#submitter-unit').value);
+      const academicList = contacts.filter((c) => c.type === 'academic').map(toExcelRow);
+      const employerList = contacts.filter((c) => c.type === 'employer').map(toExcelRow);
+
+      if (academicList.length) {
+        downloadWorkbook(academicList, `QS_學術聯絡人名單_${unit}.xlsx`);
+      }
+      if (employerList.length) {
+        // slight delay so browsers allow a second download
+        setTimeout(() => {
+          downloadWorkbook(employerList, `QS_雇主聯絡人名單_${unit}.xlsx`);
+          goToStep3();
+        }, academicList.length ? 400 : 0);
+        return;
+      }
+      goToStep3();
+    }
+
+    function goToStep3() {
+      const unit = trimVal($('#submitter-unit').value);
+      const submitter = trimVal($('#submitter-name').value);
+      $('#copy-subject').textContent = `QS聯絡人提報 - ${unit} - ${submitter}`;
+      showStep(3);
+    }
+
+    function bindGlobal() {
+      $('#submitter-unit').addEventListener('input', saveState);
+      $('#submitter-name').addEventListener('input', saveState);
+
+      $('#btn-add-contact').addEventListener('click', () => {
+        if (contacts.length >= MAX_CONTACTS) return;
+        contacts.push(emptyContact());
+        renderAllCards();
+        saveState();
+      });
+
+      $('#btn-preview').addEventListener('click', () => {
+        // sync all cards first
+        $$('.contact-card').forEach(syncCardToModel);
+        const err = validateAll();
+        if (err) {
+          showError(err);
+          return;
+        }
+        showError('');
+        renderPreview();
+        showStep(2);
+      });
+
+      $('#btn-back').addEventListener('click', () => showStep(1));
+
+      $('#confirm-unlock').addEventListener('input', (e) => {
+        $('#btn-download').disabled = e.target.value.trim() !== UNLOCK_PHRASE;
+      });
+
+      $('#btn-download').addEventListener('click', () => {
+        if ($('#confirm-unlock').value.trim() !== UNLOCK_PHRASE) return;
+        handleDownload();
+      });
+
+      $$('.copy-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-copy-target');
+          const text = $(`#${id}`).textContent;
+          try {
+            await navigator.clipboard.writeText(text);
+          } catch {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            ta.remove();
+          }
+          const original = btn.textContent;
+          btn.textContent = '已複製！';
+          setTimeout(() => {
+            btn.textContent = original;
+          }, 1500);
+        });
+      });
+
+      $('#btn-reset').addEventListener('click', () => {
+        localStorage.removeItem(STORAGE_KEY);
+        location.reload();
+      });
+    }
+
+    function init() {
+      bindGlobal();
+      const saved = loadState();
+      if (saved?.contacts?.length) {
+        $('#submitter-unit').value = saved.unit || '';
+        $('#submitter-name').value = saved.submitter || '';
+        contacts = saved.contacts.map((c) => ({ ...emptyContact(), ...c, id: c.id || uid() }));
+        renderAllCards();
+        // Don't auto-jump to step 2/3 after download unless still mid-flow on step 1/2
+        if (saved.step === 2) {
+          const err = validateAll();
+          if (!err) {
+            renderPreview();
+            showStep(2);
+            return;
+          }
+        }
+        showStep(1);
+      } else {
+        contacts = [emptyContact()];
+        renderAllCards();
+        showStep(1);
+      }
+    }
+
+    init();
+  </script>
+</Layout>
