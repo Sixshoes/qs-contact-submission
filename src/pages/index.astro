@@ -177,7 +177,10 @@ const base = import.meta.env.BASE_URL;
 
         <p id="form-error" class="hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-sm" role="alert"></p>
 
-        <div class="flex justify-end pt-2">
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+          <button type="button" id="btn-open-clear" class="btn-secondary px-5 py-2.5">
+            清空欄位
+          </button>
           <button type="button" id="btn-preview" class="btn-primary px-6 py-3 text-base shadow-lg">
             預覽與確認名單 →
           </button>
@@ -313,6 +316,29 @@ const base = import.meta.env.BASE_URL;
         </div>
       </section>
     </main>
+
+    <!-- 清空欄位確認 -->
+    <div id="clear-modal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="clear-modal-title">
+      <div id="clear-modal-backdrop" class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
+      <div class="relative flex min-h-full items-center justify-center p-4">
+        <div class="card-panel w-full max-w-md shadow-xl">
+          <h3 id="clear-modal-title" class="text-lg font-semibold text-slate-900">確認清空欄位</h3>
+          <p class="mt-2 text-sm leading-relaxed text-slate-600">
+            此操作將清除目前填寫的所有資料（含已儲存於本機的草稿），且無法復原。
+          </p>
+          <label for="clear-confirm" class="mt-4 block text-sm font-medium text-fgu-dark">
+            防呆確認：請輸入「我確定要清空以上資料」
+          </label>
+          <input id="clear-confirm" type="text" autocomplete="off" placeholder="我確定要清空以上資料" class="input-field mt-2" />
+          <div class="mt-5 flex justify-end gap-2">
+            <button type="button" id="btn-clear-cancel" class="btn-secondary px-4 py-2">取消</button>
+            <button type="button" id="btn-clear-confirm" disabled class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500">
+              清空欄位
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <footer class="relative mt-8 border-t border-fgu/10 bg-white/90 py-8 backdrop-blur-sm">
       <div class="footer-bar absolute inset-x-0 top-0 h-1" aria-hidden="true"></div>
@@ -467,6 +493,7 @@ const base = import.meta.env.BASE_URL;
     const STORAGE_KEY = 'qs-contact-form-v3';
     const MAX_CONTACTS = 10;
     const UNLOCK_PHRASE = '我確定提交';
+    const CLEAR_PHRASE = '我確定要清空以上資料';
     const EMAIL_FORBIDDEN = /[\[\]{}();:,<>'#~=+"¬`!]/;
 
     /** @type {{ id: string, type: string, title: string, titleOther: string, firstName: string, lastName: string, jobTitle: string, jobOther: string, department: string, industry: string, industryOther: string, institution: string, country: string, countryOther: string, email: string, subject: string, subjectOther: string, phone: string }[]} */
@@ -1360,6 +1387,59 @@ ${unit}
       showStep(3);
     }
 
+    function clearAllFormData() {
+      localStorage.removeItem(STORAGE_KEY);
+      $('#submitter-unit').value = '';
+      $('#submitter-name').value = '';
+      academicContacts = [];
+      employerContacts = [];
+      downloadArtifacts = [];
+      downloadedFiles = [];
+      renderAllCards();
+      showError('');
+      $('#confirm-unlock').value = '';
+      $('#btn-submit').disabled = true;
+      showStep(1);
+    }
+
+    function openClearModal() {
+      $('#clear-confirm').value = '';
+      $('#btn-clear-confirm').disabled = true;
+      $('#clear-modal').classList.remove('hidden');
+      $('#clear-confirm').focus();
+    }
+
+    function closeClearModal() {
+      $('#clear-modal').classList.add('hidden');
+      $('#clear-confirm').value = '';
+      $('#btn-clear-confirm').disabled = true;
+    }
+
+    function bindClearModal() {
+      $('#btn-open-clear').addEventListener('click', openClearModal);
+      $('#btn-reset').addEventListener('click', openClearModal);
+      $('#btn-clear-cancel').addEventListener('click', closeClearModal);
+      $('#clear-modal-backdrop').addEventListener('click', closeClearModal);
+
+      $('#clear-confirm').addEventListener('input', (e) => {
+        $('#btn-clear-confirm').disabled = e.target.value.trim() !== CLEAR_PHRASE;
+      });
+
+      $('#clear-confirm').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.target.value.trim() === CLEAR_PHRASE) {
+          e.preventDefault();
+          $('#btn-clear-confirm').click();
+        }
+        if (e.key === 'Escape') closeClearModal();
+      });
+
+      $('#btn-clear-confirm').addEventListener('click', () => {
+        if ($('#clear-confirm').value.trim() !== CLEAR_PHRASE) return;
+        closeClearModal();
+        clearAllFormData();
+      });
+    }
+
     function bindGlobal() {
       $('#submitter-unit').addEventListener('input', saveState);
       $('#submitter-name').addEventListener('input', saveState);
@@ -1412,15 +1492,11 @@ ${unit}
           }, 1500);
         });
       });
-
-      $('#btn-reset').addEventListener('click', () => {
-        localStorage.removeItem(STORAGE_KEY);
-        location.reload();
-      });
     }
 
     function init() {
       bindGlobal();
+      bindClearModal();
       const saved = loadState();
       if (saved && (saved.academicContacts?.length || saved.employerContacts?.length)) {
         $('#submitter-unit').value = saved.unit || '';
