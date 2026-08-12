@@ -184,10 +184,60 @@ const base = import.meta.env.BASE_URL;
         </div>
 
         <div class="card-panel shadow-md">
-          <h3 class="text-lg font-semibold text-slate-900">Mail2000 寄信指示</h3>
-          <p class="mt-2 text-sm leading-relaxed text-slate-600">
-            請自行登入 Mail2000，並將剛才下載的 Excel 檔作為附件寄給我們。下方提供收件人、主旨與內文，可一鍵複製。
+          <div class="flex items-center gap-2">
+            <span class="inline-block h-5 w-1 rounded-full bg-gradient-to-b from-fgu to-sage" aria-hidden="true"></span>
+            <h3 class="text-lg font-semibold text-slate-900">Mail2000 寄信指示</h3>
+          </div>
+          <p class="mt-3 text-sm leading-relaxed text-slate-600">
+            請使用佛光大學 Mail2000 將剛才下載的 Excel 檔寄至永續辦公室。下方已自動帶入本次提報的收件人、主旨、內文與附件檔名，可一鍵複製使用。
           </p>
+
+          <!-- 操作步驟 -->
+          <div class="mt-5 rounded-xl border border-sage/25 bg-sage-light/40 p-4">
+            <h4 class="text-sm font-semibold text-fgu-dark">寄信步驟（Mail2000）</h4>
+            <ol class="mt-3 space-y-2.5 text-sm leading-relaxed text-slate-700">
+              <li class="flex gap-2">
+                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-fgu text-xs font-bold text-white">1</span>
+                <span>登入 <strong>Mail2000</strong>（校內信箱系統），點選「撰寫郵件」或「新郵件」。</span>
+              </li>
+              <li class="flex gap-2">
+                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-fgu text-xs font-bold text-white">2</span>
+                <span>將下方「收件人」複製貼上至<strong>收件者</strong>欄位：<code class="rounded bg-white px-1 text-fgu">yitingchen@mail.fgu.edu.tw</code></span>
+              </li>
+              <li class="flex gap-2">
+                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-fgu text-xs font-bold text-white">3</span>
+                <span>複製「信件主旨」貼至<strong>主旨</strong>欄（請勿修改格式，以便承辦人員歸檔）。</span>
+              </li>
+              <li class="flex gap-2">
+                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-fgu text-xs font-bold text-white">4</span>
+                <span>複製「信件內文」貼至<strong>內文</strong>區域，可依需要微調禮貌用語。</span>
+              </li>
+              <li class="flex gap-2">
+                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-fgu text-xs font-bold text-white">5</span>
+                <span>點選「附加檔案」，加入您剛才下載的 Excel（檔名見下方「本次附件清單」）。</span>
+              </li>
+              <li class="flex gap-2">
+                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-fgu text-xs font-bold text-white">6</span>
+                <span>確認附件無誤後，點選「傳送」完成提報。</span>
+              </li>
+            </ol>
+          </div>
+
+          <!-- 附件說明 -->
+          <div class="mt-4 rounded-xl border border-qs/25 bg-qs-light/50 p-4">
+            <h4 class="text-sm font-semibold text-amber-900">附件注意事項</h4>
+            <ul class="mt-2 space-y-1.5 text-sm leading-relaxed text-slate-700">
+              <li>• 若有填寫<strong>學術</strong>聯絡人，請附上 <strong>QS_學術聯絡人名單</strong> Excel（1 個檔案）。</li>
+              <li>• 若有填寫<strong>雇主</strong>聯絡人，請附上 <strong>QS_雇主聯絡人名單</strong> Excel（1 個檔案，內含「中文」「English」「合併說明」分頁）。</li>
+              <li>• 兩類都有填寫時，請<strong>一次寄出 2 個附件</strong>即可，不必分開寄兩封信。</li>
+              <li>• 檔名末尾含時間戳（如 <code class="rounded bg-white px-1 text-xs">_20260812_142030</code>），請保留原檔名勿重新命名。</li>
+              <li>• 請確認下載資料夾中的檔案可正常開啟後再寄出。</li>
+            </ul>
+            <div class="mt-3 rounded-lg border border-amber-200/60 bg-white p-3">
+              <p class="text-xs font-medium text-slate-500">本次附件清單</p>
+              <ul id="attachment-list" class="mt-1.5 space-y-1 text-sm font-medium text-slate-800"></ul>
+            </div>
+          </div>
 
           <div class="mt-6 space-y-4">
             <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
@@ -219,10 +269,22 @@ const base = import.meta.env.BASE_URL;
               </div>
               <pre id="copy-body" class="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-800">您好，
 
-附件為本單位提報之 QS 聯絡人名單，請查收。
-如有需要修改或補充，請再隨時通知，謝謝！</pre>
+附件為本單位提報之 QS 學術／雇主問卷聯絡人名單，請查收。
+
+提報單位：
+提報人：
+附件檔案：
+
+如有需要修改或補充，請再隨時通知，謝謝！
+
+敬祝
+教安</pre>
             </div>
           </div>
+
+          <p class="mt-4 text-xs leading-relaxed text-slate-500">
+            提示：若寄信後未收到回覆，請先檢查「寄件備份」是否成功送出，或來信確認是否需補件。如有系統操作問題，請聯繫永續辦公室。
+          </p>
         </div>
 
         <div class="flex justify-center">
@@ -975,28 +1037,36 @@ const base = import.meta.env.BASE_URL;
       return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
     }
 
+    /** @type {string[]} */
+    let downloadedFiles = [];
+
     async function handleDownload() {
       const unit = safeFilePart($('#submitter-unit').value);
       const ts = fileTimestamp();
       const academicList = academicContacts.map(toAcademicExcelRow);
+      downloadedFiles = [];
 
       try {
         if (academicList.length) {
+          const name = `QS_學術聯絡人名單_${unit}_${ts}.xlsx`;
+          downloadedFiles.push(name);
           await downloadStyledSheet({
             headers: ACADEMIC_EXCEL_HEADERS,
             rows: academicList,
-            filename: `QS_學術聯絡人名單_${unit}_${ts}.xlsx`,
+            filename: name,
             sheetName: 'Academic',
           });
         }
         if (employerContacts.length) {
           await new Promise((r) => setTimeout(r, academicList.length ? 400 : 0));
+          const name = `QS_雇主聯絡人名單_${unit}_${ts}.xlsx`;
+          downloadedFiles.push(name);
           await downloadEmployerStyledWorkbook({
             headersZh: EMPLOYER_EXCEL_HEADERS_ZH,
             headersEn: EMPLOYER_EXCEL_HEADERS_EN,
             rowsZh: employerContacts.map((c) => toEmployerExcelRow(c, 'zh')),
             rowsEn: employerContacts.map((c) => toEmployerExcelRow(c, 'en')),
-            filename: `QS_雇主聯絡人名單_${unit}_${ts}.xlsx`,
+            filename: name,
           });
         }
         goToStep3();
@@ -1009,7 +1079,48 @@ const base = import.meta.env.BASE_URL;
     function goToStep3() {
       const unit = trimVal($('#submitter-unit').value);
       const submitter = trimVal($('#submitter-name').value);
+      const academicCount = academicContacts.length;
+      const employerCount = employerContacts.length;
+
       $('#copy-subject').textContent = `QS聯絡人提報 - ${unit} - ${submitter}`;
+
+      const fileLines = downloadedFiles.length
+        ? downloadedFiles.map((f, i) => `${i + 1}. ${f}`).join('\n')
+        : '（請確認已下載 Excel 檔案）';
+
+      const summaryParts = [];
+      if (academicCount) summaryParts.push(`學術聯絡人 ${academicCount} 筆`);
+      if (employerCount) summaryParts.push(`雇主聯絡人 ${employerCount} 筆`);
+      const summary = summaryParts.join('、') || '—';
+
+      $('#copy-body').textContent = `您好，
+
+附件為本單位提報之 QS 學術／雇主問卷聯絡人名單，請查收。
+
+提報單位：${unit}
+提報人：${submitter}
+本次提報：${summary}
+附件檔案：
+${fileLines}
+
+如有需要修改或補充，請再隨時通知，謝謝！
+
+敬祝
+教安`;
+
+      const attachList = $('#attachment-list');
+      attachList.innerHTML = '';
+      if (downloadedFiles.length) {
+        downloadedFiles.forEach((f) => {
+          const li = document.createElement('li');
+          li.className = 'flex items-center gap-2';
+          li.innerHTML = `<span class="text-qs">📎</span><span>${escapeHtml(f)}</span>`;
+          attachList.appendChild(li);
+        });
+      } else {
+        attachList.innerHTML = '<li class="text-slate-500">（尚無附件紀錄，請確認已下載）</li>';
+      }
+
       showStep(3);
     }
 
