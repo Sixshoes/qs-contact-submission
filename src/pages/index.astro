@@ -61,12 +61,12 @@ const base = import.meta.env.BASE_URL;
           <li class="step-connector hidden h-px w-10 sm:block" aria-hidden="true"></li>
           <li id="step-indicator-2" class="flex items-center gap-2 text-slate-400">
             <span class="step-badge flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600">2</span>
-            <span>確認下載</span>
+            <span>確認提交</span>
           </li>
           <li class="step-connector hidden h-px w-10 sm:block" aria-hidden="true"></li>
           <li id="step-indicator-3" class="flex items-center gap-2 text-slate-400">
             <span class="step-badge flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600">3</span>
-            <span>寄信完成</span>
+            <span>寄件完成</span>
           </li>
         </ol>
       </nav>
@@ -191,30 +191,35 @@ const base = import.meta.env.BASE_URL;
 
       <!-- ========== STEP 3 ========== -->
       <section id="step-3" class="hidden space-y-6">
-        <div class="rounded-2xl border border-sage/30 bg-gradient-to-br from-sage-light to-white p-8 text-center shadow-md">
-          <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-sage/15 text-3xl text-sage" aria-hidden="true">✓</div>
-          <h2 class="text-xl font-bold text-fgu-dark">提交成功！</h2>
-          <p class="mt-3 text-base leading-relaxed text-slate-700">
-            請先下載下方 Excel 檔案，再以 Email 寄給<strong>奕廷</strong>：
-            <code class="mt-1 block rounded-lg bg-white px-3 py-2 text-sm font-medium text-fgu shadow-sm">yitingchen@mail.fgu.edu.tw</code>
-          </p>
-          <p class="mt-2 text-sm text-slate-500">
-            （學術／雇主檔均含「中文」「English」「合併說明」分頁；資料已正規化）
-          </p>
-          <div id="download-panel" class="mt-6 hidden rounded-xl border border-fgu/20 bg-white/90 px-4 py-4 text-left shadow-sm">
-            <p class="text-sm font-semibold text-fgu-dark">下載 Excel 檔案</p>
-            <div id="download-buttons" class="mt-3 flex flex-wrap gap-2"></div>
-          </div>
+        <div class="card-panel text-center shadow-md">
+          <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-sage/15 text-2xl text-sage" aria-hidden="true">✓</div>
+          <h2 class="text-xl font-bold text-fgu-dark">寄件完成</h2>
+          <p class="mt-2 text-sm text-slate-600">請依下方步驟下載 Excel 並寄信給奕廷即可完成提報。</p>
         </div>
 
+        <!-- 下載 -->
         <div class="card-panel shadow-md">
           <div class="flex items-center gap-2">
             <span class="inline-block h-5 w-1 rounded-full bg-gradient-to-b from-fgu to-sage" aria-hidden="true"></span>
-            <h3 class="text-lg font-semibold text-slate-900">寄信範本（參考）</h3>
+            <h3 class="text-lg font-semibold text-slate-900">下載</h3>
           </div>
           <p class="mt-3 text-sm leading-relaxed text-slate-600">
-            若需要，可複製下方<strong>收件人、主旨、內文</strong>作為寄信參考。
-            主旨、內文、附件檔名皆可依需要自行修改，不必完全照抄。
+            請下載本次產生的 Excel 檔案（學術／雇主檔均含「中文」「English」「合併說明」分頁；資料已正規化）。
+          </p>
+          <div id="download-panel" class="mt-4 hidden rounded-xl border border-fgu/20 bg-fgu-light/30 px-4 py-4">
+            <div id="download-buttons" class="flex flex-wrap gap-2"></div>
+          </div>
+        </div>
+
+        <!-- 回信範本 -->
+        <div class="card-panel shadow-md">
+          <div class="flex items-center gap-2">
+            <span class="inline-block h-5 w-1 rounded-full bg-gradient-to-b from-fgu to-sage" aria-hidden="true"></span>
+            <h3 class="text-lg font-semibold text-slate-900">回信範本</h3>
+          </div>
+          <p class="mt-3 text-sm leading-relaxed text-slate-600">
+            下載完成後，請將 Excel 以 Email 寄給<strong>奕廷</strong>（<code class="rounded bg-slate-100 px-1 text-fgu">yitingchen@mail.fgu.edu.tw</code>）。
+            下方為<strong>參考用</strong>收件人、主旨、內文，可依需要自行修改。
           </p>
 
           <!-- 附件說明 -->
