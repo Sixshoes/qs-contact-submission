@@ -269,6 +269,7 @@ import Layout from '../layouts/Layout.astro';
           <select class="field-title w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required>
             <option value="">請選擇</option>
           </select>
+          <input type="text" class="field-title-other mt-2 hidden w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="請填寫其他稱謂" />
         </div>
 
         <!-- First Name -->
@@ -295,7 +296,7 @@ import Layout from '../layouts/Layout.astro';
           <select class="field-job-title w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required>
             <option value="">請選擇</option>
           </select>
-          <input type="text" class="field-job-other mt-2 hidden w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="請填寫 Other 具體職稱（將輸出為 Others (xxx)）" />
+          <input type="text" class="field-job-other mt-2 hidden w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="請填寫具體職稱（將輸出為 Others (xxx)）" />
         </div>
 
         <!-- Department / Industry -->
@@ -307,7 +308,7 @@ import Layout from '../layouts/Layout.astro';
           <select class="field-industry hidden w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
             <option value="">請選擇產業</option>
           </select>
-          <input type="text" class="field-industry-other mt-2 hidden w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="請填寫 Other 具體產業（將輸出為 Other (xxx)）" />
+          <input type="text" class="field-industry-other mt-2 hidden w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="請填寫具體產業（將輸出為 Other (xxx)）" />
         </div>
 
         <!-- Institution / Company Name -->
@@ -325,6 +326,7 @@ import Layout from '../layouts/Layout.astro';
           </label>
           <select class="field-country w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required>
           </select>
+          <input type="text" class="field-country-other mt-2 hidden w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="請填寫其他國家／地區名稱" />
         </div>
 
         <!-- Email -->
@@ -343,7 +345,7 @@ import Layout from '../layouts/Layout.astro';
           <select class="field-subject w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
             <option value="">請選擇學術領域</option>
           </select>
-          <input type="text" class="field-subject-other mt-2 hidden w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="請填寫 Other 具體領域（將輸出為 Others (xxx)）" />
+          <input type="text" class="field-subject-other mt-2 hidden w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="請填寫具體學術領域（將輸出為 Others (xxx)）" />
         </div>
 
         <!-- Phone -->
@@ -385,7 +387,7 @@ import Layout from '../layouts/Layout.astro';
     const UNLOCK_PHRASE = '我確定提交';
     const EMAIL_FORBIDDEN = /[\[\]{}();:,<>'#~=+"¬`!]/;
 
-    /** @type {{ id: string, type: string, title: string, firstName: string, lastName: string, jobTitle: string, jobOther: string, department: string, industry: string, industryOther: string, institution: string, country: string, email: string, subject: string, subjectOther: string, phone: string }[]} */
+    /** @type {{ id: string, type: string, title: string, titleOther: string, firstName: string, lastName: string, jobTitle: string, jobOther: string, department: string, industry: string, industryOther: string, institution: string, country: string, countryOther: string, email: string, subject: string, subjectOther: string, phone: string }[]} */
     let contacts = [];
     let currentStep = 1;
 
@@ -401,6 +403,7 @@ import Layout from '../layouts/Layout.astro';
         id: uid(),
         type: 'academic',
         title: '',
+        titleOther: '',
         firstName: '',
         lastName: '',
         jobTitle: '',
@@ -410,6 +413,7 @@ import Layout from '../layouts/Layout.astro';
         industryOther: '',
         institution: '',
         country: DEFAULT_COUNTRY,
+        countryOther: '',
         email: '',
         subject: '',
         subjectOther: '',
@@ -465,6 +469,14 @@ import Layout from '../layouts/Layout.astro';
       return detail ? `Other (${detail})` : 'Other';
     }
 
+    function formatSimpleOther(otherText, lang = 'en') {
+      const detail = trimVal(otherText);
+      if (lang === 'zh') {
+        return detail ? `其他 (${detail})` : '其他';
+      }
+      return detail ? `Other (${detail})` : 'Other';
+    }
+
     /** @param {'en'|'zh'} lang */
     function resolveJobTitle(c, lang = 'en') {
       const list = c.type === 'academic' ? ACADEMIC_JOB_TITLES : EMPLOYER_JOB_TITLES;
@@ -488,11 +500,13 @@ import Layout from '../layouts/Layout.astro';
 
     /** @param {'en'|'zh'} lang */
     function resolveTitle(c, lang = 'en') {
+      if (c.title === 'Other') return formatSimpleOther(c.titleOther, lang);
       return optionText(TITLES, c.title, lang) || trimVal(c.title);
     }
 
     /** @param {'en'|'zh'} lang */
     function resolveCountry(c, lang = 'en') {
+      if (c.country === 'Other') return formatSimpleOther(c.countryOther, lang);
       return optionText(COUNTRIES, c.country, lang) || trimVal(c.country);
     }
 
@@ -601,8 +615,10 @@ import Layout from '../layouts/Layout.astro';
     }
 
     function toggleOtherInput(selectEl, otherInput) {
+      if (!selectEl || !otherInput) return;
       const isOther = selectEl.value === 'Other';
       otherInput.classList.toggle('hidden', !isOther);
+      otherInput.required = isOther;
       if (!isOther) otherInput.value = '';
     }
 
@@ -614,6 +630,7 @@ import Layout from '../layouts/Layout.astro';
       const typeRadio = $$('.field-type', card).find((r) => r.checked);
       c.type = typeRadio?.value || 'academic';
       c.title = $('.field-title', card).value;
+      c.titleOther = $('.field-title-other', card).value;
       c.firstName = $('.field-first-name', card).value;
       c.lastName = $('.field-last-name', card).value;
       c.jobTitle = $('.field-job-title', card).value;
@@ -623,6 +640,7 @@ import Layout from '../layouts/Layout.astro';
       c.industryOther = $('.field-industry-other', card).value;
       c.institution = $('.field-institution', card).value;
       c.country = $('.field-country', card).value;
+      c.countryOther = $('.field-country-other', card).value;
       c.email = $('.field-email', card).value;
       c.subject = $('.field-subject', card).value;
       c.subjectOther = $('.field-subject-other', card).value;
@@ -654,20 +672,23 @@ import Layout from '../layouts/Layout.astro';
       $('.field-institution', node).value = contact.institution;
       $('.field-email', node).value = contact.email;
       $('.field-phone', node).value = contact.phone;
-      $('.field-job-other', node).value = contact.jobOther;
-      $('.field-industry-other', node).value = contact.industryOther;
-      $('.field-subject-other', node).value = contact.subjectOther;
 
       applyTypeUI(node, contact.type);
       $('.field-job-title', node).value = contact.jobTitle;
-      toggleOtherInput($('.field-job-title', node), $('.field-job-other', node));
-      if (contact.jobOther) $('.field-job-other', node).value = contact.jobOther;
-      if (contact.type === 'employer') {
-        toggleOtherInput($('.field-industry', node), $('.field-industry-other', node));
-        if (contact.industryOther) $('.field-industry-other', node).value = contact.industryOther;
-      } else {
-        toggleOtherInput($('.field-subject', node), $('.field-subject-other', node));
-        if (contact.subjectOther) $('.field-subject-other', node).value = contact.subjectOther;
+
+      // Restore "Other" free-text after selects are ready
+      const otherPairs = [
+        ['.field-title', '.field-title-other', contact.titleOther],
+        ['.field-job-title', '.field-job-other', contact.jobOther],
+        ['.field-industry', '.field-industry-other', contact.industryOther],
+        ['.field-country', '.field-country-other', contact.countryOther],
+        ['.field-subject', '.field-subject-other', contact.subjectOther],
+      ];
+      for (const [sel, otherSel, saved] of otherPairs) {
+        const selectEl = $(sel, node);
+        const otherEl = $(otherSel, node);
+        toggleOtherInput(selectEl, otherEl);
+        if (selectEl?.value === 'Other' && saved) otherEl.value = saved;
       }
 
       // Events
@@ -677,11 +698,17 @@ import Layout from '../layouts/Layout.astro';
         if (t.classList.contains('field-type')) {
           applyTypeUI(node, t.value);
         }
+        if (t.classList.contains('field-title')) {
+          toggleOtherInput(t, $('.field-title-other', node));
+        }
         if (t.classList.contains('field-job-title')) {
           toggleOtherInput(t, $('.field-job-other', node));
         }
         if (t.classList.contains('field-industry')) {
           toggleOtherInput(t, $('.field-industry-other', node));
+        }
+        if (t.classList.contains('field-country')) {
+          toggleOtherInput(t, $('.field-country-other', node));
         }
         if (t.classList.contains('field-subject')) {
           toggleOtherInput(t, $('.field-subject-other', node));
@@ -742,22 +769,24 @@ import Layout from '../layouts/Layout.astro';
         const n = i + 1;
         if (!c.type) return `聯絡人 #${n}：請選擇類別。`;
         if (!trimVal(c.title)) return `聯絡人 #${n}：請選擇 Title。`;
+        if (c.title === 'Other' && !trimVal(c.titleOther)) return `聯絡人 #${n}：請填寫其他稱謂。`;
         if (!trimVal(c.firstName)) return `聯絡人 #${n}：請填寫 First Name。`;
         if (!trimVal(c.lastName)) return `聯絡人 #${n}：請填寫 Last Name。`;
         if (!trimVal(c.jobTitle)) return `聯絡人 #${n}：請選擇 ${c.type === 'academic' ? 'Job Title' : 'Position'}。`;
-        if (c.jobTitle === 'Other' && !trimVal(c.jobOther)) return `聯絡人 #${n}：請填寫 Other 職稱說明。`;
+        if (c.jobTitle === 'Other' && !trimVal(c.jobOther)) return `聯絡人 #${n}：請填寫其他職稱說明。`;
         if (c.type === 'academic') {
           if (!trimVal(c.department)) return `聯絡人 #${n}：請填寫 Department。`;
           if (!trimVal(c.subject)) return `聯絡人 #${n}：請選擇 Subject。`;
-          if (c.subject === 'Other' && !trimVal(c.subjectOther)) return `聯絡人 #${n}：請填寫 Other 學術領域說明。`;
+          if (c.subject === 'Other' && !trimVal(c.subjectOther)) return `聯絡人 #${n}：請填寫其他學術領域說明。`;
         } else {
           if (!trimVal(c.industry)) return `聯絡人 #${n}：請選擇 Industry。`;
-          if (c.industry === 'Other' && !trimVal(c.industryOther)) return `聯絡人 #${n}：請填寫 Other 產業說明。`;
+          if (c.industry === 'Other' && !trimVal(c.industryOther)) return `聯絡人 #${n}：請填寫其他產業說明。`;
         }
         if (!trimVal(c.institution)) {
           return `聯絡人 #${n}：請填寫 ${c.type === 'academic' ? 'Institution' : 'Company Name'}。`;
         }
         if (!trimVal(c.country)) return `聯絡人 #${n}：請選擇 Country or Territory。`;
+        if (c.country === 'Other' && !trimVal(c.countryOther)) return `聯絡人 #${n}：請填寫其他國家／地區。`;
         const emailErr = validateEmail(c.email);
         if (emailErr) return `聯絡人 #${n}：${emailErr}。`;
       }
@@ -815,7 +844,9 @@ import Layout from '../layouts/Layout.astro';
         const jobList = c.type === 'academic' ? ACADEMIC_JOB_TITLES : EMPLOYER_JOB_TITLES;
         const cells = [
           typeBadge,
-          displayOpt(TITLES, c.title),
+          c.title === 'Other'
+            ? formatSimpleOther(c.titleOther, 'zh') + ' / ' + formatSimpleOther(c.titleOther, 'en')
+            : displayOpt(TITLES, c.title),
           trimVal(c.firstName),
           trimVal(c.lastName),
           c.jobTitle === 'Other' ? formatOther(c.jobOther, 'zh') + ' / ' + formatOther(c.jobOther, 'en') : displayOpt(jobList, c.jobTitle),
@@ -825,7 +856,9 @@ import Layout from '../layouts/Layout.astro';
               ? formatIndustryOther(c.industryOther, 'zh') + ' / ' + formatIndustryOther(c.industryOther, 'en')
               : displayOpt(INDUSTRIES, c.industry),
           trimVal(c.institution),
-          displayOpt(COUNTRIES, c.country),
+          c.country === 'Other'
+            ? formatSimpleOther(c.countryOther, 'zh') + ' / ' + formatSimpleOther(c.countryOther, 'en')
+            : displayOpt(COUNTRIES, c.country),
           trimVal(c.email),
           c.type === 'academic'
             ? c.subject === 'Other'
