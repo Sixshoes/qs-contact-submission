@@ -167,6 +167,31 @@ body {
   background: linear-gradient(90deg, var(--color-qs), var(--color-warm-gold));
 }
 
+@keyframes field-flash-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-fgu) 0%, transparent);
+    border-color: #fca5a5;
+    background-color: #fff;
+  }
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-fgu) 35%, transparent);
+    border-color: var(--color-fgu);
+    background-color: var(--color-fgu-light);
+  }
+}
+
+.field-flash {
+  animation: field-flash-pulse 0.55s ease-in-out 3;
+  border-color: var(--color-fgu) !important;
+  scroll-margin-top: 6rem;
+}
+
+.section-flash {
+  animation: field-flash-pulse 0.55s ease-in-out 3;
+  scroll-margin-top: 5rem;
+}
+
 .step-connector {
   background: linear-gradient(90deg, var(--color-fgu-muted), var(--color-sage-light), var(--color-fgu-muted));
 }
