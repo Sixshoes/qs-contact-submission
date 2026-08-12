@@ -91,18 +91,18 @@ const base = import.meta.env.BASE_URL;
         <div class="card-panel sticky top-0 z-20 space-y-4 backdrop-blur supports-[backdrop-filter]:bg-white/95">
           <div class="flex items-center gap-2">
             <span class="inline-block h-5 w-1 rounded-full bg-gradient-to-b from-fgu to-sage" aria-hidden="true"></span>
-            <h2 class="text-lg font-semibold text-slate-900">提報資訊</h2>
+            <h2 class="text-lg font-semibold text-slate-900">提交資訊</h2>
           </div>
           <div class="grid gap-4 sm:grid-cols-2">
             <div>
               <label for="submitter-unit" class="mb-1.5 block text-sm font-medium text-slate-700">
-                提報單位 (Department / Unit) <span class="text-red-500">*</span>
+                提交單位 (Department / Unit) <span class="text-red-500">*</span>
               </label>
               <input id="submitter-unit" type="text" required placeholder="例如：歷史學系、永續辦公室、國際處..." class="input-field" />
             </div>
             <div>
               <label for="submitter-name" class="mb-1.5 block text-sm font-medium text-slate-700">
-                提報人姓名 (Submitter Name) <span class="text-red-500">*</span>
+                提交人姓名 (Submitter Name) <span class="text-red-500">*</span>
               </label>
               <input id="submitter-name" type="text" required placeholder="請輸入您的姓名" class="input-field" />
             </div>
@@ -269,9 +269,9 @@ const base = import.meta.env.BASE_URL;
 
 謹此提報本單位 QS 世界大學排名學術／雇主問卷聯絡人名單，請查收協助後續作業，謝謝。
 
-■ 提報單位：
-■ 提報人：
-■ 提報內容：
+■ 提交單位：
+■ 提交人姓名：
+■ 提交內容：
 ■ 附件檔案：
 
 敬祝
@@ -1019,8 +1019,8 @@ const base = import.meta.env.BASE_URL;
     function validateAll() {
       const unit = trimVal($('#submitter-unit').value);
       const submitter = trimVal($('#submitter-name').value);
-      if (!unit) return validationErr('請填寫提報單位。', { globalId: 'submitter-unit' });
-      if (!submitter) return validationErr('請填寫提報人姓名。', { globalId: 'submitter-name' });
+      if (!unit) return validationErr('請填寫提交單位。', { globalId: 'submitter-unit' });
+      if (!submitter) return validationErr('請填寫提交人姓名。', { globalId: 'submitter-name' });
       if (!academicContacts.length && !employerContacts.length) {
         return validationErr('請至少新增一筆學術或雇主聯絡人。', { section: 'academic' });
       }
