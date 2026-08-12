@@ -431,6 +431,7 @@ import Layout from '../layouts/Layout.astro';
       else employerContacts = list;
     }
 
+    function findContact(id) {
       return academicContacts.find((c) => c.id === id) || employerContacts.find((c) => c.id === id) || null;
     }
 
