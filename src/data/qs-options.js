@@ -371,8 +371,8 @@ export const SUBJECTS = [
   { en: 'Other', zh: '其他' },
 ];
 
-/** Academic Excel headers (English / QS template) */
-export const ACADEMIC_EXCEL_HEADERS = [
+/** Academic Excel headers — English sheet */
+export const ACADEMIC_EXCEL_HEADERS_EN = [
   'Source',
   'Title',
   'First Name',
@@ -385,6 +385,24 @@ export const ACADEMIC_EXCEL_HEADERS = [
   'Subject',
   'Phone (Optional)',
 ];
+
+/** Academic Excel headers — Chinese sheet */
+export const ACADEMIC_EXCEL_HEADERS_ZH = [
+  '來源',
+  '稱謂',
+  '名字',
+  '姓氏',
+  '職稱',
+  '系所',
+  '機構',
+  '國家或地區',
+  '電子郵件',
+  '學術領域',
+  '電話（選填）',
+];
+
+/** @deprecated use ACADEMIC_EXCEL_HEADERS_EN */
+export const ACADEMIC_EXCEL_HEADERS = ACADEMIC_EXCEL_HEADERS_EN;
 
 /** Employer Excel headers — English sheet */
 export const EMPLOYER_EXCEL_HEADERS_EN = [
