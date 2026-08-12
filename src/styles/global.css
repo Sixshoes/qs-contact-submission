@@ -34,7 +34,6 @@ body {
   background-attachment: fixed;
 }
 
-/* 頁面裝飾浮點（佛光紅 + 鼠尾草綠） */
 .page-deco {
   pointer-events: none;
   position: fixed;
@@ -48,24 +47,35 @@ body {
   content: "";
   position: absolute;
   border-radius: 50%;
-  filter: blur(60px);
-  opacity: 0.35;
+  filter: blur(70px);
+  opacity: 0.4;
+  animation: deco-float 18s ease-in-out infinite alternate;
 }
 
 .page-deco::before {
-  width: 280px;
-  height: 280px;
-  top: 120px;
-  left: -80px;
-  background: color-mix(in srgb, var(--color-fgu) 25%, transparent);
+  width: 320px;
+  height: 320px;
+  top: 100px;
+  left: -100px;
+  background: color-mix(in srgb, var(--color-fgu) 28%, transparent);
 }
 
 .page-deco::after {
-  width: 220px;
-  height: 220px;
-  bottom: 80px;
-  right: -60px;
-  background: color-mix(in srgb, var(--color-sage) 30%, transparent);
+  width: 260px;
+  height: 260px;
+  bottom: 60px;
+  right: -80px;
+  background: color-mix(in srgb, var(--color-sage) 32%, transparent);
+  animation-delay: -9s;
+}
+
+@keyframes deco-float {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(12px, -16px) scale(1.05);
+  }
 }
 
 .page-content {
@@ -73,13 +83,137 @@ body {
   z-index: 1;
 }
 
+/* ── Header ── */
+.site-header {
+  box-shadow:
+    0 4px 24px color-mix(in srgb, var(--color-fgu-deep) 35%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 12%, transparent);
+}
+
+.site-header::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.header-logo-ring {
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, white 15%, transparent),
+    0 8px 24px color-mix(in srgb, black 25%, transparent);
+}
+
+.guidelines-box {
+  background: linear-gradient(135deg, color-mix(in srgb, white 14%, transparent), color-mix(in srgb, white 8%, transparent));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 20%, transparent);
+}
+
+.guidelines-link {
+  backdrop-filter: blur(8px);
+  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.guidelines-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px color-mix(in srgb, black 15%, transparent);
+}
+
+.header-accent-line {
+  background: linear-gradient(90deg, var(--color-qs), var(--color-warm-gold), var(--color-sage));
+}
+
+/* ── Step progress ── */
+.step-nav {
+  box-shadow:
+    0 1px 0 color-mix(in srgb, white 80%, transparent) inset,
+    0 8px 32px color-mix(in srgb, var(--color-fgu) 8%, transparent);
+}
+
+.step-item {
+  transition: color 0.2s ease;
+}
+
+.step-item .step-badge {
+  display: flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.step-item--active {
+  color: var(--color-fgu);
+  font-weight: 600;
+}
+
+.step-item--active .step-badge {
+  background: linear-gradient(135deg, var(--color-fgu), var(--color-fgu-dark));
+  color: white;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-fgu) 45%, transparent);
+  transform: scale(1.05);
+}
+
+.step-item--done {
+  color: var(--color-sage);
+  font-weight: 500;
+}
+
+.step-item--done .step-badge {
+  background: linear-gradient(135deg, var(--color-sage), color-mix(in srgb, var(--color-sage) 80%, #3d6b5a));
+  color: white;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-sage) 35%, transparent);
+}
+
+.step-item--pending {
+  color: #94a3b8;
+}
+
+.step-item--pending .step-badge {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+.step-label {
+  max-width: 7rem;
+  line-height: 1.3;
+}
+
+@media (min-width: 640px) {
+  .step-label {
+    max-width: none;
+  }
+}
+
+.step-connector {
+  background: linear-gradient(90deg, var(--color-fgu-muted), var(--color-sage-light), var(--color-fgu-muted));
+  height: 2px;
+  border-radius: 1px;
+}
+
+/* ── Panels & inputs ── */
 .input-field {
-  @apply w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm transition;
+  @apply w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm shadow-sm transition;
   @apply focus:border-fgu focus:outline-none focus:ring-2 focus:ring-fgu/15;
 }
 
+select.input-field {
+  @apply cursor-pointer appearance-none bg-no-repeat pr-9;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  background-position: right 0.6rem center;
+  background-size: 1rem;
+}
+
 .card-panel {
-  @apply relative overflow-hidden rounded-2xl border border-fgu/10 bg-white/90 p-5 shadow-sm backdrop-blur-sm;
+  @apply relative overflow-hidden rounded-2xl border border-fgu/10 bg-white/92 p-5 shadow-sm backdrop-blur-sm;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, white 90%, transparent) inset,
+    0 4px 24px color-mix(in srgb, var(--color-fgu) 6%, transparent);
 }
 
 .card-panel::before {
@@ -93,26 +227,156 @@ body {
   border-radius: 4px 0 0 4px;
 }
 
+.panel-title {
+  @apply flex items-center gap-2 text-lg font-semibold text-slate-900;
+}
+
+.panel-title-mark {
+  @apply inline-block h-5 w-1 rounded-full;
+  background: linear-gradient(180deg, var(--color-fgu), var(--color-sage));
+}
+
+.info-banner {
+  @apply rounded-xl border border-slate-200/80 bg-white/85 px-4 py-3 text-sm text-slate-600;
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--color-fgu) 4%, transparent);
+}
+
+.details-panel {
+  @apply rounded-xl border border-fgu/15 bg-gradient-to-br from-fgu-light/80 to-white px-4 py-3 text-sm shadow-sm;
+}
+
+.details-panel summary {
+  @apply cursor-pointer list-none font-medium text-fgu-dark transition hover:text-fgu;
+}
+
+.details-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+.details-panel summary::before {
+  content: "▸";
+  display: inline-block;
+  margin-right: 0.5rem;
+  transition: transform 0.2s ease;
+  color: var(--color-fgu);
+}
+
+.details-panel[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.sticky-panel {
+  box-shadow:
+    0 1px 0 color-mix(in srgb, white 90%, transparent) inset,
+    0 8px 28px color-mix(in srgb, var(--color-fgu) 10%, transparent);
+}
+
+/* ── Buttons ── */
 .btn-primary {
-  @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-md transition;
+  @apply inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition;
   background: linear-gradient(135deg, var(--color-fgu) 0%, var(--color-fgu-dark) 100%);
-  @apply hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-fgu) 35%, transparent);
+}
+
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--color-fgu) 40%, transparent);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  @apply cursor-not-allowed opacity-50;
+  box-shadow: none;
 }
 
 .btn-qs {
-  @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-md transition;
+  @apply inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition;
   background: linear-gradient(135deg, var(--color-qs) 0%, var(--color-warm-gold) 100%);
-  @apply hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-qs) 35%, transparent);
+}
+
+.btn-qs:hover:not(:disabled) {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.btn-qs:disabled {
+  @apply cursor-not-allowed bg-slate-300 text-slate-500;
+  box-shadow: none;
+  filter: none;
 }
 
 .btn-secondary {
-  @apply rounded-lg border border-sage/30 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition;
-  @apply hover:border-fgu/30 hover:bg-fgu-light/50;
+  @apply rounded-xl border border-sage/30 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition;
 }
 
+.btn-secondary:hover {
+  @apply border-fgu/30 bg-fgu-light/50;
+  transform: translateY(-1px);
+}
+
+.btn-danger {
+  @apply rounded-xl px-4 py-2 text-sm font-semibold text-white transition;
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  box-shadow: 0 4px 12px color-mix(in srgb, #dc2626 30%, transparent);
+}
+
+.btn-danger:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.btn-danger:disabled {
+  @apply cursor-not-allowed bg-slate-300 text-slate-500;
+  box-shadow: none;
+}
+
+.btn-remove {
+  @apply rounded-lg border border-red-200/80 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700 transition;
+}
+
+.btn-remove:hover {
+  @apply border-red-300 bg-red-100;
+}
+
+.count-badge {
+  @apply rounded-full px-2.5 py-0.5 text-sm font-semibold shadow-sm;
+}
+
+.count-badge--academic {
+  @apply bg-white text-fgu;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-fgu) 12%, transparent);
+}
+
+.count-badge--employer {
+  @apply bg-white text-amber-900;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-qs) 15%, transparent);
+}
+
+.section-icon {
+  @apply mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold shadow-sm;
+}
+
+.section-icon--academic {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-fgu) 18%, white), var(--color-sage-light));
+  color: var(--color-fgu);
+}
+
+.section-icon--employer {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-qs) 25%, white), var(--color-warm-gold-light));
+  color: #92400e;
+}
+
+/* ── Contact sections ── */
 .section-academic {
-  @apply relative rounded-2xl border border-fgu/15 p-5 pb-8 shadow-sm;
-  background: linear-gradient(135deg, var(--color-fgu-light) 0%, white 55%, var(--color-sage-light) 100%);
+  @apply relative rounded-2xl border border-fgu/15 p-5 pb-8;
+  background: linear-gradient(145deg, var(--color-fgu-light) 0%, white 50%, var(--color-sage-light) 100%);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, white 70%, transparent) inset,
+    0 8px 32px color-mix(in srgb, var(--color-fgu) 8%, transparent);
 }
 
 .section-academic::after {
@@ -120,10 +384,10 @@ body {
   position: absolute;
   top: -40px;
   right: -40px;
-  width: 120px;
-  height: 120px;
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--color-fgu) 8%, transparent);
+  background: color-mix(in srgb, var(--color-fgu) 10%, transparent);
   pointer-events: none;
   z-index: 0;
 }
@@ -134,8 +398,11 @@ body {
 }
 
 .section-employer {
-  @apply relative rounded-2xl border border-warm-gold/25 p-5 pb-8 shadow-sm;
-  background: linear-gradient(135deg, var(--color-qs-light) 0%, white 50%, var(--color-warm-gold-light) 100%);
+  @apply relative rounded-2xl border border-warm-gold/25 p-5 pb-8;
+  background: linear-gradient(145deg, var(--color-qs-light) 0%, white 50%, var(--color-warm-gold-light) 100%);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, white 70%, transparent) inset,
+    0 8px 32px color-mix(in srgb, var(--color-qs) 10%, transparent);
 }
 
 .section-employer::after {
@@ -143,10 +410,10 @@ body {
   position: absolute;
   bottom: -20px;
   left: -20px;
-  width: 100px;
-  height: 100px;
+  width: 110px;
+  height: 110px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--color-qs) 10%, transparent);
+  background: color-mix(in srgb, var(--color-qs) 12%, transparent);
   pointer-events: none;
   z-index: 0;
 }
@@ -157,9 +424,19 @@ body {
 }
 
 .contact-card {
-  @apply relative rounded-xl border bg-white p-5 pb-6 shadow-md transition hover:shadow-lg;
+  @apply relative rounded-xl border border-slate-200/80 bg-white p-5 pb-6 transition;
   scroll-margin-top: 7rem;
   scroll-margin-bottom: 1.5rem;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, white 80%, transparent) inset,
+    0 4px 16px color-mix(in srgb, var(--color-fgu) 5%, transparent);
+}
+
+.contact-card:hover {
+  box-shadow:
+    0 1px 0 color-mix(in srgb, white 80%, transparent) inset,
+    0 8px 28px color-mix(in srgb, var(--color-fgu) 10%, transparent);
+  transform: translateY(-2px);
 }
 
 .contact-card::before {
@@ -169,8 +446,8 @@ body {
   left: 1rem;
   right: 1rem;
   height: 3px;
-  border-radius: 0 0 3px 3px;
-  opacity: 0.6;
+  border-radius: 0 0 4px 4px;
+  opacity: 0.75;
 }
 
 .contact-card.academic-card::before {
@@ -181,6 +458,111 @@ body {
   background: linear-gradient(90deg, var(--color-qs), var(--color-warm-gold));
 }
 
+/* ── Step 2 / 3 ── */
+.preview-meta-bar {
+  @apply mb-4 rounded-xl border border-slate-200/80 bg-gradient-to-r from-slate-50 to-fgu-light/30 px-4 py-3 text-sm text-slate-600;
+}
+
+.unlock-panel {
+  @apply rounded-2xl border border-sage/25 p-5 shadow-sm;
+  background: linear-gradient(145deg, var(--color-sage-light) 0%, white 60%, var(--color-fgu-light) 100%);
+  box-shadow: 0 8px 28px color-mix(in srgb, var(--color-sage) 12%, transparent);
+}
+
+.preview-card--academic {
+  @apply rounded-xl border border-fgu/20 p-4;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-fgu-light) 60%, white), white);
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--color-fgu) 6%, transparent);
+}
+
+.preview-card--employer {
+  @apply rounded-xl border border-qs/25 p-4;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-qs-light) 70%, white), white);
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--color-qs) 8%, transparent);
+}
+
+.preview-badge--academic {
+  @apply inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold text-fgu;
+  background: color-mix(in srgb, var(--color-fgu) 10%, white);
+}
+
+.preview-badge--employer {
+  @apply inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold text-amber-900;
+  background: color-mix(in srgb, var(--color-qs) 15%, white);
+}
+
+.success-hero {
+  text-align: center;
+}
+
+.success-icon {
+  @apply mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full text-2xl font-bold text-sage;
+  background: linear-gradient(135deg, var(--color-sage-light), white);
+  box-shadow:
+    0 0 0 6px color-mix(in srgb, var(--color-sage) 12%, transparent),
+    0 8px 24px color-mix(in srgb, var(--color-sage) 20%, transparent);
+  animation: success-pop 0.5s ease-out;
+}
+
+@keyframes success-pop {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.download-panel {
+  @apply mt-4 rounded-xl border border-fgu/20 px-4 py-4;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-fgu-light) 50%, white), white);
+}
+
+.copy-block {
+  @apply rounded-xl border border-slate-200/80 bg-slate-50/80 p-4 transition;
+}
+
+.copy-block:hover {
+  @apply border-fgu/20 bg-white;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--color-fgu) 6%, transparent);
+}
+
+.copy-btn {
+  @apply rounded-lg border border-fgu/20 bg-white px-2.5 py-1 text-xs font-medium text-fgu transition;
+}
+
+.copy-btn:hover {
+  @apply border-fgu/40 bg-fgu-light;
+}
+
+.notice-panel {
+  @apply rounded-xl border border-qs/25 p-4;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-qs-light) 80%, white), white);
+}
+
+/* ── Modal ── */
+.modal-panel {
+  animation: modal-in 0.25s ease-out;
+}
+
+.modal-panel.card-panel::before {
+  background: linear-gradient(180deg, #dc2626, var(--color-fgu));
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ── Validation flash ── */
 @keyframes field-flash-pulse {
   0%,
   100% {
@@ -206,14 +588,30 @@ body {
   scroll-margin-top: 5rem;
 }
 
-.step-connector {
-  background: linear-gradient(90deg, var(--color-fgu-muted), var(--color-sage-light), var(--color-fgu-muted));
-}
-
-.header-accent-line {
-  background: linear-gradient(90deg, var(--color-qs), var(--color-warm-gold), var(--color-sage));
-}
-
 .footer-bar {
   background: linear-gradient(90deg, var(--color-fgu-deep), var(--color-fgu), var(--color-sage));
+}
+
+.site-footer {
+  box-shadow: 0 -4px 24px color-mix(in srgb, var(--color-fgu) 5%, transparent);
+}
+
+.action-bar {
+  @apply flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/60 bg-white/60 px-4 py-3 backdrop-blur-sm;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-deco::before,
+  .page-deco::after,
+  .success-icon,
+  .modal-panel {
+    animation: none;
+  }
+
+  .contact-card:hover,
+  .btn-primary:hover:not(:disabled),
+  .btn-secondary:hover,
+  .guidelines-link:hover {
+    transform: none;
+  }
 }

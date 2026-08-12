@@ -7,7 +7,7 @@ const base = import.meta.env.BASE_URL;
   <div class="page-deco" aria-hidden="true"></div>
   <div class="page-content min-h-screen">
     <!-- Header -->
-    <header class="relative overflow-hidden border-b border-fgu/30 bg-gradient-to-br from-fgu via-fgu-dark to-fgu-deep text-white shadow-lg">
+    <header class="site-header relative overflow-hidden border-b border-fgu/30 bg-gradient-to-br from-fgu via-fgu-dark to-fgu-deep text-white">
       <div class="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-qs/15 blur-3xl" aria-hidden="true"></div>
       <div class="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-sage/20 blur-2xl" aria-hidden="true"></div>
       <div class="pointer-events-none absolute right-1/4 top-1/2 h-32 w-32 -translate-y-1/2 rounded-full bg-warm-gold/10 blur-2xl" aria-hidden="true"></div>
@@ -17,7 +17,7 @@ const base = import.meta.env.BASE_URL;
             <img
               src={`${base}images/fgu-logo.png`}
               alt="佛光大學校徽"
-              class="h-16 w-16 shrink-0 rounded-full object-cover shadow-md ring-2 ring-white/30 sm:h-20 sm:w-20"
+              class="header-logo-ring h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-white/30 sm:h-20 sm:w-20"
               width="80"
               height="80"
             />
@@ -42,14 +42,14 @@ const base = import.meta.env.BASE_URL;
         <p class="mt-5 max-w-3xl text-sm leading-relaxed text-white/85 sm:text-base">
           依 QS Global Academic and Employer Survey Guidelines 填寫聯絡人資料，系統將自動拆分為學術／雇主 Excel 檔供上傳。
         </p>
-        <div class="mt-4 rounded-xl border border-white/20 bg-white/10 px-4 py-3 backdrop-blur-sm">
+        <div class="guidelines-box mt-4 rounded-xl border border-white/20 px-4 py-3 backdrop-blur-sm">
           <p class="text-sm font-semibold text-white">QS Global Academic and Employer Survey Guidelines</p>
           <div class="mt-2 flex flex-wrap gap-2">
             <a
               href={`${base}docs/qs-guidelines-en.pdf`}
               target="_blank"
               rel="noopener noreferrer"
-              class="inline-flex items-center gap-1.5 rounded-lg border border-white/25 bg-white/15 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-white/25"
+              class="guidelines-link inline-flex items-center gap-1.5 rounded-lg border border-white/25 bg-white/15 px-3 py-1.5 text-sm font-medium text-white"
             >
               <span aria-hidden="true">📄</span>
               English（PDF 預覽）
@@ -58,7 +58,7 @@ const base = import.meta.env.BASE_URL;
               href={`${base}docs/qs-guidelines-zh.pdf`}
               target="_blank"
               rel="noopener noreferrer"
-              class="inline-flex items-center gap-1.5 rounded-lg border border-white/25 bg-white/15 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-white/25"
+              class="guidelines-link inline-flex items-center gap-1.5 rounded-lg border border-white/25 bg-white/15 px-3 py-1.5 text-sm font-medium text-white"
             >
               <span aria-hidden="true">📄</span>
               中文譯本（PDF 預覽）
@@ -75,33 +75,33 @@ const base = import.meta.env.BASE_URL;
 
     <main class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <!-- Step indicator -->
-      <nav aria-label="進度" class="card-panel mb-8">
+      <nav aria-label="進度" class="step-nav card-panel mb-8">
         <ol class="flex flex-wrap items-center justify-center gap-3 text-sm sm:gap-6">
-          <li id="step-indicator-1" class="flex items-center gap-2 font-semibold text-fgu">
-            <span class="step-badge flex h-9 w-9 items-center justify-center rounded-full bg-fgu text-sm font-bold text-white shadow-md">1</span>
-            <span>填寫</span>
+          <li id="step-indicator-1" class="step-item step-item--active flex items-center gap-2">
+            <span class="step-badge">1</span>
+            <span class="step-label">填寫</span>
           </li>
           <li class="step-connector hidden h-px w-10 sm:block" aria-hidden="true"></li>
-          <li id="step-indicator-2" class="flex items-center gap-2 text-slate-400">
-            <span class="step-badge flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600">2</span>
-            <span>預覽與匯出 Excel</span>
+          <li id="step-indicator-2" class="step-item step-item--pending flex items-center gap-2">
+            <span class="step-badge">2</span>
+            <span class="step-label">預覽與匯出 Excel</span>
           </li>
           <li class="step-connector hidden h-px w-10 sm:block" aria-hidden="true"></li>
-          <li id="step-indicator-3" class="flex items-center gap-2 text-slate-400">
-            <span class="step-badge flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600">3</span>
-            <span>下載與回信範本</span>
+          <li id="step-indicator-3" class="step-item step-item--pending flex items-center gap-2">
+            <span class="step-badge">3</span>
+            <span class="step-label">下載與回信範本</span>
           </li>
         </ol>
       </nav>
 
       <!-- ========== STEP 1 ========== -->
       <section id="step-1" class="space-y-6">
-        <p class="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 text-sm text-slate-600 shadow-sm">
+        <p class="info-banner">
           學術聯絡人與雇主聯絡人各最多 10 筆。
         </p>
 
-        <details class="rounded-xl border border-fgu/15 bg-fgu-light/50 px-4 py-3 text-sm shadow-sm">
-          <summary class="cursor-pointer font-medium text-fgu-dark">Email 填寫說明（依 QS 方法論 §2.8）</summary>
+        <details class="details-panel">
+          <summary>Email 填寫說明（依 QS 方法論 §2.8）</summary>
           <ul class="mt-3 space-y-2 text-xs leading-relaxed text-slate-600">
             <li>• 請填寫聯絡人<strong>個人信箱或個人公務信箱</strong>，避免使用 team@、info@、admissions@ 等共用或團隊信箱。</li>
             <li>• 每位聯絡人僅填<strong>一組</strong> email。</li>
@@ -110,11 +110,11 @@ const base = import.meta.env.BASE_URL;
           </ul>
         </details>
 
-        <div class="card-panel sticky top-0 z-20 space-y-4 backdrop-blur supports-[backdrop-filter]:bg-white/95">
-          <div class="flex items-center gap-2">
-            <span class="inline-block h-5 w-1 rounded-full bg-gradient-to-b from-fgu to-sage" aria-hidden="true"></span>
-            <h2 class="text-lg font-semibold text-slate-900">提交資訊</h2>
-          </div>
+        <div class="sticky-panel card-panel sticky top-0 z-20 space-y-4 supports-[backdrop-filter]:bg-white/95">
+          <h2 class="panel-title">
+            <span class="panel-title-mark" aria-hidden="true"></span>
+            提交資訊
+          </h2>
           <div class="grid gap-4 sm:grid-cols-2">
             <div>
               <label for="submitter-unit" class="mb-1.5 block text-sm font-medium text-slate-700">
@@ -135,12 +135,12 @@ const base = import.meta.env.BASE_URL;
         <section id="section-academic" class="section-academic">
           <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-start gap-3">
-              <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-fgu/15 to-sage-light text-sm font-bold text-fgu">A</span>
+              <span class="section-icon section-icon--academic" aria-hidden="true">A</span>
               <div>
                 <h2 class="text-lg font-semibold text-fgu-dark">學術聯絡人 (Academic)</h2>
               </div>
             </div>
-            <span id="academic-count" class="rounded-full bg-white px-2.5 py-0.5 text-sm font-medium text-fgu shadow-sm">(0 / 10)</span>
+            <span id="academic-count" class="count-badge count-badge--academic">(0 / 10)</span>
           </div>
           <div id="academic-contacts-container" class="space-y-5"></div>
           <p id="academic-empty-hint" class="hidden rounded-xl border border-dashed border-fgu/30 bg-white/70 px-4 py-8 text-center text-sm text-slate-500">
@@ -157,12 +157,12 @@ const base = import.meta.env.BASE_URL;
         <section id="section-employer" class="section-employer">
           <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-start gap-3">
-              <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-qs/20 to-warm-gold-light text-sm font-bold text-amber-900">E</span>
+              <span class="section-icon section-icon--employer" aria-hidden="true">E</span>
               <div>
                 <h2 class="text-lg font-semibold text-amber-900">雇主聯絡人 (Employer)</h2>
               </div>
             </div>
-            <span id="employer-count" class="rounded-full bg-white px-2.5 py-0.5 text-sm font-medium text-amber-800 shadow-sm">(0 / 10)</span>
+            <span id="employer-count" class="count-badge count-badge--employer">(0 / 10)</span>
           </div>
           <div id="employer-contacts-container" class="space-y-5"></div>
           <p id="employer-empty-hint" class="hidden rounded-xl border border-dashed border-qs/40 bg-white/70 px-4 py-8 text-center text-sm text-slate-500">
@@ -177,11 +177,11 @@ const base = import.meta.env.BASE_URL;
 
         <p id="form-error" class="hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-sm" role="alert"></p>
 
-        <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+        <div class="action-bar">
           <button type="button" id="btn-open-clear" class="btn-secondary px-5 py-2.5">
             清空所有欄位
           </button>
-          <button type="button" id="btn-preview" class="btn-primary px-6 py-3 text-base shadow-lg">
+          <button type="button" id="btn-preview" class="btn-primary px-6 py-3 text-base">
             預覽與確認名單 →
           </button>
         </div>
@@ -194,11 +194,11 @@ const base = import.meta.env.BASE_URL;
             <h2 class="text-lg font-semibold text-slate-900">確認提報名單</h2>
             <button type="button" id="btn-back" class="btn-secondary">← 返回修改</button>
           </div>
-          <p id="preview-meta" class="mb-4 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600"></p>
+          <p id="preview-meta" class="preview-meta-bar"></p>
           <div id="preview-list" class="space-y-4"></div>
         </div>
 
-        <div class="rounded-2xl border border-sage/25 bg-gradient-to-br from-sage-light/80 to-white p-5 shadow-sm">
+        <div class="unlock-panel">
           <label for="confirm-unlock" class="mb-2 block text-sm font-medium text-fgu-dark">
             防呆解鎖：請輸入「我確定提交」以解鎖提交按鈕
           </label>
@@ -216,39 +216,39 @@ const base = import.meta.env.BASE_URL;
 
       <!-- ========== STEP 3 ========== -->
       <section id="step-3" class="hidden space-y-6">
-        <div class="card-panel text-center shadow-md">
-          <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-sage/15 text-2xl text-sage" aria-hidden="true">✓</div>
-          <h2 class="text-xl font-bold text-fgu-dark">寄件完成</h2>
+        <div class="success-hero card-panel shadow-md">
+          <div class="success-icon" aria-hidden="true">✓</div>
+          <h2 class="text-xl font-bold text-fgu-dark">成功匯出</h2>
           <p class="mt-2 text-sm text-slate-600">請依下方步驟下載 Excel 並寄信給下列收件人即可完成提交。</p>
         </div>
 
         <!-- 下載 -->
         <div class="card-panel shadow-md">
-          <div class="flex items-center gap-2">
-            <span class="inline-block h-5 w-1 rounded-full bg-gradient-to-b from-fgu to-sage" aria-hidden="true"></span>
-            <h3 class="text-lg font-semibold text-slate-900">下載</h3>
-          </div>
+          <h3 class="panel-title">
+            <span class="panel-title-mark" aria-hidden="true"></span>
+            下載
+          </h3>
           <p class="mt-3 text-sm leading-relaxed text-slate-600">
             請下載本次產生的 Excel 檔案。
           </p>
-          <div id="download-panel" class="mt-4 hidden rounded-xl border border-fgu/20 bg-fgu-light/30 px-4 py-4">
+          <div id="download-panel" class="download-panel hidden">
             <div id="download-buttons" class="flex flex-wrap gap-2"></div>
           </div>
         </div>
 
         <!-- 回信範本 -->
         <div class="card-panel shadow-md">
-          <div class="flex items-center gap-2">
-            <span class="inline-block h-5 w-1 rounded-full bg-gradient-to-b from-fgu to-sage" aria-hidden="true"></span>
-            <h3 class="text-lg font-semibold text-slate-900">回信範本</h3>
-          </div>
+          <h3 class="panel-title">
+            <span class="panel-title-mark" aria-hidden="true"></span>
+            回信範本
+          </h3>
           <p class="mt-3 text-sm leading-relaxed text-slate-600">
             下載完成後，請將 Excel 以 Email 寄給<strong>奕廷</strong>（<code class="rounded bg-slate-100 px-1 text-fgu">yitingchen@mail.fgu.edu.tw</code>）、<strong>嘉玲</strong>（<code class="rounded bg-slate-100 px-1 text-fgu">chlchang@mail.fgu.edu.tw</code>）。
             若需要，可複製下方<strong>收件人、主旨、內文</strong>作為寄信參考。主旨、內文、附件檔名皆可依需要自行修改。
           </p>
 
           <!-- 附件說明 -->
-          <div class="mt-4 rounded-xl border border-qs/25 bg-qs-light/50 p-4">
+          <div class="notice-panel mt-4">
             <h4 class="text-sm font-semibold text-amber-900">附件注意事項</h4>
             <ul class="mt-2 space-y-1.5 text-sm leading-relaxed text-slate-700">
               <li>• 若有填寫<strong>學術</strong>聯絡人，請附上 <strong>QS_學術聯絡人名單</strong> Excel（1 個檔案，內含「中文」「English」「合併說明」分頁）。</li>
@@ -263,30 +263,30 @@ const base = import.meta.env.BASE_URL;
           </div>
 
           <div class="mt-6 space-y-4">
-            <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div class="copy-block">
               <div class="mb-2 flex items-center justify-between gap-2">
                 <span class="text-sm font-medium text-slate-700">收件人</span>
-                <button type="button" data-copy-target="copy-to" class="copy-btn rounded-md border border-fgu/20 bg-white px-2.5 py-1 text-xs font-medium text-fgu transition hover:bg-fgu-light">
+                <button type="button" data-copy-target="copy-to" class="copy-btn">
                   複製
                 </button>
               </div>
               <pre id="copy-to" class="whitespace-pre-wrap break-all font-sans text-sm text-slate-800">yitingchen@mail.fgu.edu.tw; chlchang@mail.fgu.edu.tw</pre>
             </div>
 
-            <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div class="copy-block">
               <div class="mb-2 flex items-center justify-between gap-2">
                 <span class="text-sm font-medium text-slate-700">信件主旨</span>
-                <button type="button" data-copy-target="copy-subject" class="copy-btn rounded-md border border-fgu/20 bg-white px-2.5 py-1 text-xs font-medium text-fgu transition hover:bg-fgu-light">
+                <button type="button" data-copy-target="copy-subject" class="copy-btn">
                   複製
                 </button>
               </div>
               <pre id="copy-subject" class="whitespace-pre-wrap break-all font-sans text-sm text-slate-800"></pre>
             </div>
 
-            <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div class="copy-block">
               <div class="mb-2 flex items-center justify-between gap-2">
                 <span class="text-sm font-medium text-slate-700">信件內文</span>
-                <button type="button" data-copy-target="copy-body" class="copy-btn rounded-md border border-fgu/20 bg-white px-2.5 py-1 text-xs font-medium text-fgu transition hover:bg-fgu-light">
+                <button type="button" data-copy-target="copy-body" class="copy-btn">
                   複製
                 </button>
               </div>
@@ -321,7 +321,7 @@ const base = import.meta.env.BASE_URL;
     <div id="clear-modal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="clear-modal-title">
       <div id="clear-modal-backdrop" class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
       <div class="relative flex min-h-full items-center justify-center p-4">
-        <div class="card-panel w-full max-w-md shadow-xl">
+        <div class="modal-panel card-panel w-full max-w-md shadow-xl">
           <h3 id="clear-modal-title" class="text-lg font-semibold text-slate-900">確認清空所有欄位</h3>
           <p class="mt-2 text-sm leading-relaxed text-slate-600">
             此操作將清除目前填寫的所有資料（含已儲存於本機的草稿），且無法復原。
@@ -332,7 +332,7 @@ const base = import.meta.env.BASE_URL;
           <input id="clear-confirm" type="text" autocomplete="off" placeholder="我確定要清空以上資料" class="input-field mt-2" />
           <div class="mt-5 flex justify-end gap-2">
             <button type="button" id="btn-clear-cancel" class="btn-secondary px-4 py-2">取消</button>
-            <button type="button" id="btn-clear-confirm" disabled class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500">
+            <button type="button" id="btn-clear-confirm" disabled class="btn-danger">
               清空所有欄位
             </button>
           </div>
@@ -340,7 +340,7 @@ const base = import.meta.env.BASE_URL;
       </div>
     </div>
 
-    <footer class="relative mt-8 border-t border-fgu/10 bg-white/90 py-8 backdrop-blur-sm">
+    <footer class="site-footer relative mt-8 border-t border-fgu/10 bg-white/90 py-8 backdrop-blur-sm">
       <div class="footer-bar absolute inset-x-0 top-0 h-1" aria-hidden="true"></div>
       <div class="mx-auto flex max-w-5xl flex-col items-center gap-4 px-4 pt-2 sm:flex-row sm:justify-between sm:px-6">
         <div class="flex items-center gap-3">
@@ -357,7 +357,7 @@ const base = import.meta.env.BASE_URL;
     <article class="contact-card border-slate-200" data-contact-id="">
       <div class="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-3">
         <h3 class="contact-card-title text-base font-semibold text-slate-900">聯絡人 #1</h3>
-        <button type="button" class="btn-remove-contact rounded-md border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700 transition hover:bg-red-100">
+        <button type="button" class="btn-remove btn-remove-contact">
           刪除
         </button>
       </div>
@@ -727,17 +727,8 @@ const base = import.meta.env.BASE_URL;
     function setStepIndicators(step) {
       for (let i = 1; i <= 3; i++) {
         const el = $(`#step-indicator-${i}`);
-        const badge = el.querySelector('.step-badge');
-        if (i === step) {
-          el.className = 'flex items-center gap-2 font-semibold text-fgu';
-          badge.className = 'step-badge flex h-9 w-9 items-center justify-center rounded-full bg-fgu text-sm font-bold text-white shadow-md';
-        } else if (i < step) {
-          el.className = 'flex items-center gap-2 font-medium text-sage';
-          badge.className = 'step-badge flex h-9 w-9 items-center justify-center rounded-full bg-sage text-sm font-bold text-white shadow-sm';
-        } else {
-          el.className = 'flex items-center gap-2 text-slate-400';
-          badge.className = 'step-badge flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-600';
-        }
+        el.className = 'step-item flex items-center gap-2';
+        el.classList.add(i === step ? 'step-item--active' : i < step ? 'step-item--done' : 'step-item--pending');
       }
     }
 
@@ -1156,14 +1147,11 @@ const base = import.meta.env.BASE_URL;
       ];
 
       const card = document.createElement('article');
-      card.className =
-        type === 'academic'
-          ? 'rounded-xl border border-fgu/20 bg-fgu-light/50 p-4 shadow-sm'
-          : 'rounded-xl border border-qs/30 bg-qs-light/50 p-4 shadow-sm';
+      card.className = type === 'academic' ? 'preview-card--academic' : 'preview-card--employer';
       const badge =
         type === 'academic'
-          ? '<span class="inline-flex rounded-full bg-fgu/10 px-2.5 py-0.5 text-xs font-semibold text-fgu">學術 Academic</span>'
-          : '<span class="inline-flex rounded-full bg-qs/15 px-2.5 py-0.5 text-xs font-semibold text-amber-900">雇主 Employer</span>';
+          ? '<span class="preview-badge--academic">學術 Academic</span>'
+          : '<span class="preview-badge--employer">雇主 Employer</span>';
 
       card.innerHTML = `
         <div class="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2">
