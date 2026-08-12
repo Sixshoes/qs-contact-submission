@@ -73,6 +73,10 @@ const base = import.meta.env.BASE_URL;
 
       <!-- ========== STEP 1 ========== -->
       <section id="step-1" class="space-y-6">
+        <p class="rounded-xl border border-slate-200 bg-white/80 px-4 py-3 text-sm text-slate-600 shadow-sm">
+          學術聯絡人與雇主聯絡人各最多 10 筆。
+        </p>
+
         <div class="card-panel sticky top-0 z-20 space-y-4 backdrop-blur supports-[backdrop-filter]:bg-white/95">
           <div class="flex items-center gap-2">
             <span class="inline-block h-5 w-1 rounded-full bg-gradient-to-b from-fgu to-sage" aria-hidden="true"></span>
@@ -101,7 +105,6 @@ const base = import.meta.env.BASE_URL;
               <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-fgu/15 to-sage-light text-sm font-bold text-fgu">A</span>
               <div>
                 <h2 class="text-lg font-semibold text-fgu-dark">學術聯絡人 (Academic)</h2>
-                <p class="mt-1 text-sm text-slate-600">含 Subject 等 11 個 QS 欄位，最多 10 筆</p>
               </div>
             </div>
             <div class="flex items-center gap-3">
@@ -124,7 +127,6 @@ const base = import.meta.env.BASE_URL;
               <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-qs/20 to-warm-gold-light text-sm font-bold text-amber-900">E</span>
               <div>
                 <h2 class="text-lg font-semibold text-amber-900">雇主聯絡人 (Employer)</h2>
-                <p class="mt-1 text-sm text-slate-600">含 Position、Industry 等 10 個 QS 欄位，最多 10 筆</p>
               </div>
             </div>
             <div class="flex items-center gap-3">
@@ -186,10 +188,10 @@ const base = import.meta.env.BASE_URL;
         <div class="card-panel shadow-md">
           <div class="flex items-center gap-2">
             <span class="inline-block h-5 w-1 rounded-full bg-gradient-to-b from-fgu to-sage" aria-hidden="true"></span>
-            <h3 class="text-lg font-semibold text-slate-900">Mail2000 寄信指示</h3>
+            <h3 class="text-lg font-semibold text-slate-900">寄信範本（Mail2000）</h3>
           </div>
           <p class="mt-3 text-sm leading-relaxed text-slate-600">
-            請使用佛光大學 Mail2000 將剛才下載的 Excel 檔寄至永續辦公室。下方已自動帶入本次提報的收件人、主旨、內文與附件檔名，可一鍵複製使用。
+            請使用佛光大學 Mail2000 將剛才下載的 Excel 檔寄至永續辦公室。下方已依本次提報內容自動產生<strong>收件人、主旨、內文</strong>，可一鍵複製貼上使用。
           </p>
 
           <!-- 操作步驟 -->
@@ -267,15 +269,16 @@ const base = import.meta.env.BASE_URL;
                   複製
                 </button>
               </div>
-              <pre id="copy-body" class="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-800">您好，
+              <pre id="copy-body" class="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-800">永續辦公室 承辦老師您好：
 
-附件為本單位提報之 QS 學術／雇主問卷聯絡人名單，請查收。
+謹此提報本單位 QS 世界大學排名學術／雇主問卷聯絡人名單，請查收協助後續作業，謝謝。
 
-提報單位：
-提報人：
-附件檔案：
+■ 提報單位：
+■ 提報人：
+■ 提報內容：
+■ 附件檔案：
 
-如有需要修改或補充，請再隨時通知，謝謝！
+附件為依 QS Global Academic and Employer Survey Guidelines 格式填寫之 Excel 檔案。若資料需修正或補充，請不吝告知。
 
 敬祝
 教安</pre>
@@ -317,7 +320,7 @@ const base = import.meta.env.BASE_URL;
         </button>
       </div>
 
-      <div class="grid gap-4 sm:grid-cols-2">
+      <div class="grid gap-4 sm:grid-cols-2 [&>div]:min-w-0">
         <!-- Title -->
         <div>
           <label class="mb-1.5 block text-sm font-medium text-slate-700">
@@ -838,7 +841,7 @@ const base = import.meta.env.BASE_URL;
       showError('');
       const container = type === 'academic' ? $('#academic-contacts-container') : $('#employer-contacts-container');
       const lastCard = container?.lastElementChild;
-      lastCard?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      lastCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function showError(err) {
@@ -1176,13 +1179,45 @@ const base = import.meta.env.BASE_URL;
       }
     }
 
+    function buildMailSubject(unit, submitter) {
+      return `【QS聯絡人提報】${unit}－${submitter}`;
+    }
+
+    function buildMailBody(unit, submitter, summary, fileLines, academicCount, employerCount) {
+      const attachmentNote =
+        academicCount && employerCount
+          ? '（含學術聯絡人名單及雇主聯絡人名單；雇主檔含「中文」「English」「合併說明」分頁）'
+          : employerCount
+            ? '（雇主聯絡人名單含「中文」「English」「合併說明」分頁）'
+            : '';
+
+      return `永續辦公室 承辦老師您好：
+
+謹此提報本單位 QS 世界大學排名學術／雇主問卷聯絡人名單，請查收協助後續作業，謝謝。
+
+■ 提報單位：${unit}
+■ 提報人：${submitter}
+■ 提報內容：${summary}
+■ 附件檔案${attachmentNote}：
+${fileLines}
+
+附件為依 QS Global Academic and Employer Survey Guidelines 格式填寫之 Excel 檔案。若資料需修正或補充，請不吝告知。
+
+敬祝
+教安
+
+${submitter}
+${unit}
+佛光大學`;
+    }
+
     function goToStep3() {
       const unit = trimVal($('#submitter-unit').value);
       const submitter = trimVal($('#submitter-name').value);
       const academicCount = academicContacts.length;
       const employerCount = employerContacts.length;
 
-      $('#copy-subject').textContent = `QS聯絡人提報 - ${unit} - ${submitter}`;
+      $('#copy-subject').textContent = buildMailSubject(unit, submitter);
 
       const fileLines = downloadedFiles.length
         ? downloadedFiles.map((f, i) => `${i + 1}. ${f}`).join('\n')
@@ -1193,20 +1228,14 @@ const base = import.meta.env.BASE_URL;
       if (employerCount) summaryParts.push(`雇主聯絡人 ${employerCount} 筆`);
       const summary = summaryParts.join('、') || '—';
 
-      $('#copy-body').textContent = `您好，
-
-附件為本單位提報之 QS 學術／雇主問卷聯絡人名單，請查收。
-
-提報單位：${unit}
-提報人：${submitter}
-本次提報：${summary}
-附件檔案：
-${fileLines}
-
-如有需要修改或補充，請再隨時通知，謝謝！
-
-敬祝
-教安`;
+      $('#copy-body').textContent = buildMailBody(
+        unit,
+        submitter,
+        summary,
+        fileLines,
+        academicCount,
+        employerCount,
+      );
 
       const attachList = $('#attachment-list');
       attachList.innerHTML = '';

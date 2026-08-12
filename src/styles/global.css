@@ -111,7 +111,7 @@ body {
 }
 
 .section-academic {
-  @apply relative overflow-hidden rounded-2xl border border-fgu/15 p-5 shadow-sm;
+  @apply relative rounded-2xl border border-fgu/15 p-5 pb-8 shadow-sm;
   background: linear-gradient(135deg, var(--color-fgu-light) 0%, white 55%, var(--color-sage-light) 100%);
 }
 
@@ -125,27 +125,41 @@ body {
   border-radius: 50%;
   background: color-mix(in srgb, var(--color-fgu) 8%, transparent);
   pointer-events: none;
+  z-index: 0;
+}
+
+.section-academic > * {
+  position: relative;
+  z-index: 1;
 }
 
 .section-employer {
-  @apply relative overflow-hidden rounded-2xl border border-warm-gold/25 p-5 shadow-sm;
+  @apply relative rounded-2xl border border-warm-gold/25 p-5 pb-8 shadow-sm;
   background: linear-gradient(135deg, var(--color-qs-light) 0%, white 50%, var(--color-warm-gold-light) 100%);
 }
 
 .section-employer::after {
   content: "";
   position: absolute;
-  bottom: -30px;
-  left: -30px;
+  bottom: -20px;
+  left: -20px;
   width: 100px;
   height: 100px;
   border-radius: 50%;
   background: color-mix(in srgb, var(--color-qs) 10%, transparent);
   pointer-events: none;
+  z-index: 0;
+}
+
+.section-employer > * {
+  position: relative;
+  z-index: 1;
 }
 
 .contact-card {
-  @apply relative rounded-xl border bg-white p-5 shadow-md transition hover:shadow-lg;
+  @apply relative rounded-xl border bg-white p-5 pb-6 shadow-md transition hover:shadow-lg;
+  scroll-margin-top: 7rem;
+  scroll-margin-bottom: 1.5rem;
 }
 
 .contact-card::before {
