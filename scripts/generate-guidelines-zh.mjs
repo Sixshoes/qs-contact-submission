@@ -11,7 +11,7 @@ import {
 } from '../src/data/qs-options.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const outDir = path.resolve(__dirname, '../../世界大學排名/雇主學術聯絡人蒐集');
+const outDir = path.resolve(__dirname, '../source-docs');
 
 const listItems = (items) =>
   items

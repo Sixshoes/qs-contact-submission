@@ -42,6 +42,29 @@ const base = import.meta.env.BASE_URL;
         <p class="mt-5 max-w-3xl text-sm leading-relaxed text-white/85 sm:text-base">
           依 QS Global Academic and Employer Survey Guidelines 填寫聯絡人資料，系統將自動拆分為學術／雇主 Excel 檔供上傳。
         </p>
+        <div class="mt-4 rounded-xl border border-white/20 bg-white/10 px-4 py-3 backdrop-blur-sm">
+          <p class="text-sm font-semibold text-white">QS Global Academic and Employer Survey Guidelines</p>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <a
+              href={`${base}docs/qs-guidelines-en.pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1.5 rounded-lg border border-white/25 bg-white/15 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-white/25"
+            >
+              <span aria-hidden="true">📄</span>
+              English（PDF 預覽）
+            </a>
+            <a
+              href={`${base}docs/qs-guidelines-zh.pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1.5 rounded-lg border border-white/25 bg-white/15 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-white/25"
+            >
+              <span aria-hidden="true">📄</span>
+              中文譯本（PDF 預覽）
+            </a>
+          </div>
+        </div>
         <div class="mt-4 flex items-center gap-2" aria-hidden="true">
           <div class="header-accent-line h-1 w-20 rounded-full shadow-sm"></div>
           <div class="h-1.5 w-1.5 rounded-full bg-sage-light/80"></div>

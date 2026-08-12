@@ -7,6 +7,9 @@
   },
   "scripts": {
     "dev": "astro dev",
+    "generate:guidelines-md": "node scripts/generate-guidelines-zh.mjs",
+    "generate:guidelines-pdf": "node scripts/generate-guidelines-pdf.mjs",
+    "prepare:docs": "node scripts/generate-guidelines-zh.mjs && node scripts/generate-guidelines-pdf.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
@@ -16,5 +19,9 @@
     "astro": "^7.2.1",
     "exceljs": "^4.4.0",
     "tailwindcss": "^4.3.3"
+  },
+  "devDependencies": {
+    "marked": "^18.0.9",
+    "playwright": "^1.62.1"
   }
 }
