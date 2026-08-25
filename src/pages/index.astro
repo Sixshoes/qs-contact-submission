@@ -40,7 +40,7 @@ const base = import.meta.env.BASE_URL;
           </div>
         </div>
         <p class="mt-5 max-w-3xl text-sm leading-relaxed text-white/85 sm:text-base">
-          依 QS Global Academic and Employer Survey Guidelines 填寫聯絡人資料；確認提交後會追加到永續辦共用試算表 Pool（亦可選用下載 Excel 備份）。
+          依 QS Global Academic and Employer Survey Guidelines 填寫聯絡人資料。
         </p>
         <div class="guidelines-box mt-4 rounded-xl border border-white/20 px-4 py-3 backdrop-blur-sm">
           <p class="text-sm font-semibold text-white">QS Global Academic and Employer Survey Guidelines</p>
@@ -208,7 +208,7 @@ const base = import.meta.env.BASE_URL;
               確認提交
             </button>
             <p id="submit-hint" class="mt-2 text-xs leading-relaxed text-slate-500">
-              提交後資料會追加到永續辦共用試算表 Pool（不覆蓋他人資料）；完成後可選用下載 Excel 備份。
+              可複製上方「我確定提交」以完成提交。
             </p>
           </div>
         </div>
@@ -218,9 +218,9 @@ const base = import.meta.env.BASE_URL;
       <section id="step-3" class="hidden space-y-6">
         <div class="success-hero card-panel shadow-md">
           <div class="success-icon" aria-hidden="true">✓</div>
-          <h2 id="success-title" class="text-xl font-bold text-fgu-dark">成功提交</h2>
+          <h2 id="success-title" class="text-xl font-bold text-fgu-dark">已提交成功</h2>
           <p id="success-desc" class="mt-2 text-sm text-slate-600">
-            資料已追加至永續辦共用試算表 Pool。若需自行留存，可於下方下載 Excel 備份。
+            下方 Excel 可下載備份。
           </p>
           <p id="submission-id-line" class="mt-3 hidden text-xs text-slate-500"></p>
         </div>
@@ -228,12 +228,9 @@ const base = import.meta.env.BASE_URL;
         <div class="card-panel shadow-md">
           <h3 class="panel-title">
             <span class="panel-title-mark" aria-hidden="true"></span>
-            下載備份（選用）
+            下載 Excel 備份
           </h3>
-          <p class="mt-3 text-sm leading-relaxed text-slate-600">
-            一般情況不必下載。若您想自行留存，可下載本次產生的 Excel 檔案。
-          </p>
-          <div id="download-panel" class="download-panel hidden">
+          <div id="download-panel" class="download-panel mt-3 hidden">
             <div id="download-buttons" class="flex flex-wrap gap-2"></div>
           </div>
         </div>
@@ -1333,9 +1330,8 @@ const base = import.meta.env.BASE_URL;
       const idLine = $('#submission-id-line');
 
       if (cloudOk) {
-        titleEl.textContent = '成功提交';
-        descEl.textContent =
-          '資料已追加至永續辦共用試算表 Pool。若需自行留存，可於下方下載 Excel 備份。';
+        titleEl.textContent = '已提交成功';
+        descEl.textContent = '下方 Excel 可下載備份。';
         if (lastSubmissionId) {
           idLine.textContent = lastSubmitTimestamp
             ? `提交編號：${lastSubmissionId}　｜　時間戳：${lastSubmitTimestamp}`
@@ -1345,10 +1341,10 @@ const base = import.meta.env.BASE_URL;
           idLine.classList.add('hidden');
         }
       } else {
-        titleEl.textContent = '尚無法送出至試算表';
+        titleEl.textContent = '送出失敗';
         descEl.textContent = lastSubmitError
-          ? `自動送出失敗（${lastSubmitError}）。請先下載下方 Excel 備份，並聯絡永續辦協助處理。`
-          : '目前無法自動送出。請先下載下方 Excel 備份，並聯絡永續辦協助處理。';
+          ? `無法寫入試算表（${lastSubmitError}）。請下載下方 Excel 備份。`
+          : '無法寫入試算表。請下載下方 Excel 備份。';
         idLine.classList.add('hidden');
       }
 
@@ -1450,8 +1446,7 @@ const base = import.meta.env.BASE_URL;
       bindClearModal();
       const hint = $('#submit-hint');
       if (hint && !GOOGLE_SCRIPT_URL) {
-        hint.textContent =
-          '目前尚未啟用雲端提交：送出後請下載 Excel 備份，並聯絡永續辦協助處理。啟用方式見 google-apps-script/Code.gs。';
+        hint.textContent = '可複製上方「我確定提交」以完成提交。送出後請下載 Excel 備份。';
       }
       const saved = loadState();
       if (saved && (saved.academicContacts?.length || saved.employerContacts?.length)) {
