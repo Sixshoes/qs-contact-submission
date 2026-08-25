@@ -36,6 +36,9 @@ jobs:
           SITE: https://sixshoes.github.io
           BASE: /qs-contact-submission/
           PUBLIC_GOOGLE_SCRIPT_URL: https://script.google.com/macros/s/AKfycbzRS2On9J60R37GHPm7_dwlTP4tzLQDob5yDWHIQ3Fl-W12cPogA3wkc1Qa1DOipV7NOA/exec
+          PUBLIC_GOOGLE_CLIENT_ID: ${{ vars.PUBLIC_GOOGLE_CLIENT_ID }}
+          PUBLIC_GOOGLE_SHEET_ID: ${{ vars.PUBLIC_GOOGLE_SHEET_ID }}
+          PUBLIC_GOOGLE_SHEET_NAME: QS 2028 聯絡人提報
         run: npm run build
 
       - name: Upload Pages artifact
