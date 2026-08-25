@@ -88,6 +88,13 @@ function formatTimestamp_(date) {
   return Utilities.formatDate(date || new Date(), TZ, 'yyyy-MM-dd HH:mm:ss');
 }
 
+/** 強制當文字寫入，避免電話 0978… 被試算表吃掉開頭 0 */
+function asText_(value) {
+  var s = String(value == null ? '' : value).trim();
+  if (!s) return '';
+  return "'" + s;
+}
+
 /**
  * 優先順序：程式內 SHEET_ID → ScriptProperties → 綁定試算表 → 新建一本
  */
@@ -153,7 +160,7 @@ function appendSubmission_(data) {
       row['Country or Territory'] || '',
       row.Email || '',
       row.Subject || '',
-      row['Phone (Optional)'] || '',
+      asText_(row['Phone (Optional)']),
       stamp,
     ]);
   });
@@ -173,7 +180,7 @@ function appendSubmission_(data) {
       row['Company Name'] || '',
       row['Country or Territory'] || '',
       row.Email || '',
-      row['Phone (Optional)'] || '',
+      asText_(row['Phone (Optional)']),
       stamp,
     ]);
   });
@@ -239,6 +246,11 @@ function ensureSheet_(ss, name, headers) {
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(headers);
     sheet.setFrozenRows(1);
+  }
+  // Phone 欄位設為純文字，避免開頭 0 被吃掉
+  var phoneCol = headers.indexOf('Phone (Optional)') + 1;
+  if (phoneCol > 0) {
+    sheet.getRange(1, phoneCol, Math.max(sheet.getMaxRows(), 1), 1).setNumberFormat('@');
   }
 }
 
