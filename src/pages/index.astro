@@ -208,7 +208,7 @@ const base = import.meta.env.BASE_URL;
               確認提交
             </button>
             <p id="submit-hint" class="mt-2 text-xs leading-relaxed text-slate-500">
-              提交後資料會追加到永續辦共用試算表 Pool（不覆蓋他人資料）；您不必再下載或寄信。仍可於下一步選用下載 Excel 作為備份。
+              提交後資料會追加到永續辦共用試算表 Pool（不覆蓋他人資料）；完成後可選用下載 Excel 備份。
             </p>
           </div>
         </div>
@@ -218,73 +218,25 @@ const base = import.meta.env.BASE_URL;
       <section id="step-3" class="hidden space-y-6">
         <div class="success-hero card-panel shadow-md">
           <div class="success-icon" aria-hidden="true">✓</div>
-          <h2 id="success-title" class="text-xl font-bold text-fgu-dark">提交成功</h2>
+          <h2 id="success-title" class="text-xl font-bold text-fgu-dark">成功提交</h2>
           <p id="success-desc" class="mt-2 text-sm text-slate-600">
-            資料已追加至永續辦共用試算表 Pool，您無需再寄信。下方 Excel 下載僅供自行備份（選用）。
+            資料已追加至永續辦共用試算表 Pool。若需自行留存，可於下方下載 Excel 備份。
           </p>
           <p id="submission-id-line" class="mt-3 hidden text-xs text-slate-500"></p>
         </div>
 
-        <!-- 下載（選用） -->
         <div class="card-panel shadow-md">
           <h3 class="panel-title">
             <span class="panel-title-mark" aria-hidden="true"></span>
-            下載 Excel（選用備份）
+            下載備份（選用）
           </h3>
           <p class="mt-3 text-sm leading-relaxed text-slate-600">
-            一般情況不必下載。若您想自行留存，可下載本次產生的檔案。
+            一般情況不必下載。若您想自行留存，可下載本次產生的 Excel 檔案。
           </p>
           <div id="download-panel" class="download-panel hidden">
             <div id="download-buttons" class="flex flex-wrap gap-2"></div>
           </div>
         </div>
-
-        <!-- 回信備援（僅在無法自動送出時使用） -->
-        <details id="mail-fallback" class="card-panel shadow-md">
-          <summary class="cursor-pointer text-sm font-semibold text-slate-800">
-            若自動送出失敗：改用寄信備援
-          </summary>
-          <p class="mt-3 text-sm leading-relaxed text-slate-600">
-            請將 Excel 寄給<strong>奕廷</strong>（<code class="rounded bg-slate-100 px-1 text-fgu">yitingchen@mail.fgu.edu.tw</code>）、<strong>嘉玲</strong>（<code class="rounded bg-slate-100 px-1 text-fgu">chlchang@mail.fgu.edu.tw</code>）。
-          </p>
-
-          <div class="notice-panel mt-4">
-            <h4 class="text-sm font-semibold text-amber-900">附件注意事項</h4>
-            <ul class="mt-2 space-y-1.5 text-sm leading-relaxed text-slate-700">
-              <li>• 若有填寫<strong>學術</strong>聯絡人，請附上 <strong>QS_學術聯絡人名單</strong> Excel。</li>
-              <li>• 若有填寫<strong>雇主</strong>聯絡人，請附上 <strong>QS_雇主聯絡人名單</strong> Excel。</li>
-              <li>• 兩類都有時，請一次寄出 2 個附件。</li>
-            </ul>
-            <div class="mt-3 rounded-lg border border-amber-200/60 bg-white p-3">
-              <p class="text-xs font-medium text-slate-500">本次附件清單</p>
-              <ul id="attachment-list" class="mt-1.5 space-y-1 text-sm font-medium text-slate-800"></ul>
-            </div>
-          </div>
-
-          <div class="mt-6 space-y-4">
-            <div class="copy-block">
-              <div class="mb-2 flex items-center justify-between gap-2">
-                <span class="text-sm font-medium text-slate-700">收件人</span>
-                <button type="button" data-copy-target="copy-to" class="copy-btn">複製</button>
-              </div>
-              <pre id="copy-to" class="whitespace-pre-wrap break-all font-sans text-sm text-slate-800">yitingchen@mail.fgu.edu.tw; chlchang@mail.fgu.edu.tw</pre>
-            </div>
-            <div class="copy-block">
-              <div class="mb-2 flex items-center justify-between gap-2">
-                <span class="text-sm font-medium text-slate-700">信件主旨</span>
-                <button type="button" data-copy-target="copy-subject" class="copy-btn">複製</button>
-              </div>
-              <pre id="copy-subject" class="whitespace-pre-wrap break-all font-sans text-sm text-slate-800"></pre>
-            </div>
-            <div class="copy-block">
-              <div class="mb-2 flex items-center justify-between gap-2">
-                <span class="text-sm font-medium text-slate-700">信件內文</span>
-                <button type="button" data-copy-target="copy-body" class="copy-btn">複製</button>
-              </div>
-              <pre id="copy-body" class="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-800"></pre>
-            </div>
-          </div>
-        </details>
 
         <div class="flex flex-wrap justify-center gap-3">
           <button type="button" id="btn-back-to-form" class="btn-primary px-6 py-2.5 font-semibold">
@@ -475,7 +427,7 @@ const base = import.meta.env.BASE_URL;
     const UNLOCK_PHRASE = '我確定提交';
     const CLEAR_PHRASE = '我確定要清空以上資料';
     const EMAIL_FORBIDDEN = /[\[\]{}();:,<>'#~=+"¬`!]/;
-    /** 由 .env / 部署環境變數 PUBLIC_GOOGLE_SCRIPT_URL 注入；未設定時退回下載＋寄信 */
+    /** 由 .env / 部署環境變數 PUBLIC_GOOGLE_SCRIPT_URL 注入；未設定時改以下載備份處理 */
     const GOOGLE_SCRIPT_URL = (import.meta.env.PUBLIC_GOOGLE_SCRIPT_URL || '').trim();
 
     /** @type {{ id: string, type: string, title: string, titleOther: string, firstName: string, lastName: string, jobTitle: string, jobOther: string, department: string, industry: string, industryOther: string, institution: string, country: string, countryOther: string, email: string, subject: string, subjectOther: string, phone: string }[]} */
@@ -1213,7 +1165,6 @@ const base = import.meta.env.BASE_URL;
     }
 
     /** @type {string[]} */
-    let downloadedFiles = [];
     /** @type {{ filename: string, blob: Blob }[]} */
     let downloadArtifacts = [];
 
@@ -1311,7 +1262,6 @@ const base = import.meta.env.BASE_URL;
       normalizeAllData();
       const unit = safeFilePart($('#submitter-unit').value);
       const ts = fileTimestamp();
-      downloadedFiles = [];
       downloadArtifacts = [];
       lastSubmitMode = null;
       lastSubmissionId = '';
@@ -1367,7 +1317,6 @@ const base = import.meta.env.BASE_URL;
         }
 
         downloadArtifacts = queue;
-        downloadedFiles = queue.map((item) => item.filename);
         goToStep3({ cloudOk });
       } catch (err) {
         console.error(err);
@@ -1378,54 +1327,15 @@ const base = import.meta.env.BASE_URL;
       }
     }
 
-    function buildMailSubject(unit, submitter) {
-      return `【QS聯絡人提報】${unit}－${submitter}`;
-    }
-
-    function buildMailBody(unit, submitter, summary, fileLines, academicCount, employerCount) {
-      const attachmentNote =
-        academicCount && employerCount
-          ? '（含學術與雇主聯絡人名單；兩檔均含「中文」「English」「合併說明」分頁）'
-          : academicCount
-            ? '（學術聯絡人名單含「中文」「English」「合併說明」分頁）'
-            : employerCount
-              ? '（雇主聯絡人名單含「中文」「English」「合併說明」分頁）'
-              : '';
-
-      return `奕廷、嘉玲 您好：
-
-謹此提報本單位 QS 世界大學排名學術／雇主問卷聯絡人名單，請查收協助後續作業，謝謝。
-
-■ 提交單位：${unit}
-■ 提交人姓名：${submitter}
-■ 提交內容：${summary}
-■ 附件檔案${attachmentNote}：
-${fileLines}
-
-敬祝
-教安
-
-${submitter}
-${unit}
-佛光大學`;
-    }
-
     function goToStep3({ cloudOk = false } = {}) {
-      const unit = trimVal($('#submitter-unit').value);
-      const submitter = trimVal($('#submitter-name').value);
-      const academicCount = academicContacts.length;
-      const employerCount = employerContacts.length;
-
       const titleEl = $('#success-title');
       const descEl = $('#success-desc');
       const idLine = $('#submission-id-line');
-      const mailFallback = $('#mail-fallback');
 
       if (cloudOk) {
-        titleEl.textContent = '提交成功';
+        titleEl.textContent = '成功提交';
         descEl.textContent =
-          '資料已追加至永續辦共用試算表 Pool，您無需再寄信。下方 Excel 下載僅供自行備份（選用）。';
-        mailFallback?.removeAttribute('open');
+          '資料已追加至永續辦共用試算表 Pool。若需自行留存，可於下方下載 Excel 備份。';
         if (lastSubmissionId) {
           idLine.textContent = lastSubmitTimestamp
             ? `提交編號：${lastSubmissionId}　｜　時間戳：${lastSubmitTimestamp}`
@@ -1435,45 +1345,11 @@ ${unit}
           idLine.classList.add('hidden');
         }
       } else {
-        titleEl.textContent = '已產生 Excel（請改用寄信）';
+        titleEl.textContent = '尚無法送出至試算表';
         descEl.textContent = lastSubmitError
-          ? `自動送出失敗（${lastSubmitError}）。請下載 Excel 並寄信完成提交。`
-          : '目前無法自動送出。請下載 Excel 並寄信完成提交。';
-        mailFallback?.setAttribute('open', '');
+          ? `自動送出失敗（${lastSubmitError}）。請先下載下方 Excel 備份，並聯絡永續辦協助處理。`
+          : '目前無法自動送出。請先下載下方 Excel 備份，並聯絡永續辦協助處理。';
         idLine.classList.add('hidden');
-      }
-
-      $('#copy-subject').textContent = buildMailSubject(unit, submitter);
-
-      const fileLines = downloadedFiles.length
-        ? downloadedFiles.map((f, i) => `${i + 1}. ${f}`).join('\n')
-        : '（請確認已下載 Excel 檔案）';
-
-      const summaryParts = [];
-      if (academicCount) summaryParts.push(`學術聯絡人 ${academicCount} 筆`);
-      if (employerCount) summaryParts.push(`雇主聯絡人 ${employerCount} 筆`);
-      const summary = summaryParts.join('、') || '—';
-
-      $('#copy-body').textContent = buildMailBody(
-        unit,
-        submitter,
-        summary,
-        fileLines,
-        academicCount,
-        employerCount,
-      );
-
-      const attachList = $('#attachment-list');
-      attachList.innerHTML = '';
-      if (downloadedFiles.length) {
-        downloadedFiles.forEach((f) => {
-          const li = document.createElement('li');
-          li.className = 'flex items-center gap-2';
-          li.innerHTML = `<span class="text-qs">📎</span><span>${escapeHtml(f)}</span>`;
-          attachList.appendChild(li);
-        });
-      } else {
-        attachList.innerHTML = '<li class="text-slate-500">（請先下載上方 Excel 檔案）</li>';
       }
 
       renderDownloadPanel();
@@ -1487,7 +1363,6 @@ ${unit}
       academicContacts = [];
       employerContacts = [];
       downloadArtifacts = [];
-      downloadedFiles = [];
       lastSubmitMode = null;
       lastSubmissionId = '';
       lastSubmitTimestamp = '';
@@ -1568,28 +1443,6 @@ ${unit}
         if ($('#confirm-unlock').value.trim() !== UNLOCK_PHRASE) return;
         handleSubmit();
       });
-
-      $$('.copy-btn').forEach((btn) => {
-        btn.addEventListener('click', async () => {
-          const id = btn.getAttribute('data-copy-target');
-          const text = $(`#${id}`).textContent;
-          try {
-            await navigator.clipboard.writeText(text);
-          } catch {
-            const ta = document.createElement('textarea');
-            ta.value = text;
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand('copy');
-            ta.remove();
-          }
-          const original = btn.textContent;
-          btn.textContent = '已複製！';
-          setTimeout(() => {
-            btn.textContent = original;
-          }, 1500);
-        });
-      });
     }
 
     function init() {
@@ -1598,7 +1451,7 @@ ${unit}
       const hint = $('#submit-hint');
       if (hint && !GOOGLE_SCRIPT_URL) {
         hint.textContent =
-          '目前尚未啟用雲端提交：送出後請下載 Excel，並以寄信完成提報。啟用方式見 google-apps-script/Code.gs。';
+          '目前尚未啟用雲端提交：送出後請下載 Excel 備份，並聯絡永續辦協助處理。啟用方式見 google-apps-script/Code.gs。';
       }
       const saved = loadState();
       if (saved && (saved.academicContacts?.length || saved.employerContacts?.length)) {
