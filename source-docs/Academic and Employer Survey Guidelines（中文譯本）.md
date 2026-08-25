@@ -47,14 +47,14 @@ QS 全球學術與雇主問卷（QS Global Academic and Employer Surveys）之�
 **可選稱謂：**
 
 1. 先生（Mr）
-2. 太太（Mrs）
+2. 夫人（Mrs）
 3. 女士（Ms）
 4. 小姐（Miss）
 5. 博士（Dr）
 6. 教授（Professor）
 7. 教授（Prof）
 8. 法師（Ven）
-9. 不特定稱謂（Mx）
+9. 中性稱謂（Mx）
 10. 其他（Other）
 
 若選 **Other（其他）**，請於括號內說明，例如：`Other (Ven)`。
@@ -70,16 +70,16 @@ QS 全球學術與雇主問卷（QS Global Academic and Employer Surveys）之�
 
 #### 2.4.1 學術職稱（Academic Designations）
 
-1. 校長（President／Vice-Chancellor；英／澳體系之大學首長亦稱 Vice-Chancellor）
+1. 校長（President/Vice-Chancellor；美式 President 與英／澳 Vice-Chancellor 皆指大學首長）
 2. 副校長／代理副校長（Vice-President/Deputy Vice-Chancellor）
 3. 高階行政主管（Senior Administrator）
 4. 系所主管（Head of Department）
 5. 教授／副教授（Professor/Associate Professor）
 6. 助理教授（Assistant Professor）
-7. 高級講師（Senior Lecturer）
+7. 資深講師（Senior Lecturer）
 8. 講師（Lecturer）
-9. 研究專員（Research Specialist）
-10. 行政人員／功能主管（Administrator/Functional Manager）
+9. 研究專家（Research Specialist）
+10. 行政人員／職能主管（Administrator/Functional Manager）
 11. 研究助理（Research Assistant）
 12. 教學助理（Teaching Assistant）
 13. 招生人員（Admissions Officer）
@@ -90,13 +90,13 @@ QS 全球學術與雇主問卷（QS Global Academic and Employer Surveys）之�
 
 1. 執行長／總裁／董事總經理（CEO/President/Managing Director）
 2. 營運長／財務長／技術長／資訊長／行銷長（COO/CFO/CTO/CIO/CMO）
-3. 董事／合夥人／副總裁（Director/Partner/Vice President）
+3. 總監／合夥人／副總裁（Director/Partner/Vice President）
 4. 資深人資／招募主管（Senior Human Resources/Recruitment）
 5. 其他人資／招募人員（Other Human Resources/Recruitment）
 6. 經理／高階主管（Manager/Executive）
-7. 顧問／諮詢專家（Consultant/Advisor）
-8. 協調專員／專員（Coordinator/Officer）
-9. 分析師／專案專家（Analyst/Specialist）
+7. 顧問／諮詢顧問（Consultant/Advisor）
+8. 協調員／專員（Coordinator/Officer）
+9. 分析師／專家（Analyst/Specialist）
 10. 助理／行政人員（Assistant/Administrator）
 11. 其他（Other）
 
@@ -112,14 +112,14 @@ QS 全球學術與雇主問卷（QS Global Academic and Employer Surveys）之�
 2. 營建／不動產（Construction/Real Estate）
 3. 顧問／專業服務（Consulting/Professional Service）
 4. 消費品（Consumer Goods）
-5. 國防／安全／救援（Defence/Security/Rescue）
+5. 國防／安全／救難（Defence/Security/Rescue）
 6. 教育（Education）
 7. 工程（Engineering）
 8. 娛樂／休閒（Entertainment/Leisure）
 9. 金融／銀行（Finance/Banking）
 10. 政府／公部門（Government/Public Sector）
-11. 健康／醫療（Health/Medical）
-12. 餐旅／旅遊（Hospitality/Travel/Tourism）
+11. 醫療／衛生（Health/Medical）
+12. 餐旅／觀光（Hospitality/Travel/Tourism）
 13. 人資／招募／培訓（HR/Recruitment/Training）
 14. 法律（Law）
 15. 物流／運輸（Logistics/Transportation）
@@ -128,7 +128,7 @@ QS 全球學術與雇主問卷（QS Global Academic and Employer Surveys）之�
 18. 金屬／礦業（Metals/Mining）
 19. 非營利／慈善（Non-profit/Charity）
 20. 石油與天然氣（Oil & Gas）
-21. 製藥／生技（Pharma/Biotech）
+21. 製藥／生物科技（Pharma/Biotech）
 22. 研發／科學（R&D/Science）
 23. 再生能源（Renewable Energy）
 24. 零售／批發（Retail/Wholesale）
@@ -364,27 +364,27 @@ v. email **不可含空白**（前、後或中間皆不可）。
 
 **學科清單（List of subjects）：**
 
-1. 會計與財務（Accounting & Finance）
+1. 會計與金融（Accounting & Finance）
 2. 農業與林業（Agriculture & Forestry）
-3. 解剖與生理學（Anatomy & Physiology）
+3. 解剖學與生理學（Anatomy & Physiology）
 4. 人類學（Anthropology）
 5. 考古學（Archaeology）
 6. 建築與建成環境（Architecture & Built Environment）
 7. 藝術與設計（Art & Design）
 8. 天文學（Astronomy）
 9. 生物科學（Biological Sciences）
-10. 商業與管理研究（Business & Management Studies）
+10. 商學與管理（Business & Management Studies）
 11. 化學（Chemistry）
 12. 古典學與古代史（Classics & Ancient History）
 13. 傳播與媒體研究（Communication & Media Studies）
-14. 電腦科學（Computer Science）
+14. 資訊科學（Computer Science）
 15. 文化研究（Cultural Studies）
 16. 牙醫學（Dentistry）
 17. 發展研究（Development Studies）
 18. 戲劇、舞蹈與表演藝術（Drama; Dance & Performing Arts）
 19. 地球科學（Earth Sciences）
 20. 經濟學與計量經濟學（Economics & Econometrics）
-21. 教育（Education）
+21. 教育學（Education）
 22. 工程－航空與航太（Engineering - Aeronautical & Aerospace）
 23. 工程－化學（Engineering - Chemical）
 24. 工程－土木與結構（Engineering - Civil & Structural）
@@ -396,18 +396,18 @@ v. email **不可含空白**（前、後或中間皆不可）。
 30. 環境科學（Environmental Sciences）
 31. 歐洲研究（European Studies）
 32. 地理學（Geography）
-33. 歷史（History）
+33. 歷史學（History）
 34. 藝術、建築與設計史（History of: Art; Architecture; Design）
 35. 餐旅與休閒管理（Hospitality & Leisure Management）
-36. 法律（Law）
-37. 圖書館與資訊管理（Library & Information Management）
+36. 法學（Law）
+37. 圖書資訊管理（Library & Information Management）
 38. 語言學（Linguistics）
 39. 海洋科學（Marine Sciences）
-40. 行銷（Marketing）
+40. 行銷學（Marketing）
 41. 材料科學（Materials Science）
 42. 數學（Mathematics）
 43. 醫學（Medicine）
-44. 現代語言（Modern Languages）
+44. 現代語文（Modern Languages）
 45. 音樂（Music）
 46. 護理學（Nursing）
 47. 藥理學（Pharmacology）
@@ -419,9 +419,9 @@ v. email **不可含空白**（前、後或中間皆不可）。
 53. 社會政策與行政（Social Policy & Administration）
 54. 社會工作（Social Work）
 55. 社會學（Sociology）
-56. 運動與相關學科（Sports-related Subjects）
+56. 運動與相關領域（Sports-related Subjects）
 57. 統計與作業研究（Statistics & Operational Research）
-58. 神學、聖教與宗教研究（Theology; Divinity & Religious Studies）
+58. 神學與宗教研究（Theology; Divinity & Religious Studies）
 59. 獸醫學（Veterinary Science）
 60. 其他（Other）
 
