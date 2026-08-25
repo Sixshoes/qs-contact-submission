@@ -35,6 +35,7 @@ jobs:
           # 與下方 repo 名稱一致；若改名請同步修改
           SITE: https://sixshoes.github.io
           BASE: /qs-contact-submission/
+          PUBLIC_GOOGLE_SCRIPT_URL: https://script.google.com/macros/s/AKfycbzRS2On9J60R37GHPm7_dwlTP4tzLQDob5yDWHIQ3Fl-W12cPogA3wkc1Qa1DOipV7NOA/exec
         run: npm run build
 
       - name: Upload Pages artifact
