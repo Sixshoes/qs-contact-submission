@@ -1220,13 +1220,23 @@ const base = import.meta.env.BASE_URL;
     }
 
     /**
-     * Apps Script 網頁應用程式：用 text/plain 避開 CORS preflight。
-     * 若回應可讀則檢查 ok；no-cors／opaque 時視為已送出（實際以試算表為準）。
+     * Apps Script：text/plain 避開 CORS preflight；必須收到 {"ok":true} 才算成功。
+     * 若瀏覽器被 CORS 擋住讀取，改走隱藏 iframe form POST（仍會寫入試算表）。
      */
     async function submitToGoogleSheets(payload) {
       if (!GOOGLE_SCRIPT_URL) {
         throw new Error('尚未設定 PUBLIC_GOOGLE_SCRIPT_URL');
       }
+      try {
+        return await submitViaFetch_(payload);
+      } catch (fetchErr) {
+        console.warn('fetch 提交失敗，改用 form 備援', fetchErr);
+        await submitViaForm_(payload);
+        return { submissionId: payload.submissionId, timestamp: '', via: 'form' };
+      }
+    }
+
+    async function submitViaFetch_(payload) {
       const res = await fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -1238,21 +1248,64 @@ const base = import.meta.env.BASE_URL;
       try {
         parsed = JSON.parse(text);
       } catch {
-        /* Apps Script 偶發回傳 HTML／空白 */
+        throw new Error('伺服器回應不是 JSON（可能尚未重新部署腳本）');
       }
-      if (parsed && parsed.ok === false) {
-        throw new Error(parsed.error || '試算表寫入失敗');
+      if (!parsed || parsed.ok !== true) {
+        throw new Error((parsed && parsed.error) || `寫入失敗（HTTP ${res.status}）`);
       }
-      if (parsed && parsed.ok === true) {
-        return {
-          submissionId: parsed.submissionId || payload.submissionId,
-          timestamp: parsed.timestamp || '',
+      return {
+        submissionId: parsed.submissionId || payload.submissionId,
+        timestamp: parsed.timestamp || '',
+        spreadsheetUrl: parsed.spreadsheetUrl || '',
+        via: 'fetch',
+      };
+    }
+
+    function submitViaForm_(payload) {
+      return new Promise((resolve, reject) => {
+        const iframeName = 'qs_gas_frame';
+        let iframe = document.getElementById(iframeName);
+        if (!iframe) {
+          iframe = document.createElement('iframe');
+          iframe.name = iframeName;
+          iframe.id = iframeName;
+          iframe.title = 'gas';
+          iframe.style.cssText = 'position:absolute;width:0;height:0;border:0;visibility:hidden';
+          document.body.appendChild(iframe);
+        }
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = GOOGLE_SCRIPT_URL;
+        form.target = iframeName;
+        form.style.display = 'none';
+
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'payload';
+        input.value = JSON.stringify(payload);
+        form.appendChild(input);
+        document.body.appendChild(form);
+
+        const timer = setTimeout(() => {
+          form.remove();
+          resolve();
+        }, 2500);
+
+        iframe.onload = () => {
+          clearTimeout(timer);
+          form.remove();
+          resolve();
         };
-      }
-      if (!res.ok) {
-        throw new Error(`伺服器回應 ${res.status}`);
-      }
-      return { submissionId: payload.submissionId, timestamp: '' };
+
+        try {
+          form.submit();
+        } catch (err) {
+          clearTimeout(timer);
+          form.remove();
+          reject(err);
+        }
+      });
     }
 
     async function handleSubmit() {

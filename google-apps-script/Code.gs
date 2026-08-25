@@ -1,20 +1,19 @@
 /**
  * QS 聯絡人提交 → 共用試算表 Pool
  *
- * 設計：所有單位／人員都提交到「同一本」試算表，以追加列方式累積（pool）。
- * 每一列最後一欄為「時間戳」（台北時間）。
+ * ★ 重要：若腳本是「獨立專案」（不是從試算表 → 擴充功能開啟），
+ *   getActiveSpreadsheet() 會是空的，導致寫不進去。
+ *   本版會自動記住／建立試算表；也可手動填 SHEET_ID。
  *
- * 設定步驟（用 yitingchen@gm.fgu.edu.tw 登入）：
- * 1. 開啟 https://sheets.google.com 新增試算表，命名例如「QS 2028 聯絡人 Pool」
- * 2. 擴充功能 → Apps Script，清空預設程式碼，貼上本檔全部內容並儲存
- * 3. 部署 → 新增部署作業 → 網頁應用程式
- *    - 執行身分：我
- *    - 具有存取權的使用者：任何人
- * 4. 授權後複製網址，設到網站環境變數 PUBLIC_GOOGLE_SCRIPT_URL
- *
- * 若先前已建過舊版工作表（時間戳在最左），請刪除「提交紀錄／學術聯絡人／雇主聯絡人」
- * 三個工作表後再提交一次，讓腳本依新欄位順序重建。
+ * 設定：
+ * 1. 把本檔貼到 Apps Script 並儲存
+ * 2.（建議）把試算表網址中 /d/XXXX/edit 的 XXXX 貼到下方 SHEET_ID
+ * 3. 部署 → 管理部署作業 → 編輯 → 版本選「新版本」→ 部署
+ *    （執行身分：我；誰可以存取：所有人）
  */
+
+/** 可選：試算表 ID（網址 https://docs.google.com/spreadsheets/d/【這裡】/edit） */
+var SHEET_ID = '';
 
 var NOTIFY_TO = [
   'yitingchen@mail.fgu.edu.tw',
@@ -25,25 +24,58 @@ var SHEET_SUBMISSIONS = '提交紀錄';
 var SHEET_ACADEMIC = '學術聯絡人';
 var SHEET_EMPLOYER = '雇主聯絡人';
 var TZ = 'Asia/Taipei';
+var PROP_SHEET_ID = 'SHEET_ID';
 
 function doPost(e) {
   try {
-    var raw = (e && e.postData && e.postData.contents) || '{}';
+    var raw = extractPayload_(e);
     var data = JSON.parse(raw);
     var result = appendSubmission_(data);
     maybeNotify_(data, result);
-    return jsonOut_({ ok: true, submissionId: result.submissionId, timestamp: result.timestamp });
+    return jsonOut_({
+      ok: true,
+      submissionId: result.submissionId,
+      timestamp: result.timestamp,
+      spreadsheetUrl: result.spreadsheetUrl,
+    });
   } catch (err) {
     return jsonOut_({ ok: false, error: String(err && err.message ? err.message : err) });
   }
 }
 
 function doGet() {
+  var ss = null;
+  var url = '';
+  try {
+    ss = getSpreadsheet_();
+    url = ss.getUrl();
+  } catch (err) {
+    /* ignore */
+  }
   return jsonOut_({
     ok: true,
     service: 'QS contact pool receiver',
+    spreadsheetUrl: url,
     hint: 'Anyone can POST; rows append to one shared spreadsheet pool.',
   });
+}
+
+function extractPayload_(e) {
+  if (e && e.parameter && e.parameter.payload) {
+    return String(e.parameter.payload);
+  }
+  if (e && e.postData && e.postData.contents) {
+    var contents = String(e.postData.contents);
+    // text/plain JSON
+    if (contents.charAt(0) === '{' || contents.charAt(0) === '[') {
+      return contents;
+    }
+    // application/x-www-form-urlencoded
+    if (e.parameter && e.parameter.payload) {
+      return String(e.parameter.payload);
+    }
+  }
+  return '{}';
 }
 
 function jsonOut_(obj) {
@@ -52,13 +84,34 @@ function jsonOut_(obj) {
   );
 }
 
-/** 台北時間戳，例如 2026-08-25 08:44:12 */
 function formatTimestamp_(date) {
   return Utilities.formatDate(date || new Date(), TZ, 'yyyy-MM-dd HH:mm:ss');
 }
 
+/**
+ * 優先順序：程式內 SHEET_ID → ScriptProperties → 綁定試算表 → 新建一本
+ */
+function getSpreadsheet_() {
+  var props = PropertiesService.getScriptProperties();
+  var id = String(SHEET_ID || '').trim() || props.getProperty(PROP_SHEET_ID);
+
+  if (id) {
+    return SpreadsheetApp.openById(id);
+  }
+
+  var active = SpreadsheetApp.getActiveSpreadsheet();
+  if (active) {
+    props.setProperty(PROP_SHEET_ID, active.getId());
+    return active;
+  }
+
+  var created = SpreadsheetApp.create('QS 2028 聯絡人 Pool');
+  props.setProperty(PROP_SHEET_ID, created.getId());
+  return created;
+}
+
 function appendSubmission_(data) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getSpreadsheet_();
   ensureSheets_(ss);
 
   var unit = String(data.unit || '').trim();
@@ -75,7 +128,6 @@ function appendSubmission_(data) {
     throw new Error('至少需要一筆學術或雇主聯絡人');
   }
 
-  // Pool：一律 append，不覆蓋既有列
   ss.getSheetByName(SHEET_SUBMISSIONS).appendRow([
     submissionId,
     unit,
@@ -131,6 +183,7 @@ function appendSubmission_(data) {
     academicCount: academic.length,
     employerCount: employer.length,
     timestamp: stamp,
+    spreadsheetUrl: ss.getUrl(),
   };
 }
 
@@ -195,7 +248,7 @@ function maybeNotify_(data, result) {
   var submitter = String(data.submitter || '');
   var subject = '【QS聯絡人提報】' + unit + '－' + submitter;
   var body = [
-    '已有單位寫入共用試算表 Pool（追加一筆，不覆蓋舊資料）。',
+    '已有單位寫入共用試算表 Pool。',
     '',
     '提交單位：' + unit,
     '提交人：' + submitter,
@@ -203,8 +256,7 @@ function maybeNotify_(data, result) {
     '學術筆數：' + result.academicCount,
     '雇主筆數：' + result.employerCount,
     '時間戳：' + result.timestamp,
-    '',
-    '請開啟綁定本腳本的 Google 試算表查看「學術聯絡人」「雇主聯絡人」工作表。',
+    '試算表：' + (result.spreadsheetUrl || ''),
   ].join('\n');
 
   try {
