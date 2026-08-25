@@ -40,7 +40,7 @@ export const TITLES = [
 
 /** 2.4.1 Academic Designations */
 export const ACADEMIC_JOB_TITLES = [
-  { en: 'President/Vice-Chancellor', zh: '校長／副校長' },
+  { en: 'President/Vice-Chancellor', zh: '校長（President／Vice-Chancellor）' },
   { en: 'Vice-President/Deputy Vice-Chancellor', zh: '副校長／代理副校長' },
   { en: 'Senior Administrator', zh: '高階行政主管' },
   { en: 'Head of Department', zh: '系所主管' },

@@ -70,7 +70,7 @@ QS 全球學術與雇主問卷（QS Global Academic and Employer Surveys）之�
 
 #### 2.4.1 學術職稱（Academic Designations）
 
-1. 校長／副校長（President/Vice-Chancellor）
+1. 校長（President／Vice-Chancellor；英／澳體系之大學首長亦稱 Vice-Chancellor）
 2. 副校長／代理副校長（Vice-President/Deputy Vice-Chancellor）
 3. 高階行政主管（Senior Administrator）
 4. 系所主管（Head of Department）
