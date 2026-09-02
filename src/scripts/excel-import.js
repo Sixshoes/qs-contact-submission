@@ -14,7 +14,7 @@ import {
 } from '../data/qs-options.js';
 import {
   trimVal,
-  matchOption,
+  resolveFlexibleOption,
   validateImportContact,
   normalizeImportContact,
   normalizeEmail,
@@ -117,135 +117,82 @@ function rowToMap(headers, values) {
   return map;
 }
 
-/**
- * 下拉選 Other 時，優先讀取旁邊的 Other 欄；舊版仍支援 Others (說明) 寫在同一格。
- */
-function resolveOtherField(map, mainKey, otherKey, list, { pluralOther = false, hasOtherCols = false } = {}) {
-  const mainRaw = trimVal(map[mainKey]);
-  const parsed = matchOption(list, mainRaw, { pluralOther });
-
-  if (hasOtherCols && (mainRaw === 'Other' || parsed.en === 'Other')) {
-    const detail = trimVal(map[otherKey]);
-    if (detail) return { en: 'Other', other: detail, invalid: false, raw: mainRaw };
-    if (parsed.other) return parsed;
-    return { en: 'Other', other: '', invalid: false, raw: mainRaw };
+function pickFlexible(map, mainKey, otherKey, list, { pluralOther = false } = {}) {
+  const flex = resolveFlexibleOption(list, map[mainKey], { pluralOther });
+  if (flex.en === 'Other' && !flex.other && otherKey && trimVal(map[otherKey])) {
+    return { ...flex, other: trimVal(map[otherKey]) };
   }
-
-  if (parsed.invalid && mainRaw) return parsed;
-  return parsed;
+  return flex;
 }
 
-function parseAcademicRow(map, rowNum, { hasOtherCols }) {
-  const title = resolveOtherField(map, 'Title', 'Title Other', TITLES, { hasOtherCols });
-  const job = resolveOtherField(map, 'Job Title', 'Job Title Other', ACADEMIC_JOB_TITLES, {
+function parseAcademicRow(map, rowNum, { hasOtherCols = false } = {}) {
+  const title = pickFlexible(map, 'Title', hasOtherCols ? 'Title Other' : null, TITLES);
+  const job = pickFlexible(map, 'Job Title', hasOtherCols ? 'Job Title Other' : null, ACADEMIC_JOB_TITLES, {
     pluralOther: true,
-    hasOtherCols,
   });
-  const country = resolveOtherField(map, 'Country or Territory', 'Country Other', COUNTRIES, { hasOtherCols });
-  const subject = resolveOtherField(map, 'Subject', 'Subject Other', SUBJECTS, {
+  const country = pickFlexible(map, 'Country or Territory', hasOtherCols ? 'Country Other' : null, COUNTRIES);
+  const subject = pickFlexible(map, 'Subject', hasOtherCols ? 'Subject Other' : null, SUBJECTS, {
     pluralOther: true,
-    hasOtherCols,
   });
 
   const contact = {
     _source: map.Source,
-    title: title.invalid ? '' : title.en,
+    title: title.en,
     titleOther: title.other,
-    _rawTitle: title.raw || map.Title,
+    _rawTitle: title.raw,
     firstName: map['First Name'],
     lastName: map['Last Name'],
-    jobTitle: job.invalid ? '' : job.en,
+    jobTitle: job.en,
     jobOther: job.other,
-    _rawJob: job.invalid ? job.raw : '',
+    _rawJob: job.raw,
     department: map.Department,
     industry: '',
     industryOther: '',
     institution: map.Institution,
-    country: country.invalid ? '' : country.en,
+    country: country.en,
     countryOther: country.other,
-    _rawCountry: country.invalid ? country.raw : '',
+    _rawCountry: country.raw,
     email: map.Email,
-    subject: subject.invalid ? '' : subject.en,
+    subject: subject.en,
     subjectOther: subject.other,
-    _rawSubject: subject.invalid ? subject.raw : '',
+    _rawSubject: subject.raw,
     phone: map['Phone (Optional)'],
   };
-
-  const errors = [];
-  if (title.invalid) {
-    errors.push({ sheet: SHEET_ACADEMIC, row: rowNum, field: 'Title', message: `「${title.raw}」不在選項清單內` });
-  }
-  if (job.invalid) {
-    errors.push({ sheet: SHEET_ACADEMIC, row: rowNum, field: 'Job Title', message: `「${job.raw}」不在選項清單內` });
-  }
-  if (country.invalid) {
-    errors.push({
-      sheet: SHEET_ACADEMIC,
-      row: rowNum,
-      field: 'Country or Territory',
-      message: `「${country.raw}」不在選項清單內`,
-    });
-  }
-  if (subject.invalid) {
-    errors.push({ sheet: SHEET_ACADEMIC, row: rowNum, field: 'Subject', message: `「${subject.raw}」不在選項清單內` });
-  }
-  if (errors.length) return { contact, errors };
 
   return { contact, errors: validateImportContact(contact, 'academic', rowNum, OPTS) };
 }
 
-function parseEmployerRow(map, rowNum, { hasOtherCols }) {
-  const title = resolveOtherField(map, 'Title', 'Title Other', TITLES, { hasOtherCols });
-  const job = resolveOtherField(map, 'Position', 'Position Other', EMPLOYER_JOB_TITLES, {
+function parseEmployerRow(map, rowNum, { hasOtherCols = false } = {}) {
+  const title = pickFlexible(map, 'Title', hasOtherCols ? 'Title Other' : null, TITLES);
+  const job = pickFlexible(map, 'Position', hasOtherCols ? 'Position Other' : null, EMPLOYER_JOB_TITLES, {
     pluralOther: true,
-    hasOtherCols,
   });
-  const industry = resolveOtherField(map, 'Industry', 'Industry Other', INDUSTRIES, { hasOtherCols });
-  const country = resolveOtherField(map, 'Country or Territory', 'Country Other', COUNTRIES, { hasOtherCols });
+  const industry = pickFlexible(map, 'Industry', hasOtherCols ? 'Industry Other' : null, INDUSTRIES);
+  const country = pickFlexible(map, 'Country or Territory', hasOtherCols ? 'Country Other' : null, COUNTRIES);
 
   const contact = {
     _source: map.Source,
-    title: title.invalid ? '' : title.en,
+    title: title.en,
     titleOther: title.other,
-    _rawTitle: title.raw || map.Title,
+    _rawTitle: title.raw,
     firstName: map['First Name'],
     lastName: map['Last Name'],
-    jobTitle: job.invalid ? '' : job.en,
+    jobTitle: job.en,
     jobOther: job.other,
-    _rawJob: job.invalid ? job.raw : '',
+    _rawJob: job.raw,
     department: '',
-    industry: industry.invalid ? '' : industry.en,
+    industry: industry.en,
     industryOther: industry.other,
-    _rawIndustry: industry.invalid ? industry.raw : '',
+    _rawIndustry: industry.raw,
     institution: map['Company Name'],
-    country: country.invalid ? '' : country.en,
+    country: country.en,
     countryOther: country.other,
-    _rawCountry: country.invalid ? country.raw : '',
+    _rawCountry: country.raw,
     email: map.Email,
     subject: '',
     subjectOther: '',
     phone: map['Phone (Optional)'],
   };
-
-  const errors = [];
-  if (title.invalid) {
-    errors.push({ sheet: SHEET_EMPLOYER, row: rowNum, field: 'Title', message: `「${title.raw}」不在選項清單內` });
-  }
-  if (job.invalid) {
-    errors.push({ sheet: SHEET_EMPLOYER, row: rowNum, field: 'Position', message: `「${job.raw}」不在選項清單內` });
-  }
-  if (industry.invalid) {
-    errors.push({ sheet: SHEET_EMPLOYER, row: rowNum, field: 'Industry', message: `「${industry.raw}」不在選項清單內` });
-  }
-  if (country.invalid) {
-    errors.push({
-      sheet: SHEET_EMPLOYER,
-      row: rowNum,
-      field: 'Country or Territory',
-      message: `「${country.raw}」不在選項清單內`,
-    });
-  }
-  if (errors.length) return { contact, errors };
 
   return { contact, errors: validateImportContact(contact, 'employer', rowNum, OPTS) };
 }
@@ -268,7 +215,9 @@ function parseSheet(workbook, sheetName, type) {
   const format = detectHeaderFormat(headers, type);
   if (!format) {
     const expected =
-      type === 'academic' ? ACADEMIC_IMPORT_TEMPLATE_HEADERS.join('、') : EMPLOYER_IMPORT_TEMPLATE_HEADERS.join('、');
+      type === 'academic'
+        ? `${ACADEMIC_EXCEL_HEADERS_EN.slice(0, 4).join('、')}…`
+        : `${EMPLOYER_EXCEL_HEADERS_EN.slice(0, 4).join('、')}…`;
     return {
       contacts: [],
       errors: [

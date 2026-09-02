@@ -76,6 +76,33 @@ export function matchOption(list, value, { pluralOther = false } = {}) {
 }
 
 /**
+ * 可選下拉或自行輸入：選單內→該選項；選單外→自動視為 Other（內容為輸入值）。
+ */
+export function resolveFlexibleOption(list, value, { pluralOther = false } = {}) {
+  const raw = trimVal(value);
+  if (!raw) return { en: '', other: '', raw: '' };
+
+  if (raw === 'Other' || raw === 'Others') {
+    return { en: 'Other', other: '', raw };
+  }
+
+  const parsed = matchOption(list, raw, { pluralOther });
+  if (!parsed.invalid) {
+    return { en: parsed.en, other: parsed.other || '', raw };
+  }
+
+  return { en: 'Other', other: raw, raw };
+}
+
+/** 表單／datalist 顯示用：Other 顯示自訂文字，其餘顯示英文選項 */
+export function displayOptionInput(en, other, list) {
+  if (en === 'Other') return other || '';
+  if (!en) return '';
+  const found = list.find((item) => item.en === en);
+  return found ? found.en : en;
+}
+
+/**
  * @typedef {Object} ImportContact
  * @property {string} title
  * @property {string} titleOther
@@ -124,7 +151,7 @@ export function validateImportContact(c, type, rowNum, opts) {
 
   if (!c.title) add('Title', '請填寫稱謂（Title）');
   if (c.title === 'Other' && !trimVal(c.titleOther)) {
-    add('Title Other', '已選 Other，請在「Title Other」欄填寫說明');
+    add('Title', '請填寫稱謂（可選下拉或自行輸入）');
   }
 
   if (!trimVal(c.firstName)) add('First Name', '名字為必填');
@@ -134,25 +161,19 @@ export function validateImportContact(c, type, rowNum, opts) {
   const jobField = type === 'academic' ? 'Job Title' : 'Position';
   if (!c.jobTitle) add(jobField, `請填寫${jobField}`);
   if (c.jobTitle === 'Other' && !trimVal(c.jobOther)) {
-    add(`${jobField} Other`, `已選 Other，請在「${jobField} Other」欄填寫說明`);
-  } else if (c.jobTitle && !jobList.some((item) => item.en === c.jobTitle) && c.jobTitle !== 'Other') {
-    add(jobField, `「${c._rawJob || c.jobTitle}」不在選項清單內`);
+    add(jobField, `請填寫${jobField}（可選下拉或自行輸入）`);
   }
 
   if (type === 'academic') {
     if (!trimVal(c.department)) add('Department', '系所為必填');
     if (!c.subject) add('Subject', '請填寫學術領域（Subject）');
     if (c.subject === 'Other' && !trimVal(c.subjectOther)) {
-      add('Subject Other', '已選 Other，請在「Subject Other」欄填寫說明');
-    } else if (c.subject && !SUBJECTS.some((item) => item.en === c.subject) && c.subject !== 'Other') {
-      add('Subject', `「${c._rawSubject || c.subject}」不在選項清單內`);
+      add('Subject', '請填寫學科領域（可選下拉或自行輸入）');
     }
   } else {
     if (!c.industry) add('Industry', '請填寫產業（Industry）');
     if (c.industry === 'Other' && !trimVal(c.industryOther)) {
-      add('Industry Other', '已選 Other，請在「Industry Other」欄填寫說明');
-    } else if (c.industry && !INDUSTRIES.some((item) => item.en === c.industry) && c.industry !== 'Other') {
-      add('Industry', `「${c._rawIndustry || c.industry}」不在選項清單內`);
+      add('Industry', '請填寫產業（可選下拉或自行輸入）');
     }
   }
 
@@ -161,13 +182,7 @@ export function validateImportContact(c, type, rowNum, opts) {
 
   if (!c.country) add('Country or Territory', '請填寫國家或地區');
   if (c.country === 'Other' && !trimVal(c.countryOther)) {
-    add('Country Other', '已選 Other，請在「Country Other」欄填寫說明');
-  } else if (c.country && !COUNTRIES.some((item) => item.en === c.country) && c.country !== 'Other') {
-    add('Country or Territory', `「${c._rawCountry || c.country}」不在選項清單內`);
-  }
-
-  if (c.title && !TITLES.some((item) => item.en === c.title) && c.title !== 'Other' && c.title !== 'Ven') {
-    add('Title', `「${c._rawTitle || c.title}」不在選項清單內`);
+    add('Country or Territory', '請填寫國家或地區（可選下拉或自行輸入）');
   }
 
   const emailErr = validateEmail(c.email);

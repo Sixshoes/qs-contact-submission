@@ -13,8 +13,6 @@ import {
   DEFAULT_COUNTRY,
   ACADEMIC_EXCEL_HEADERS_EN,
   EMPLOYER_EXCEL_HEADERS_EN,
-  ACADEMIC_IMPORT_TEMPLATE_HEADERS,
-  EMPLOYER_IMPORT_TEMPLATE_HEADERS,
 } from '../src/data/qs-options.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -60,34 +58,19 @@ function sheetListRange(sheetName, itemCount) {
   return `'${safe}'!$A$2:$A$${itemCount + 1}`;
 }
 
-const OTHER_HEADER_FILL = {
-  type: 'pattern',
-  pattern: 'solid',
-  fgColor: { argb: 'FFFDE68A' },
-};
-const OTHER_BODY_FILL = {
-  type: 'pattern',
-  pattern: 'solid',
-  fgColor: { argb: 'FFFFFBEB' },
-};
-
-function isOtherColumn(header) {
-  return String(header).endsWith(' Other');
-}
-
 function styleDataSheet(ws, headers, rows, { exampleRowCount = 0 } = {}) {
   ws.views = [{ state: 'frozen', ySplit: 1, activeCell: 'A2' }];
 
   const headerRow = ws.getRow(1);
   headers.forEach((text, i) => {
     const cell = headerRow.getCell(i + 1);
-    cell.value = isOtherColumn(text) ? `${text}\n（選 Other 時填）` : text;
-    cell.fill = isOtherColumn(text) ? OTHER_HEADER_FILL : HEADER_FILL;
+    cell.value = text;
+    cell.fill = HEADER_FILL;
     cell.font = HEADER_FONT;
     cell.border = THIN_BORDER;
     cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
   });
-  headerRow.height = isOtherColumn(headers.find(isOtherColumn) || '') ? 36 : 24;
+  headerRow.height = 24;
 
   rows.forEach((rowValues, rowIdx) => {
     const row = ws.getRow(rowIdx + 2);
@@ -98,21 +81,9 @@ function styleDataSheet(ws, headers, rows, { exampleRowCount = 0 } = {}) {
       cell.font = isExample ? EXAMPLE_FONT : BODY_FONT;
       cell.border = THIN_BORDER;
       cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
-      if (isOtherColumn(headers[colIdx])) {
-        cell.fill = OTHER_BODY_FILL;
-      }
     });
     row.height = 20;
   });
-
-  for (let row = FIRST_DATA_ROW; row <= LAST_DATA_ROW; row++) {
-    headers.forEach((header, colIdx) => {
-      if (!isOtherColumn(header)) return;
-      const cell = ws.getCell(row, colIdx + 1);
-      cell.fill = OTHER_BODY_FILL;
-      cell.border = THIN_BORDER;
-    });
-  }
 
   headers.forEach((header, i) => {
     let maxLen = String(header).length;
@@ -120,8 +91,7 @@ function styleDataSheet(ws, headers, rows, { exampleRowCount = 0 } = {}) {
       const len = String(row[i] ?? '').length;
       if (len > maxLen) maxLen = len;
     }
-    const extra = isOtherColumn(header) ? 8 : 0;
-    ws.getColumn(i + 1).width = Math.min(Math.max(maxLen + extra + 2, 12), 42);
+    ws.getColumn(i + 1).width = Math.min(Math.max(maxLen + 2, 12), 42);
   });
 
   if (headers.length) {
@@ -137,13 +107,10 @@ function applyColumnListValidation(ws, colIndex, rangeFormula, { allowBlank = tr
     type: 'list',
     allowBlank,
     formulae: [rangeFormula],
-    showErrorMessage: true,
-    errorStyle: 'error',
-    errorTitle: '選項不正確',
-    error: '請從下拉選單選擇有效選項',
+    showErrorMessage: false,
     showInputMessage: Boolean(prompt),
-    promptTitle: prompt?.title || '請選擇',
-    prompt: prompt?.text || '請從下拉選單選擇',
+    promptTitle: prompt?.title || '請選擇或輸入',
+    prompt: prompt?.text || '可從下拉選單選擇，或直接輸入；選單外文字會自動視為 Other',
   };
 
   for (let row = FIRST_DATA_ROW; row <= LAST_DATA_ROW; row++) {
@@ -164,14 +131,13 @@ function addGuideSheet(workbook) {
     ['填寫完成後，請至線上提交網站「從 Excel 匯入」上傳本檔；通過驗證後可匯入表單並提交。'],
     [''],
     ['二、工作表說明'],
-    ['• 「學術聯絡人」「雇主聯絡人」：已為選項欄位設定下拉選單（點儲存格右側 ▼ 選擇）。'],
+    ['• 「學術聯絡人」「雇主聯絡人」：選項欄位有下拉提示（▼），也可直接輸入；選單外文字匯入時會自動視為 Other。'],
     ['• 灰色斜體列為範例，填寫前請刪除；可從第 2 列起填寫，最多 100 筆。'],
     ['• 其他分頁為選項對照表（下拉選單來源），亦可手動查閱。'],
-    ['• 黃色欄位為「Other 說明」：下拉選單選 Other 後，在旁邊黃色欄自行填寫（不必改下拉選單那一格）。'],
     [''],
     ['三、共通規則'],
     ['• Source 請選 Fo Guang University。'],
-    ['• Title／職稱／產業／學科／國家等用下拉選單；選 Other 時在右邊黃色欄填寫。'],
+    ['• Title／職稱／產業／學科／國家等：可從下拉選擇，或直接輸入自訂內容（系統會自動當作 Other）。'],
     ['• 姓名、系所、機構、Email、電話請手動輸入。'],
     ['• Email：個人信箱，勿用 team@、info@ 等共用信箱；不可重複。'],
     ['• Phone 可留空；若填寫請含開頭 0（例如 0912345678）。'],
@@ -212,42 +178,42 @@ function colIndex(headers, headerName) {
 }
 
 function applyAcademicValidations(ws, ranges) {
-  const H = ACADEMIC_IMPORT_TEMPLATE_HEADERS;
+  const H = ACADEMIC_EXCEL_HEADERS_EN;
   applyColumnListValidation(ws, colIndex(H, 'Source'), `"${SOURCE_EN}"`, {
     allowBlank: false,
     prompt: { title: 'Source', text: '請選擇 Fo Guang University' },
   });
   applyColumnListValidation(ws, colIndex(H, 'Title'), ranges.titles.range, {
-    prompt: { title: 'Title', text: '請選擇稱謂；若選 Other 請在右邊黃色欄填寫' },
+    prompt: { title: 'Title', text: '可選擇或輸入；選單外會自動視為 Other' },
   });
   applyColumnListValidation(ws, colIndex(H, 'Job Title'), ranges.academicJobs.range, {
-    prompt: { title: 'Job Title', text: '請選擇學術職稱；若選 Other 請在右邊黃色欄填寫' },
+    prompt: { title: 'Job Title', text: '可選擇或輸入；選單外會自動視為 Other' },
   });
   applyColumnListValidation(ws, colIndex(H, 'Country or Territory'), ranges.countries.range, {
-    prompt: { title: 'Country', text: '請選擇國家或地區；若選 Other 請在右邊黃色欄填寫' },
+    prompt: { title: 'Country', text: '可選擇或輸入；選單外會自動視為 Other' },
   });
   applyColumnListValidation(ws, colIndex(H, 'Subject'), ranges.subjects.range, {
-    prompt: { title: 'Subject', text: '請選擇學科領域；若選 Other 請在右邊黃色欄填寫' },
+    prompt: { title: 'Subject', text: '可選擇或輸入；選單外會自動視為 Other' },
   });
 }
 
 function applyEmployerValidations(ws, ranges) {
-  const H = EMPLOYER_IMPORT_TEMPLATE_HEADERS;
+  const H = EMPLOYER_EXCEL_HEADERS_EN;
   applyColumnListValidation(ws, colIndex(H, 'Source'), `"${SOURCE_EN}"`, {
     allowBlank: false,
     prompt: { title: 'Source', text: '請選擇 Fo Guang University' },
   });
   applyColumnListValidation(ws, colIndex(H, 'Title'), ranges.titles.range, {
-    prompt: { title: 'Title', text: '請選擇稱謂；若選 Other 請在右邊黃色欄填寫' },
+    prompt: { title: 'Title', text: '可選擇或輸入；選單外會自動視為 Other' },
   });
   applyColumnListValidation(ws, colIndex(H, 'Position'), ranges.employerJobs.range, {
-    prompt: { title: 'Position', text: '請選擇雇主職位；若選 Other 請在右邊黃色欄填寫' },
+    prompt: { title: 'Position', text: '可選擇或輸入；選單外會自動視為 Other' },
   });
   applyColumnListValidation(ws, colIndex(H, 'Industry'), ranges.industries.range, {
-    prompt: { title: 'Industry', text: '請選擇產業；若選 Other 請在右邊黃色欄填寫' },
+    prompt: { title: 'Industry', text: '可選擇或輸入；選單外會自動視為 Other' },
   });
   applyColumnListValidation(ws, colIndex(H, 'Country or Territory'), ranges.countries.range, {
-    prompt: { title: 'Country', text: '請選擇國家或地區；若選 Other 請在右邊黃色欄填寫' },
+    prompt: { title: 'Country', text: '可選擇或輸入；選單外會自動視為 Other' },
   });
 }
 
@@ -272,34 +238,26 @@ async function main() {
   const academicExample = [
     SOURCE_EN,
     'Dr',
-    '',
     'Ming',
     'Chen',
     'Professor/Associate Professor',
-    '',
     'Department of History',
     SOURCE_EN,
     DEFAULT_COUNTRY,
-    '',
     '（請改為實際 email）',
     'History',
-    '',
     '0912345678',
   ];
 
   const employerExample = [
     SOURCE_EN,
     'Ms',
-    '',
     'Jane',
     'Doe',
     'Manager/Executive',
-    '',
     'Education',
-    '',
     'Example Company Ltd.',
     DEFAULT_COUNTRY,
-    '',
     '（請改為實際 email）',
     '0912345678',
   ];
@@ -307,13 +265,13 @@ async function main() {
   const wsAcademic = workbook.addWorksheet('學術聯絡人', {
     properties: { tabColor: { argb: 'FFDC2626' } },
   });
-  styleDataSheet(wsAcademic, ACADEMIC_IMPORT_TEMPLATE_HEADERS, [academicExample], { exampleRowCount: 1 });
+  styleDataSheet(wsAcademic, ACADEMIC_EXCEL_HEADERS_EN, [academicExample], { exampleRowCount: 1 });
   applyAcademicValidations(wsAcademic, ranges);
 
   const wsEmployer = workbook.addWorksheet('雇主聯絡人', {
     properties: { tabColor: { argb: 'FFF59E0B' } },
   });
-  styleDataSheet(wsEmployer, EMPLOYER_IMPORT_TEMPLATE_HEADERS, [employerExample], { exampleRowCount: 1 });
+  styleDataSheet(wsEmployer, EMPLOYER_EXCEL_HEADERS_EN, [employerExample], { exampleRowCount: 1 });
   applyEmployerValidations(wsEmployer, ranges);
 
   const buffer = await workbook.xlsx.writeBuffer();
