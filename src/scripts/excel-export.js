@@ -1,20 +1,18 @@
 import ExcelJS from 'exceljs';
+import {
+  applyExcelCellValue,
+  defaultBodyFont,
+  defaultGuideBodyFont,
+  defaultGuideTitleFont,
+  defaultHeaderFont,
+} from './excel-fonts.js';
 
+const HEADER_FONT = defaultHeaderFont();
+const BODY_FONT = defaultBodyFont();
 const HEADER_FILL = {
   type: 'pattern',
   pattern: 'solid',
   fgColor: { argb: 'FF1D4ED8' },
-};
-const HEADER_FONT = {
-  name: 'Calibri',
-  size: 11,
-  bold: true,
-  color: { argb: 'FFFFFFFF' },
-};
-const BODY_FONT = {
-  name: 'Calibri',
-  size: 11,
-  color: { argb: 'FF0F172A' },
 };
 const ZEBRA_FILL = {
   type: 'pattern',
@@ -47,9 +45,8 @@ function styleSheet(ws, headers, rows) {
   const headerRow = ws.getRow(1);
   headers.forEach((text, i) => {
     const cell = headerRow.getCell(i + 1);
-    cell.value = text;
+    applyExcelCellValue(cell, text, HEADER_FONT);
     cell.fill = HEADER_FILL;
-    cell.font = HEADER_FONT;
     cell.border = THIN_BORDER;
     cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
   });
@@ -59,8 +56,7 @@ function styleSheet(ws, headers, rows) {
     const row = ws.getRow(rowIdx + 2);
     rowValues.forEach((value, colIdx) => {
       const cell = row.getCell(colIdx + 1);
-      cell.value = value ?? '';
-      cell.font = BODY_FONT;
+      applyExcelCellValue(cell, value ?? '', BODY_FONT);
       cell.border = THIN_BORDER;
       cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
       if (rowIdx % 2 === 1) cell.fill = ZEBRA_FILL;
@@ -110,11 +106,7 @@ function addMergeGuideSheet(workbook, kind) {
   ];
   guideLines.forEach((line, idx) => {
     const row = guide.getRow(idx + 1);
-    row.getCell(1).value = line[0];
-    row.getCell(1).font =
-      idx === 0
-        ? { name: 'Calibri', size: 14, bold: true, color: { argb: 'FF0F172A' } }
-        : { name: 'Calibri', size: 11, color: { argb: 'FF334155' } };
+    applyExcelCellValue(row.getCell(1), line[0], idx === 0 ? defaultGuideTitleFont() : defaultGuideBodyFont());
   });
   guide.getColumn(1).width = 90;
 }

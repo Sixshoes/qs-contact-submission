@@ -3,6 +3,14 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import ExcelJS from 'exceljs';
 import {
+  applyExcelCellValue,
+  defaultBodyFont,
+  defaultGuideBodyFont,
+  defaultGuideTitleFont,
+  defaultHeaderFont,
+  defaultExampleFont,
+} from '../src/scripts/excel-fonts.js';
+import {
   SOURCE_EN,
   TITLES,
   ACADEMIC_JOB_TITLES,
@@ -29,23 +37,9 @@ const HEADER_FILL = {
   pattern: 'solid',
   fgColor: { argb: 'FF1D4ED8' },
 };
-const HEADER_FONT = {
-  name: 'Calibri',
-  size: 11,
-  bold: true,
-  color: { argb: 'FFFFFFFF' },
-};
-const BODY_FONT = {
-  name: 'Calibri',
-  size: 11,
-  color: { argb: 'FF0F172A' },
-};
-const EXAMPLE_FONT = {
-  name: 'Calibri',
-  size: 11,
-  italic: true,
-  color: { argb: 'FF64748B' },
-};
+const HEADER_FONT = defaultHeaderFont();
+const BODY_FONT = defaultBodyFont();
+const EXAMPLE_FONT = defaultExampleFont();
 const THIN_BORDER = {
   top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
   left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
@@ -58,15 +52,14 @@ function sheetListRange(sheetName, itemCount) {
   return `'${safe}'!$A$2:$A$${itemCount + 1}`;
 }
 
-function styleDataSheet(ws, headers, rows, { exampleRowCount = 0 } = {}) {
+function styleDataSheet(ws, headers, rows, { exampleRowCount = 0, fillDataRows = 0 } = {}) {
   ws.views = [{ state: 'frozen', ySplit: 1, activeCell: 'A2' }];
 
   const headerRow = ws.getRow(1);
   headers.forEach((text, i) => {
     const cell = headerRow.getCell(i + 1);
-    cell.value = text;
+    applyExcelCellValue(cell, text, HEADER_FONT);
     cell.fill = HEADER_FILL;
-    cell.font = HEADER_FONT;
     cell.border = THIN_BORDER;
     cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
   });
@@ -77,13 +70,27 @@ function styleDataSheet(ws, headers, rows, { exampleRowCount = 0 } = {}) {
     const isExample = rowIdx < exampleRowCount;
     rowValues.forEach((value, colIdx) => {
       const cell = row.getCell(colIdx + 1);
-      cell.value = value ?? '';
-      cell.font = isExample ? EXAMPLE_FONT : BODY_FONT;
+      applyExcelCellValue(cell, value ?? '', isExample ? EXAMPLE_FONT : BODY_FONT);
       cell.border = THIN_BORDER;
       cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
     });
     row.height = 20;
   });
+
+  if (fillDataRows > 0) {
+    const firstEmptyRow = FIRST_DATA_ROW + rows.length;
+    const lastRow = FIRST_DATA_ROW + fillDataRows - 1;
+    for (let row = firstEmptyRow; row <= lastRow; row++) {
+      headers.forEach((_, colIdx) => {
+        const cell = ws.getCell(row, colIdx + 1);
+        cell.value = '';
+        cell.font = { ...BODY_FONT };
+        cell.border = THIN_BORDER;
+        cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+      });
+      ws.getRow(row).height = 20;
+    }
+  }
 
   headers.forEach((header, i) => {
     let maxLen = String(header).length;
@@ -151,10 +158,7 @@ function addGuideSheet(workbook) {
   lines.forEach((line, idx) => {
     const row = guide.getRow(idx + 1);
     row.getCell(1).value = line[0];
-    row.getCell(1).font =
-      idx === 0
-        ? { name: 'Calibri', size: 14, bold: true, color: { argb: 'FF0F172A' } }
-        : { name: 'Calibri', size: 11, color: { argb: 'FF334155' } };
+    row.getCell(1).font = idx === 0 ? defaultGuideTitleFont() : defaultGuideBodyFont();
   });
   guide.getColumn(1).width = 95;
 }
@@ -265,13 +269,19 @@ async function main() {
   const wsAcademic = workbook.addWorksheet('學術聯絡人', {
     properties: { tabColor: { argb: 'FFDC2626' } },
   });
-  styleDataSheet(wsAcademic, ACADEMIC_EXCEL_HEADERS_EN, [academicExample], { exampleRowCount: 1 });
+  styleDataSheet(wsAcademic, ACADEMIC_EXCEL_HEADERS_EN, [academicExample], {
+    exampleRowCount: 1,
+    fillDataRows: DATA_ROW_COUNT,
+  });
   applyAcademicValidations(wsAcademic, ranges);
 
   const wsEmployer = workbook.addWorksheet('雇主聯絡人', {
     properties: { tabColor: { argb: 'FFF59E0B' } },
   });
-  styleDataSheet(wsEmployer, EMPLOYER_EXCEL_HEADERS_EN, [employerExample], { exampleRowCount: 1 });
+  styleDataSheet(wsEmployer, EMPLOYER_EXCEL_HEADERS_EN, [employerExample], {
+    exampleRowCount: 1,
+    fillDataRows: DATA_ROW_COUNT,
+  });
   applyEmployerValidations(wsEmployer, ranges);
 
   const buffer = await workbook.xlsx.writeBuffer();
