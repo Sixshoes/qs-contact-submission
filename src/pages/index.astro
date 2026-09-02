@@ -111,6 +111,37 @@ const base = import.meta.env.BASE_URL;
           （會先驗證再匯入），或於下方手動新增聯絡人。
         </p>
 
+        <details class="details-panel">
+          <summary>Email 填寫說明（依 QS 方法論 §2.8）</summary>
+          <ul class="mt-3 space-y-2 text-xs leading-relaxed text-slate-600">
+            <li>• 請填寫聯絡人<strong>個人信箱或個人公務信箱</strong>，避免使用 team@、info@、admissions@ 等共用或團隊信箱。</li>
+            <li>• 每位聯絡人僅填<strong>一組</strong> email。</li>
+            <li>• 不同聯絡人請使用<strong>不同信箱</strong>；多人共用同一信箱時，QS 僅會寄送一次問卷邀請。</li>
+            <li>• 不可含空白，亦不可含 <code class="rounded bg-white px-1">[ ] { } ( ) ; : , &lt; &gt; ' # ~ = +</code> 等符號。</li>
+          </ul>
+        </details>
+
+        <div class="sticky-panel card-panel sticky top-0 z-20 space-y-4 supports-[backdrop-filter]:bg-white/95">
+          <h2 class="panel-title">
+            <span class="panel-title-mark" aria-hidden="true"></span>
+            提交資訊
+          </h2>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label for="submitter-unit" class="mb-1.5 block text-sm font-medium text-slate-700">
+                提交單位 (Department / Unit) <span class="text-red-500">*</span>
+              </label>
+              <input id="submitter-unit" type="text" required placeholder="例如：歷史學系、永續辦公室、國際處..." class="input-field" />
+            </div>
+            <div>
+              <label for="submitter-name" class="mb-1.5 block text-sm font-medium text-slate-700">
+                提交人姓名 (Submitter Name) <span class="text-red-500">*</span>
+              </label>
+              <input id="submitter-name" type="text" required placeholder="請輸入您的姓名" class="input-field" />
+            </div>
+          </div>
+        </div>
+
         <div class="card-panel space-y-4" id="import-panel">
           <h2 class="panel-title">
             <span class="panel-title-mark" aria-hidden="true"></span>
@@ -166,37 +197,6 @@ const base = import.meta.env.BASE_URL;
                 </label>
               </div>
               <button type="button" id="btn-apply-import" class="btn-primary">確認匯入到表單</button>
-            </div>
-          </div>
-        </div>
-
-        <details class="details-panel">
-          <summary>Email 填寫說明（依 QS 方法論 §2.8）</summary>
-          <ul class="mt-3 space-y-2 text-xs leading-relaxed text-slate-600">
-            <li>• 請填寫聯絡人<strong>個人信箱或個人公務信箱</strong>，避免使用 team@、info@、admissions@ 等共用或團隊信箱。</li>
-            <li>• 每位聯絡人僅填<strong>一組</strong> email。</li>
-            <li>• 不同聯絡人請使用<strong>不同信箱</strong>；多人共用同一信箱時，QS 僅會寄送一次問卷邀請。</li>
-            <li>• 不可含空白，亦不可含 <code class="rounded bg-white px-1">[ ] { } ( ) ; : , &lt; &gt; ' # ~ = +</code> 等符號。</li>
-          </ul>
-        </details>
-
-        <div class="sticky-panel card-panel sticky top-0 z-20 space-y-4 supports-[backdrop-filter]:bg-white/95">
-          <h2 class="panel-title">
-            <span class="panel-title-mark" aria-hidden="true"></span>
-            提交資訊
-          </h2>
-          <div class="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label for="submitter-unit" class="mb-1.5 block text-sm font-medium text-slate-700">
-                提交單位 (Department / Unit) <span class="text-red-500">*</span>
-              </label>
-              <input id="submitter-unit" type="text" required placeholder="例如：歷史學系、永續辦公室、國際處..." class="input-field" />
-            </div>
-            <div>
-              <label for="submitter-name" class="mb-1.5 block text-sm font-medium text-slate-700">
-                提交人姓名 (Submitter Name) <span class="text-red-500">*</span>
-              </label>
-              <input id="submitter-name" type="text" required placeholder="請輸入您的姓名" class="input-field" />
             </div>
           </div>
         </div>

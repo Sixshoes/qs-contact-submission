@@ -10,6 +10,7 @@
     "generate:guidelines-md": "node scripts/generate-guidelines-zh.mjs",
     "generate:guidelines-pdf": "node scripts/generate-guidelines-pdf.mjs",
     "generate:templates": "node scripts/generate-import-templates.mjs",
+    "generate:import-test": "node scripts/generate-import-test-100.mjs",
     "prepare:docs": "node scripts/generate-guidelines-zh.mjs && node scripts/generate-guidelines-pdf.mjs",
     "build": "astro build",
     "preview": "astro preview",
