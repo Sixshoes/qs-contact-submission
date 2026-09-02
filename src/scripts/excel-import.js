@@ -197,7 +197,7 @@ function parseEmployerRow(map, rowNum, { hasOtherCols = false } = {}) {
   return { contact, errors: validateImportContact(contact, 'employer', rowNum, OPTS) };
 }
 
-function parseSheet(workbook, sheetName, type) {
+function parseSheet(workbook, sheetName, type, { onRow } = {}) {
   const ws = workbook.getWorksheet(sheetName);
   if (!ws) {
     return {
@@ -234,6 +234,8 @@ function parseSheet(workbook, sheetName, type) {
   const contacts = [];
   const errors = [];
 
+  const dataRowCount = Math.max(0, matrix.length - 1);
+
   for (let i = 1; i < matrix.length; i++) {
     const rowNum = i + 1;
     const values = matrix[i];
@@ -246,6 +248,8 @@ function parseSheet(workbook, sheetName, type) {
 
     if (parsed.errors.length) errors.push(...parsed.errors);
     else contacts.push(parsed.contact);
+
+    if (onRow) onRow(i, dataRowCount);
   }
 
   return { contacts, errors };
@@ -281,11 +285,30 @@ function checkDuplicateEmails(academic, employer) {
 
 export async function parseImportWorkbook(buffer, options = {}) {
   const maxContacts = options.maxContacts ?? MAX_CONTACTS;
+  const onProgress = options.onProgress;
+  const tick = (label, percent) => {
+    onProgress?.({ label, percent: Math.min(100, Math.max(0, Math.round(percent))) });
+  };
+
+  tick('讀取 Excel 檔案…', 3);
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(buffer);
+  tick('讀取完成', 10);
 
-  const academicResult = parseSheet(workbook, SHEET_ACADEMIC, 'academic');
-  const employerResult = parseSheet(workbook, SHEET_EMPLOYER, 'employer');
+  const academicResult = parseSheet(workbook, SHEET_ACADEMIC, 'academic', {
+    onRow: (cur, tot) => {
+      if (!tot) return;
+      tick(`驗證學術聯絡人（${cur}/${tot}）…`, 10 + (cur / tot) * 38);
+    },
+  });
+  const employerResult = parseSheet(workbook, SHEET_EMPLOYER, 'employer', {
+    onRow: (cur, tot) => {
+      if (!tot) return;
+      tick(`驗證雇主聯絡人（${cur}/${tot}）…`, 48 + (cur / tot) * 38);
+    },
+  });
+
+  tick('檢查筆數與 Email…', 90);
 
   const errors = [...academicResult.errors, ...employerResult.errors];
 
@@ -319,6 +342,8 @@ export async function parseImportWorkbook(buffer, options = {}) {
 
   const academic = academicResult.contacts.slice(0, maxContacts).map((c) => normalizeImportContact(c, 'academic'));
   const employer = employerResult.contacts.slice(0, maxContacts).map((c) => normalizeImportContact(c, 'employer'));
+
+  tick('驗證完成', 100);
 
   return {
     ok: errors.length === 0,

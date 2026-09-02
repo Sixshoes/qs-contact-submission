@@ -176,6 +176,16 @@ const base = import.meta.env.BASE_URL;
             <button type="button" id="btn-clear-import" class="btn-secondary hidden">清除</button>
           </div>
 
+          <div id="import-progress" class="import-progress hidden" role="status" aria-live="polite" aria-busy="false">
+            <div class="import-progress__meta">
+              <span id="import-progress-label">處理中…</span>
+              <span id="import-progress-percent">0%</span>
+            </div>
+            <div class="import-progress__track" aria-hidden="true">
+              <div id="import-progress-bar" class="import-progress__bar"></div>
+            </div>
+          </div>
+
           <div id="import-result" class="hidden space-y-4 border-t border-slate-200 pt-4">
             <p id="import-summary" class="text-sm font-medium text-slate-800"></p>
             <div id="import-errors-wrap" class="hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3">
@@ -934,6 +944,52 @@ const base = import.meta.env.BASE_URL;
       updateContactCount();
     }
 
+    /** @param {(info: { label: string, percent: number }) => void} [onProgress] */
+    async function renderAllCardsBatched(onProgress) {
+      const academicContainer = $('#academic-contacts-container');
+      const employerContainer = $('#employer-contacts-container');
+      if (!academicContainer || !employerContainer) return;
+
+      academicContainer.innerHTML = '';
+      employerContainer.innerHTML = '';
+
+      const total = academicContacts.length + employerContacts.length;
+      let done = 0;
+      const BATCH = 8;
+
+      const tick = (label) => {
+        if (!onProgress) return;
+        const percent = total ? Math.round((done / total) * 100) : 100;
+        onProgress({ label, percent });
+      };
+
+      try {
+        for (let i = 0; i < academicContacts.length; i += BATCH) {
+          academicContacts.slice(i, i + BATCH).forEach((c, j) => {
+            academicContainer.appendChild(renderContactCard(c, i + j, 'academic'));
+            done += 1;
+          });
+          tick(`載入學術聯絡人（${done}/${total}）…`);
+          await new Promise((r) => requestAnimationFrame(r));
+        }
+        for (let i = 0; i < employerContacts.length; i += BATCH) {
+          employerContacts.slice(i, i + BATCH).forEach((c, j) => {
+            employerContainer.appendChild(renderContactCard(c, i + j, 'employer'));
+            done += 1;
+          });
+          tick(`載入雇主聯絡人（${done}/${total}）…`);
+          await new Promise((r) => requestAnimationFrame(r));
+        }
+      } catch (err) {
+        console.error(err);
+        showError('聯絡人表單渲染失敗，請重新整理頁面後再試。');
+        return;
+      }
+
+      updateContactCount();
+      onProgress?.({ label: '載入完成', percent: 100 });
+    }
+
     /** @param {'academic'|'employer'} type */
     function addContact(type) {
       const list = getList(type);
@@ -1558,8 +1614,32 @@ const base = import.meta.env.BASE_URL;
         if (!selectedFile) resetImportResult();
       }
 
+      function setImportProgress({ label, percent, visible = true }) {
+        const wrap = $('#import-progress');
+        const bar = $('#import-progress-bar');
+        const labelEl = $('#import-progress-label');
+        const pctEl = $('#import-progress-percent');
+        if (!wrap) return;
+        if (!visible) {
+          wrap.classList.add('hidden');
+          wrap.setAttribute('aria-busy', 'false');
+          return;
+        }
+        wrap.classList.remove('hidden');
+        wrap.setAttribute('aria-busy', 'true');
+        if (labelEl) labelEl.textContent = label || '處理中…';
+        const pct = Math.min(100, Math.max(0, percent ?? 0));
+        if (bar) bar.style.width = `${pct}%`;
+        if (pctEl) pctEl.textContent = `${pct}%`;
+      }
+
+      function hideImportProgress() {
+        setImportProgress({ visible: false });
+      }
+
       function resetImportResult() {
         pendingImport = null;
+        hideImportProgress();
         $('#import-result').classList.add('hidden');
         $('#import-errors-wrap').classList.add('hidden');
         $('#import-preview-wrap').classList.add('hidden');
@@ -1681,7 +1761,7 @@ const base = import.meta.env.BASE_URL;
         return errors;
       }
 
-      function applyImportResult(result, mode) {
+      async function applyImportResult(result, mode) {
         const toContact = (c, type) => ({
           ...emptyContact(type),
           ...c,
@@ -1700,7 +1780,8 @@ const base = import.meta.env.BASE_URL;
           employerContacts = newEmployer;
         }
 
-        renderAllCards();
+        setImportProgress({ label: '準備載入表單…', percent: 0 });
+        await renderAllCardsBatched(({ label, percent }) => setImportProgress({ label, percent }));
         saveState();
         showError('');
         resetImportResult();
@@ -1734,9 +1815,14 @@ const base = import.meta.env.BASE_URL;
       parseBtn?.addEventListener('click', async () => {
         if (!selectedFile) return;
         parseBtn.disabled = true;
+        clearBtn.disabled = true;
         parseBtn.textContent = '驗證中…';
+        setImportProgress({ label: '準備讀取檔案…', percent: 0 });
         try {
-          const result = await parseImportFile(selectedFile, { maxContacts: MAX_CONTACTS });
+          const result = await parseImportFile(selectedFile, {
+            maxContacts: MAX_CONTACTS,
+            onProgress: ({ label, percent }) => setImportProgress({ label, percent }),
+          });
           renderImportResult(result);
         } catch (err) {
           renderImportResult({
@@ -1747,12 +1833,14 @@ const base = import.meta.env.BASE_URL;
             summary: { academicCount: 0, employerCount: 0 },
           });
         } finally {
+          hideImportProgress();
           parseBtn.textContent = '解析並驗證';
           parseBtn.disabled = !selectedFile;
+          clearBtn.disabled = false;
         }
       });
 
-      $('#btn-apply-import')?.addEventListener('click', () => {
+      $('#btn-apply-import')?.addEventListener('click', async () => {
         if (!pendingImport?.ok) return;
         const mode = document.querySelector('input[name="import-mode"]:checked')?.value || 'replace';
         const mergeErrors = validateMerge(pendingImport, mode);
@@ -1760,7 +1848,19 @@ const base = import.meta.env.BASE_URL;
           alert(mergeErrors.join('\n'));
           return;
         }
-        applyImportResult(pendingImport, mode);
+        const applyBtn = $('#btn-apply-import');
+        if (applyBtn) {
+          applyBtn.disabled = true;
+          applyBtn.textContent = '匯入中…';
+        }
+        try {
+          await applyImportResult(pendingImport, mode);
+        } finally {
+          if (applyBtn) {
+            applyBtn.disabled = false;
+            applyBtn.textContent = '確認匯入到表單';
+          }
+        }
       });
     }
 
