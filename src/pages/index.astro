@@ -206,7 +206,7 @@ const base = import.meta.env.BASE_URL;
                   追加到現有聯絡人（合併）
                 </label>
               </div>
-              <button type="button" id="btn-apply-import" class="btn-primary">確認匯入到表單</button>
+              <button type="button" id="btn-apply-import" class="btn-primary">確認匯入並預覽</button>
             </div>
           </div>
         </div>
@@ -1652,7 +1652,10 @@ const base = import.meta.env.BASE_URL;
     function bindClearModal() {
       $('#btn-open-clear').addEventListener('click', openClearModal);
       $('#btn-reset').addEventListener('click', openClearModal);
-      $('#btn-back-to-form').addEventListener('click', () => showStep(1));
+      $('#btn-back-to-form').addEventListener('click', () => {
+        renderAllCards();
+        showStep(1);
+      });
       $('#btn-clear-cancel').addEventListener('click', closeClearModal);
       $('#clear-modal-backdrop').addEventListener('click', closeClearModal);
 
@@ -1856,14 +1859,20 @@ const base = import.meta.env.BASE_URL;
           employerContacts = newEmployer;
         }
 
-        setImportProgress({ label: '準備載入表單…', percent: 0 });
-        await renderAllCardsBatched(({ label, percent }) => setImportProgress({ label, percent }));
         saveState();
         showError('');
         resetImportResult();
         setFile(null);
         fileInput.value = '';
-        $('#section-academic')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        setImportProgress({ label: '準備預覽名單…', percent: 40 });
+        await new Promise((r) => requestAnimationFrame(r));
+        updateContactCount();
+        renderPreview();
+        setImportProgress({ label: '預覽完成', percent: 100 });
+        await new Promise((r) => setTimeout(r, 200));
+        hideImportProgress();
+        showStep(2);
       }
 
       zone?.addEventListener('dragover', (e) => {
@@ -1934,7 +1943,7 @@ const base = import.meta.env.BASE_URL;
         } finally {
           if (applyBtn) {
             applyBtn.disabled = false;
-            applyBtn.textContent = '確認匯入到表單';
+            applyBtn.textContent = '確認匯入並預覽';
           }
         }
       });
@@ -1960,7 +1969,10 @@ const base = import.meta.env.BASE_URL;
         showStep(2);
       });
 
-      $('#btn-back').addEventListener('click', () => showStep(1));
+      $('#btn-back').addEventListener('click', () => {
+        renderAllCards();
+        showStep(1);
+      });
 
       $('#confirm-unlock').addEventListener('input', (e) => {
         $('#btn-submit').disabled = e.target.value.trim() !== UNLOCK_PHRASE;
