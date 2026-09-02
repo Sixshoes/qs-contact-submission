@@ -8,7 +8,6 @@ import {
   defaultGuideBodyFont,
   defaultGuideTitleFont,
   defaultHeaderFont,
-  defaultExampleFont,
 } from '../src/scripts/excel-fonts.js';
 import {
   SOURCE_EN,
@@ -39,7 +38,6 @@ const HEADER_FILL = {
 };
 const HEADER_FONT = defaultHeaderFont();
 const BODY_FONT = defaultBodyFont();
-const EXAMPLE_FONT = defaultExampleFont();
 const THIN_BORDER = {
   top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
   left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
@@ -52,7 +50,7 @@ function sheetListRange(sheetName, itemCount) {
   return `'${safe}'!$A$2:$A$${itemCount + 1}`;
 }
 
-function styleDataSheet(ws, headers, rows, { exampleRowCount = 0, fillDataRows = 0 } = {}) {
+function styleDataSheet(ws, headers, rows, { fillDataRows = 0 } = {}) {
   ws.views = [{ state: 'frozen', ySplit: 1, activeCell: 'A2' }];
 
   const headerRow = ws.getRow(1);
@@ -67,10 +65,9 @@ function styleDataSheet(ws, headers, rows, { exampleRowCount = 0, fillDataRows =
 
   rows.forEach((rowValues, rowIdx) => {
     const row = ws.getRow(rowIdx + 2);
-    const isExample = rowIdx < exampleRowCount;
     rowValues.forEach((value, colIdx) => {
       const cell = row.getCell(colIdx + 1);
-      applyExcelCellValue(cell, value ?? '', isExample ? EXAMPLE_FONT : BODY_FONT);
+      applyExcelCellValue(cell, value ?? '', BODY_FONT);
       cell.border = THIN_BORDER;
       cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
     });
@@ -139,7 +136,7 @@ function addGuideSheet(workbook) {
     [''],
     ['二、工作表說明'],
     ['• 「學術聯絡人」「雇主聯絡人」：選項欄位有下拉提示（▼），也可直接輸入；選單外文字匯入時會自動視為 Other。'],
-    ['• 灰色斜體列為範例，填寫前請刪除；可從第 2 列起填寫，最多 100 筆。'],
+    ['• 第 2 列為範例，填寫前請刪除；可從第 2 列起填寫，最多 100 筆。'],
     ['• 其他分頁為選項對照表（下拉選單來源），亦可手動查閱。'],
     [''],
     ['三、共通規則'],
@@ -270,7 +267,6 @@ async function main() {
     properties: { tabColor: { argb: 'FFDC2626' } },
   });
   styleDataSheet(wsAcademic, ACADEMIC_EXCEL_HEADERS_EN, [academicExample], {
-    exampleRowCount: 1,
     fillDataRows: DATA_ROW_COUNT,
   });
   applyAcademicValidations(wsAcademic, ranges);
@@ -279,7 +275,6 @@ async function main() {
     properties: { tabColor: { argb: 'FFF59E0B' } },
   });
   styleDataSheet(wsEmployer, EMPLOYER_EXCEL_HEADERS_EN, [employerExample], {
-    exampleRowCount: 1,
     fillDataRows: DATA_ROW_COUNT,
   });
   applyEmployerValidations(wsEmployer, ranges);
