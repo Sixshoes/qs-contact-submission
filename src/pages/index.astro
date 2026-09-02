@@ -11,7 +11,7 @@ const base = import.meta.env.BASE_URL;
       <div class="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-qs/15 blur-3xl" aria-hidden="true"></div>
       <div class="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-sage/20 blur-2xl" aria-hidden="true"></div>
       <div class="pointer-events-none absolute right-1/4 top-1/2 h-32 w-32 -translate-y-1/2 rounded-full bg-warm-gold/10 blur-2xl" aria-hidden="true"></div>
-      <div class="relative mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      <div class="page-shell relative py-6 sm:py-8">
         <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div class="flex items-center gap-4">
             <img
@@ -73,7 +73,7 @@ const base = import.meta.env.BASE_URL;
       </div>
     </header>
 
-    <main class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+    <main class="page-shell py-6 sm:py-8">
       <!-- Step indicator -->
       <nav aria-label="進度" class="step-nav card-panel mb-8">
         <ol class="flex flex-wrap items-center justify-center gap-3 text-sm sm:gap-6">
@@ -360,7 +360,7 @@ const base = import.meta.env.BASE_URL;
 
     <footer class="site-footer relative mt-8 border-t border-fgu/10 bg-white/90 py-8 backdrop-blur-sm">
       <div class="footer-bar absolute inset-x-0 top-0 h-1" aria-hidden="true"></div>
-      <div class="mx-auto flex max-w-5xl flex-col items-center gap-4 px-4 pt-2 sm:flex-row sm:justify-between sm:px-6">
+      <div class="page-shell flex flex-col items-center gap-4 pt-2 sm:flex-row sm:justify-between">
         <div class="flex items-center gap-3">
           <img src={`${base}images/fgu-logo.png`} alt="" class="h-10 w-10 rounded-full object-cover" width="40" height="40" aria-hidden="true" />
           <p class="text-xs text-slate-500">Fo Guang University · QS Contact Submission</p>

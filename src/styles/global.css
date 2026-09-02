@@ -83,6 +83,20 @@ body {
   z-index: 1;
 }
 
+/** 主內容區：盡量貼近視窗兩側，僅保留最小邊距 */
+.page-shell {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
+  padding-inline: clamp(0.5rem, 1.25vw, 0.875rem);
+}
+
+@media (min-width: 1536px) {
+  .page-shell {
+    padding-inline: clamp(0.75rem, 1.5vw, 1.25rem);
+  }
+}
+
 /* ── Header ── */
 .site-header {
   box-shadow:
