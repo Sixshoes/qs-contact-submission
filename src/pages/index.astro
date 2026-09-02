@@ -156,7 +156,7 @@ const base = import.meta.env.BASE_URL;
             >
               匯入樣板
             </a>
-            。上傳後會先檢查欄位、選項、Email 等，<strong>全部通過</strong>才可匯入到表單。選項欄位有下拉提示，也可直接輸入；選單外文字會自動視為 Other。
+            。上傳後會先檢查欄位、選項、Email 等，<strong>全部通過</strong>即覆蓋並進入預覽頁；若表單已有聯絡人資料會先詢問是否覆蓋。選項欄位有下拉提示，也可直接輸入；選單外文字會自動視為 Other。
           </p>
           <div class="import-zone" id="import-zone">
             <p class="text-sm text-slate-600">拖曳 .xlsx 到這裡，或</p>
@@ -191,22 +191,6 @@ const base = import.meta.env.BASE_URL;
             <div id="import-errors-wrap" class="hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3">
               <p class="text-sm font-semibold text-red-800">請修正以下問題後再匯入：</p>
               <ul id="import-errors" class="mt-2 space-y-1 text-sm text-red-700"></ul>
-            </div>
-            <div id="import-preview-wrap" class="hidden space-y-3">
-              <p class="text-sm font-semibold text-slate-800">預覽（通過驗證的資料）</p>
-              <div id="import-preview" class="import-preview overflow-x-auto"></div>
-              <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                <p class="font-medium">匯入方式</p>
-                <label class="mt-2 flex cursor-pointer items-center gap-2">
-                  <input type="radio" name="import-mode" value="replace" checked class="text-fgu" />
-                  覆蓋目前表單中的聯絡人
-                </label>
-                <label class="mt-1 flex cursor-pointer items-center gap-2">
-                  <input type="radio" name="import-mode" value="merge" class="text-fgu" />
-                  追加到現有聯絡人（合併）
-                </label>
-              </div>
-              <button type="button" id="btn-apply-import" class="btn-primary">確認匯入並預覽</button>
             </div>
           </div>
         </div>
@@ -1721,61 +1705,17 @@ const base = import.meta.env.BASE_URL;
         hideImportProgress();
         $('#import-result').classList.add('hidden');
         $('#import-errors-wrap').classList.add('hidden');
-        $('#import-preview-wrap').classList.add('hidden');
         $('#import-errors').innerHTML = '';
-        $('#import-preview').innerHTML = '';
       }
 
-      function escapeHtml(s) {
-        return String(s ?? '')
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;');
+      function hasExistingContactData() {
+        return academicContacts.length > 0 || employerContacts.length > 0;
       }
 
-      function renderImportPreview(result) {
-        const rows = [];
-        result.academic.forEach((c, i) => {
-          rows.push({
-            type: '學術',
-            no: i + 1,
-            name: `${c.firstName} ${c.lastName}`.trim(),
-            email: c.email,
-            org: c.institution,
-          });
-        });
-        result.employer.forEach((c, i) => {
-          rows.push({
-            type: '雇主',
-            no: i + 1,
-            name: `${c.firstName} ${c.lastName}`.trim(),
-            email: c.email,
-            org: c.institution,
-          });
-        });
-        if (!rows.length) {
-          $('#import-preview').innerHTML = '<p class="text-sm text-slate-500">無資料</p>';
-          return;
-        }
-        const th = ['類型', '#', '姓名', 'Email', '機構／公司']
-          .map((h) => `<th>${h}</th>`)
-          .join('');
-        const tbody = rows
-          .map(
-            (r) =>
-              `<tr><td>${escapeHtml(r.type)}</td><td>${r.no}</td><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.email)}</td><td>${escapeHtml(r.org)}</td></tr>`,
-          )
-          .join('');
-        $('#import-preview').innerHTML = `<table><thead><tr>${th}</tr></thead><tbody>${tbody}</tbody></table>`;
-      }
-
-      function renderImportResult(result) {
-        pendingImport = result.ok ? result : null;
+      function renderImportErrors(result) {
+        pendingImport = null;
         $('#import-result').classList.remove('hidden');
-        $('#import-summary').textContent = result.ok
-          ? `驗證通過：學術 ${result.summary.academicCount} 筆、雇主 ${result.summary.employerCount} 筆。`
-          : `驗證未通過：學術 ${result.summary.academicCount} 筆、雇主 ${result.summary.employerCount} 筆（請修正錯誤後重新上傳）。`;
+        $('#import-summary').textContent = `驗證未通過：學術 ${result.summary.academicCount} 筆、雇主 ${result.summary.employerCount} 筆（請修正錯誤後重新上傳）。`;
 
         const errWrap = $('#import-errors-wrap');
         const errList = $('#import-errors');
@@ -1791,56 +1731,26 @@ const base = import.meta.env.BASE_URL;
           errWrap.classList.add('hidden');
           errList.innerHTML = '';
         }
-
-        const previewWrap = $('#import-preview-wrap');
-        if (result.ok) {
-          previewWrap.classList.remove('hidden');
-          renderImportPreview(result);
-        } else {
-          previewWrap.classList.add('hidden');
-        }
       }
 
-      function collectExistingEmails() {
-        const emails = new Set();
-        academicContacts.forEach((c) => {
-          const e = normalizeEmailImport(c.email);
-          if (e) emails.add(e);
-        });
-        employerContacts.forEach((c) => {
-          const e = normalizeEmailImport(c.email);
-          if (e) emails.add(e);
-        });
-        return emails;
-      }
-
-      function validateMerge(result, mode) {
-        const errors = [];
-        if (mode === 'merge') {
-          if (academicContacts.length + result.academic.length > MAX_CONTACTS) {
-            errors.push(
-              `合併後學術聯絡人將超過 ${MAX_CONTACTS} 筆（現有 ${academicContacts.length} + 匯入 ${result.academic.length}）`,
-            );
-          }
-          if (employerContacts.length + result.employer.length > MAX_CONTACTS) {
-            errors.push(
-              `合併後雇主聯絡人將超過 ${MAX_CONTACTS} 筆（現有 ${employerContacts.length} + 匯入 ${result.employer.length}）`,
-            );
-          }
-          const existing = collectExistingEmails();
-          const dup = [];
-          [...result.academic, ...result.employer].forEach((c) => {
-            const e = normalizeEmailImport(c.email);
-            if (e && existing.has(e)) dup.push(e);
-          });
-          if (dup.length) {
-            errors.push(`與表單現有聯絡人 Email 重複：${[...new Set(dup)].join('、')}`);
+      async function confirmAndApplyImport(result) {
+        if (hasExistingContactData()) {
+          const total = academicContacts.length + employerContacts.length;
+          const ok = confirm(
+            `目前已有 ${total} 筆聯絡人資料，匯入 Excel 將覆蓋現有內容。\n\n確定要繼續嗎？`,
+          );
+          if (!ok) {
+            $('#import-result').classList.remove('hidden');
+            $('#import-summary').textContent = `已取消匯入（驗證已通過：學術 ${result.summary.academicCount} 筆、雇主 ${result.summary.employerCount} 筆）。`;
+            $('#import-errors-wrap').classList.add('hidden');
+            pendingImport = null;
+            return;
           }
         }
-        return errors;
+        await applyImportResult(result);
       }
 
-      async function applyImportResult(result, mode) {
+      async function applyImportResult(result) {
         const toContact = (c, type) => ({
           ...emptyContact(type),
           ...c,
@@ -1851,13 +1761,8 @@ const base = import.meta.env.BASE_URL;
         const newAcademic = result.academic.map((c) => toContact(c, 'academic'));
         const newEmployer = result.employer.map((c) => toContact(c, 'employer'));
 
-        if (mode === 'merge') {
-          academicContacts = [...academicContacts, ...newAcademic].slice(0, MAX_CONTACTS);
-          employerContacts = [...employerContacts, ...newEmployer].slice(0, MAX_CONTACTS);
-        } else {
-          academicContacts = newAcademic;
-          employerContacts = newEmployer;
-        }
+        academicContacts = newAcademic;
+        employerContacts = newEmployer;
 
         saveState();
         showError('');
@@ -1908,9 +1813,13 @@ const base = import.meta.env.BASE_URL;
             maxContacts: MAX_CONTACTS,
             onProgress: ({ label, percent }) => setImportProgress({ label, percent }),
           });
-          renderImportResult(result);
+          if (result.ok) {
+            await confirmAndApplyImport(result);
+          } else {
+            renderImportErrors(result);
+          }
         } catch (err) {
-          renderImportResult({
+          renderImportErrors({
             ok: false,
             academic: [],
             employer: [],
@@ -1922,29 +1831,6 @@ const base = import.meta.env.BASE_URL;
           parseBtn.textContent = '解析並驗證';
           parseBtn.disabled = !selectedFile;
           clearBtn.disabled = false;
-        }
-      });
-
-      $('#btn-apply-import')?.addEventListener('click', async () => {
-        if (!pendingImport?.ok) return;
-        const mode = document.querySelector('input[name="import-mode"]:checked')?.value || 'replace';
-        const mergeErrors = validateMerge(pendingImport, mode);
-        if (mergeErrors.length) {
-          alert(mergeErrors.join('\n'));
-          return;
-        }
-        const applyBtn = $('#btn-apply-import');
-        if (applyBtn) {
-          applyBtn.disabled = true;
-          applyBtn.textContent = '匯入中…';
-        }
-        try {
-          await applyImportResult(pendingImport, mode);
-        } finally {
-          if (applyBtn) {
-            applyBtn.disabled = false;
-            applyBtn.textContent = '確認匯入並預覽';
-          }
         }
       });
     }
