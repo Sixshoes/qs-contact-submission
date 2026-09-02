@@ -3,13 +3,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import ExcelJS from 'exceljs';
 import {
-  applyExcelCellValue,
-  defaultBodyFont,
-  defaultGuideBodyFont,
-  defaultGuideTitleFont,
-  defaultHeaderFont,
-} from '../src/scripts/excel-fonts.js';
-import {
   SOURCE_EN,
   TITLES,
   ACADEMIC_JOB_TITLES,
@@ -36,8 +29,29 @@ const HEADER_FILL = {
   pattern: 'solid',
   fgColor: { argb: 'FF1D4ED8' },
 };
-const HEADER_FONT = defaultHeaderFont();
-const BODY_FONT = defaultBodyFont();
+const HEADER_FONT = {
+  name: 'Calibri',
+  size: 11,
+  bold: true,
+  color: { argb: 'FFFFFFFF' },
+};
+/** 範例列與填寫區共用同一預設字型；中英混排字型於網站匯出時再套用 */
+const CELL_FONT = {
+  name: 'Calibri',
+  size: 11,
+  color: { argb: 'FF0F172A' },
+};
+const GUIDE_TITLE_FONT = {
+  name: 'Calibri',
+  size: 14,
+  bold: true,
+  color: { argb: 'FF0F172A' },
+};
+const GUIDE_BODY_FONT = {
+  name: 'Calibri',
+  size: 11,
+  color: { argb: 'FF334155' },
+};
 const THIN_BORDER = {
   top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
   left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
@@ -56,8 +70,9 @@ function styleDataSheet(ws, headers, rows, { fillDataRows = 0 } = {}) {
   const headerRow = ws.getRow(1);
   headers.forEach((text, i) => {
     const cell = headerRow.getCell(i + 1);
-    applyExcelCellValue(cell, text, HEADER_FONT);
+    cell.value = text;
     cell.fill = HEADER_FILL;
+    cell.font = HEADER_FONT;
     cell.border = THIN_BORDER;
     cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
   });
@@ -67,7 +82,8 @@ function styleDataSheet(ws, headers, rows, { fillDataRows = 0 } = {}) {
     const row = ws.getRow(rowIdx + 2);
     rowValues.forEach((value, colIdx) => {
       const cell = row.getCell(colIdx + 1);
-      applyExcelCellValue(cell, value ?? '', BODY_FONT);
+      cell.value = value ?? '';
+      cell.font = { ...CELL_FONT };
       cell.border = THIN_BORDER;
       cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
     });
@@ -81,7 +97,7 @@ function styleDataSheet(ws, headers, rows, { fillDataRows = 0 } = {}) {
       headers.forEach((_, colIdx) => {
         const cell = ws.getCell(row, colIdx + 1);
         cell.value = '';
-        cell.font = { ...BODY_FONT };
+        cell.font = { ...CELL_FONT };
         cell.border = THIN_BORDER;
         cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
       });
@@ -132,7 +148,7 @@ function addGuideSheet(workbook) {
     [''],
     ['一、用途'],
     ['本檔供各單位先離線整理聯絡人資料，欄位與線上提交系統／QS 官方格式一致。'],
-    ['填寫完成後，請至線上提交網站「從 Excel 匯入」上傳本檔；通過驗證後可匯入表單並提交。'],
+    ['填寫完成後，請至線上提交網站「從 Excel 匯入」上傳本檔；通過驗證後可匯入表單並提交。提交後若下載 Excel 備份，系統會自動套用中文標楷體／英文 Times New Roman。'],
     [''],
     ['二、工作表說明'],
     ['• 「學術聯絡人」「雇主聯絡人」：選項欄位有下拉提示（▼），也可直接輸入；選單外文字匯入時會自動視為 Other。'],
@@ -155,7 +171,7 @@ function addGuideSheet(workbook) {
   lines.forEach((line, idx) => {
     const row = guide.getRow(idx + 1);
     row.getCell(1).value = line[0];
-    row.getCell(1).font = idx === 0 ? defaultGuideTitleFont() : defaultGuideBodyFont();
+    row.getCell(1).font = idx === 0 ? GUIDE_TITLE_FONT : GUIDE_BODY_FONT;
   });
   guide.getColumn(1).width = 95;
 }
