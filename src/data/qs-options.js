@@ -435,3 +435,39 @@ export const EMPLOYER_EXCEL_HEADERS_ZH = [
 
 /** @deprecated use EMPLOYER_EXCEL_HEADERS_EN */
 export const EMPLOYER_EXCEL_HEADERS = EMPLOYER_EXCEL_HEADERS_EN;
+
+/** 匯入樣板表頭（含 Other 說明欄，選 Other 時填寫旁邊欄位） */
+export const ACADEMIC_IMPORT_TEMPLATE_HEADERS = [
+  'Source',
+  'Title',
+  'Title Other',
+  'First Name',
+  'Last Name',
+  'Job Title',
+  'Job Title Other',
+  'Department',
+  'Institution',
+  'Country or Territory',
+  'Country Other',
+  'Email',
+  'Subject',
+  'Subject Other',
+  'Phone (Optional)',
+];
+
+export const EMPLOYER_IMPORT_TEMPLATE_HEADERS = [
+  'Source',
+  'Title',
+  'Title Other',
+  'First Name',
+  'Last Name',
+  'Position',
+  'Position Other',
+  'Industry',
+  'Industry Other',
+  'Company Name',
+  'Country or Territory',
+  'Country Other',
+  'Email',
+  'Phone (Optional)',
+];

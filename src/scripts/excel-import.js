@@ -2,6 +2,8 @@ import ExcelJS from 'exceljs';
 import {
   ACADEMIC_EXCEL_HEADERS_EN,
   EMPLOYER_EXCEL_HEADERS_EN,
+  ACADEMIC_IMPORT_TEMPLATE_HEADERS,
+  EMPLOYER_IMPORT_TEMPLATE_HEADERS,
   TITLES,
   ACADEMIC_JOB_TITLES,
   EMPLOYER_JOB_TITLES,
@@ -60,6 +62,25 @@ function headersMatch(actual, expected) {
   return e.every((h, i) => a[i] === h);
 }
 
+function detectHeaderFormat(headers, type) {
+  if (type === 'academic') {
+    if (headersMatch(headers, ACADEMIC_IMPORT_TEMPLATE_HEADERS)) {
+      return { headers: ACADEMIC_IMPORT_TEMPLATE_HEADERS, hasOtherCols: true };
+    }
+    if (headersMatch(headers, ACADEMIC_EXCEL_HEADERS_EN)) {
+      return { headers: ACADEMIC_EXCEL_HEADERS_EN, hasOtherCols: false };
+    }
+  } else {
+    if (headersMatch(headers, EMPLOYER_IMPORT_TEMPLATE_HEADERS)) {
+      return { headers: EMPLOYER_IMPORT_TEMPLATE_HEADERS, hasOtherCols: true };
+    }
+    if (headersMatch(headers, EMPLOYER_EXCEL_HEADERS_EN)) {
+      return { headers: EMPLOYER_EXCEL_HEADERS_EN, hasOtherCols: false };
+    }
+  }
+  return null;
+}
+
 function sheetToMatrix(worksheet) {
   if (!worksheet) return [];
   const rows = [];
@@ -84,13 +105,8 @@ function isPlaceholderRow(values) {
   return PLACEHOLDER_HINTS.some((h) => joined.includes(h.toLowerCase()));
 }
 
-function isEmptyDataRow(values) {
-  const [firstName = '', lastName = '', email = ''] = [
-    values[2],
-    values[3],
-    values[8] ?? values[8],
-  ];
-  return !trimVal(firstName) && !trimVal(lastName) && !trimVal(email);
+function isEmptyDataRow(map) {
+  return !trimVal(map['First Name']) && !trimVal(map['Last Name']) && !trimVal(map.Email);
 }
 
 function rowToMap(headers, values) {
@@ -101,23 +117,41 @@ function rowToMap(headers, values) {
   return map;
 }
 
-function parseTitle(raw) {
-  const m = matchOption(TITLES, raw);
-  if (m.invalid) return { title: '', titleOther: '', rawTitle: raw, invalid: true };
-  return { title: m.en, titleOther: m.other, rawTitle: raw, invalid: false };
+/**
+ * 下拉選 Other 時，優先讀取旁邊的 Other 欄；舊版仍支援 Others (說明) 寫在同一格。
+ */
+function resolveOtherField(map, mainKey, otherKey, list, { pluralOther = false, hasOtherCols = false } = {}) {
+  const mainRaw = trimVal(map[mainKey]);
+  const parsed = matchOption(list, mainRaw, { pluralOther });
+
+  if (hasOtherCols && (mainRaw === 'Other' || parsed.en === 'Other')) {
+    const detail = trimVal(map[otherKey]);
+    if (detail) return { en: 'Other', other: detail, invalid: false, raw: mainRaw };
+    if (parsed.other) return parsed;
+    return { en: 'Other', other: '', invalid: false, raw: mainRaw };
+  }
+
+  if (parsed.invalid && mainRaw) return parsed;
+  return parsed;
 }
 
-function parseAcademicRow(map, rowNum) {
-  const title = parseTitle(map.Title);
-  const job = matchOption(ACADEMIC_JOB_TITLES, map['Job Title'], { pluralOther: true });
-  const country = matchOption(COUNTRIES, map['Country or Territory']);
-  const subject = matchOption(SUBJECTS, map.Subject, { pluralOther: true });
+function parseAcademicRow(map, rowNum, { hasOtherCols }) {
+  const title = resolveOtherField(map, 'Title', 'Title Other', TITLES, { hasOtherCols });
+  const job = resolveOtherField(map, 'Job Title', 'Job Title Other', ACADEMIC_JOB_TITLES, {
+    pluralOther: true,
+    hasOtherCols,
+  });
+  const country = resolveOtherField(map, 'Country or Territory', 'Country Other', COUNTRIES, { hasOtherCols });
+  const subject = resolveOtherField(map, 'Subject', 'Subject Other', SUBJECTS, {
+    pluralOther: true,
+    hasOtherCols,
+  });
 
   const contact = {
     _source: map.Source,
-    title: title.title,
-    titleOther: title.titleOther,
-    _rawTitle: title.rawTitle,
+    title: title.invalid ? '' : title.en,
+    titleOther: title.other,
+    _rawTitle: title.raw || map.Title,
     firstName: map['First Name'],
     lastName: map['Last Name'],
     jobTitle: job.invalid ? '' : job.en,
@@ -137,45 +171,43 @@ function parseAcademicRow(map, rowNum) {
     phone: map['Phone (Optional)'],
   };
 
+  const errors = [];
   if (title.invalid) {
-    return {
-      contact,
-      errors: [{ sheet: SHEET_ACADEMIC, row: rowNum, field: 'Title', message: `「${title.rawTitle}」不在選項清單內` }],
-    };
+    errors.push({ sheet: SHEET_ACADEMIC, row: rowNum, field: 'Title', message: `「${title.raw}」不在選項清單內` });
   }
   if (job.invalid) {
-    return {
-      contact,
-      errors: [{ sheet: SHEET_ACADEMIC, row: rowNum, field: 'Job Title', message: `「${job.raw}」不在選項清單內` }],
-    };
+    errors.push({ sheet: SHEET_ACADEMIC, row: rowNum, field: 'Job Title', message: `「${job.raw}」不在選項清單內` });
   }
   if (country.invalid) {
-    return {
-      contact,
-      errors: [{ sheet: SHEET_ACADEMIC, row: rowNum, field: 'Country or Territory', message: `「${country.raw}」不在選項清單內` }],
-    };
+    errors.push({
+      sheet: SHEET_ACADEMIC,
+      row: rowNum,
+      field: 'Country or Territory',
+      message: `「${country.raw}」不在選項清單內`,
+    });
   }
   if (subject.invalid) {
-    return {
-      contact,
-      errors: [{ sheet: SHEET_ACADEMIC, row: rowNum, field: 'Subject', message: `「${subject.raw}」不在選項清單內` }],
-    };
+    errors.push({ sheet: SHEET_ACADEMIC, row: rowNum, field: 'Subject', message: `「${subject.raw}」不在選項清單內` });
   }
+  if (errors.length) return { contact, errors };
 
   return { contact, errors: validateImportContact(contact, 'academic', rowNum, OPTS) };
 }
 
-function parseEmployerRow(map, rowNum) {
-  const title = parseTitle(map.Title);
-  const job = matchOption(EMPLOYER_JOB_TITLES, map.Position, { pluralOther: true });
-  const industry = matchOption(INDUSTRIES, map.Industry);
-  const country = matchOption(COUNTRIES, map['Country or Territory']);
+function parseEmployerRow(map, rowNum, { hasOtherCols }) {
+  const title = resolveOtherField(map, 'Title', 'Title Other', TITLES, { hasOtherCols });
+  const job = resolveOtherField(map, 'Position', 'Position Other', EMPLOYER_JOB_TITLES, {
+    pluralOther: true,
+    hasOtherCols,
+  });
+  const industry = resolveOtherField(map, 'Industry', 'Industry Other', INDUSTRIES, { hasOtherCols });
+  const country = resolveOtherField(map, 'Country or Territory', 'Country Other', COUNTRIES, { hasOtherCols });
 
   const contact = {
     _source: map.Source,
-    title: title.title,
-    titleOther: title.titleOther,
-    _rawTitle: title.rawTitle,
+    title: title.invalid ? '' : title.en,
+    titleOther: title.other,
+    _rawTitle: title.raw || map.Title,
     firstName: map['First Name'],
     lastName: map['Last Name'],
     jobTitle: job.invalid ? '' : job.en,
@@ -195,35 +227,30 @@ function parseEmployerRow(map, rowNum) {
     phone: map['Phone (Optional)'],
   };
 
+  const errors = [];
   if (title.invalid) {
-    return {
-      contact,
-      errors: [{ sheet: SHEET_EMPLOYER, row: rowNum, field: 'Title', message: `「${title.rawTitle}」不在選項清單內` }],
-    };
+    errors.push({ sheet: SHEET_EMPLOYER, row: rowNum, field: 'Title', message: `「${title.raw}」不在選項清單內` });
   }
   if (job.invalid) {
-    return {
-      contact,
-      errors: [{ sheet: SHEET_EMPLOYER, row: rowNum, field: 'Position', message: `「${job.raw}」不在選項清單內` }],
-    };
+    errors.push({ sheet: SHEET_EMPLOYER, row: rowNum, field: 'Position', message: `「${job.raw}」不在選項清單內` });
   }
   if (industry.invalid) {
-    return {
-      contact,
-      errors: [{ sheet: SHEET_EMPLOYER, row: rowNum, field: 'Industry', message: `「${industry.raw}」不在選項清單內` }],
-    };
+    errors.push({ sheet: SHEET_EMPLOYER, row: rowNum, field: 'Industry', message: `「${industry.raw}」不在選項清單內` });
   }
   if (country.invalid) {
-    return {
-      contact,
-      errors: [{ sheet: SHEET_EMPLOYER, row: rowNum, field: 'Country or Territory', message: `「${country.raw}」不在選項清單內` }],
-    };
+    errors.push({
+      sheet: SHEET_EMPLOYER,
+      row: rowNum,
+      field: 'Country or Territory',
+      message: `「${country.raw}」不在選項清單內`,
+    });
   }
+  if (errors.length) return { contact, errors };
 
   return { contact, errors: validateImportContact(contact, 'employer', rowNum, OPTS) };
 }
 
-function parseSheet(workbook, sheetName, expectedHeaders, type) {
+function parseSheet(workbook, sheetName, type) {
   const ws = workbook.getWorksheet(sheetName);
   if (!ws) {
     return {
@@ -238,7 +265,10 @@ function parseSheet(workbook, sheetName, expectedHeaders, type) {
   }
 
   const headers = matrix[0];
-  if (!headersMatch(headers, expectedHeaders)) {
+  const format = detectHeaderFormat(headers, type);
+  if (!format) {
+    const expected =
+      type === 'academic' ? ACADEMIC_IMPORT_TEMPLATE_HEADERS.join('、') : EMPLOYER_IMPORT_TEMPLATE_HEADERS.join('、');
     return {
       contacts: [],
       errors: [
@@ -246,29 +276,27 @@ function parseSheet(workbook, sheetName, expectedHeaders, type) {
           sheet: sheetName,
           row: 1,
           field: '表頭',
-          message: `表頭欄位不符，請使用匯入樣板（預期：${expectedHeaders.join('、')}）`,
+          message: `表頭欄位不符，請下載最新匯入樣板（預期欄位：${expected}…）`,
         },
       ],
     };
   }
 
-  /** @type {import('./contact-validation.js').ImportContact[]} */
   const contacts = [];
-  /** @type {{ sheet: string, row: number, field: string, message: string }[]} */
   const errors = [];
 
   for (let i = 1; i < matrix.length; i++) {
     const rowNum = i + 1;
     const values = matrix[i];
-    if (isEmptyDataRow(values) || isPlaceholderRow(values)) continue;
+    const map = rowToMap(format.headers, values);
+    if (isEmptyDataRow(map) || isPlaceholderRow(values)) continue;
 
-    const map = rowToMap(expectedHeaders, values);
-    const parsed = type === 'academic' ? parseAcademicRow(map, rowNum) : parseEmployerRow(map, rowNum);
-    if (parsed.errors.length) {
-      errors.push(...parsed.errors);
-    } else {
-      contacts.push(parsed.contact);
-    }
+    const parsed = type === 'academic'
+      ? parseAcademicRow(map, rowNum, { hasOtherCols: format.hasOtherCols })
+      : parseEmployerRow(map, rowNum, { hasOtherCols: format.hasOtherCols });
+
+    if (parsed.errors.length) errors.push(...parsed.errors);
+    else contacts.push(parsed.contact);
   }
 
   return { contacts, errors };
@@ -302,19 +330,14 @@ function checkDuplicateEmails(academic, employer) {
   return errors;
 }
 
-/**
- * @param {ArrayBuffer} buffer
- * @param {{ maxContacts?: number }} [options]
- */
 export async function parseImportWorkbook(buffer, options = {}) {
   const maxContacts = options.maxContacts ?? MAX_CONTACTS;
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(buffer);
 
-  const academicResult = parseSheet(workbook, SHEET_ACADEMIC, ACADEMIC_EXCEL_HEADERS_EN, 'academic');
-  const employerResult = parseSheet(workbook, SHEET_EMPLOYER, EMPLOYER_EXCEL_HEADERS_EN, 'employer');
+  const academicResult = parseSheet(workbook, SHEET_ACADEMIC, 'academic');
+  const employerResult = parseSheet(workbook, SHEET_EMPLOYER, 'employer');
 
-  /** @type {{ sheet: string, row: number, field: string, message: string }[]} */
   const errors = [...academicResult.errors, ...employerResult.errors];
 
   if (academicResult.contacts.length > maxContacts) {
@@ -360,7 +383,6 @@ export async function parseImportWorkbook(buffer, options = {}) {
   };
 }
 
-/** @param {File} file @param {{ maxContacts?: number }} [options] */
 export async function parseImportFile(file, options = {}) {
   if (!file) throw new Error('請選擇檔案');
   const name = file.name.toLowerCase();

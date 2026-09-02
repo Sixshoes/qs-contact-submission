@@ -370,7 +370,10 @@ const base = import.meta.env.BASE_URL;
           <select class="field-title input-field" required>
             <option value="">請選擇</option>
           </select>
-          <input type="text" class="field-title-other input-field mt-2 hidden" placeholder="請填寫其他稱謂" />
+          <div class="other-detail hidden">
+            <p class="other-hint">已選「其他 (Other)」，請在下方自行填寫：</p>
+            <input type="text" class="field-title-other input-field other-detail-input" placeholder="例如：法師、客座教授…" />
+          </div>
         </div>
 
         <!-- First Name -->
@@ -397,7 +400,10 @@ const base = import.meta.env.BASE_URL;
           <select class="field-job-title input-field" required>
             <option value="">請選擇</option>
           </select>
-          <input type="text" class="field-job-other input-field mt-2 hidden" placeholder="請填寫具體職稱" />
+          <div class="other-detail hidden">
+            <p class="other-hint">已選「其他 (Other)」，請在下方自行填寫：</p>
+            <input type="text" class="field-job-other input-field other-detail-input" placeholder="例如：研究員、院長特助…" />
+          </div>
         </div>
 
         <!-- Department / Industry -->
@@ -409,7 +415,10 @@ const base = import.meta.env.BASE_URL;
           <select class="field-industry input-field hidden">
             <option value="">請選擇產業</option>
           </select>
-          <input type="text" class="field-industry-other input-field mt-2 hidden" placeholder="請填寫具體產業" />
+          <div class="other-detail other-detail-industry hidden">
+            <p class="other-hint">已選「其他 (Other)」，請在下方自行填寫：</p>
+            <input type="text" class="field-industry-other input-field other-detail-input" placeholder="例如：文化創意、社會企業…" />
+          </div>
         </div>
 
         <!-- Institution / Company Name -->
@@ -427,7 +436,10 @@ const base = import.meta.env.BASE_URL;
           </label>
           <select class="field-country input-field" required>
           </select>
-          <input type="text" class="field-country-other input-field mt-2 hidden" placeholder="請填寫其他國家／地區名稱" />
+          <div class="other-detail hidden">
+            <p class="other-hint">已選「其他 (Other)」，請在下方自行填寫：</p>
+            <input type="text" class="field-country-other input-field other-detail-input" placeholder="請填寫國家／地區英文名稱" />
+          </div>
         </div>
 
         <!-- Email -->
@@ -449,7 +461,10 @@ const base = import.meta.env.BASE_URL;
           <select class="field-subject input-field">
             <option value="">請選擇學術領域</option>
           </select>
-          <input type="text" class="field-subject-other input-field mt-2 hidden" placeholder="請填寫具體學術領域" />
+          <div class="other-detail hidden">
+            <p class="other-hint">已選「其他 (Other)」，請在下方自行填寫：</p>
+            <input type="text" class="field-subject-other input-field other-detail-input" placeholder="請填寫學科領域英文名稱" />
+          </div>
         </div>
 
         <!-- Phone -->
@@ -802,8 +817,13 @@ const base = import.meta.env.BASE_URL;
 
     function toggleOtherInput(selectEl, otherInput) {
       if (!selectEl || !otherInput) return;
+      const wrap = otherInput.closest('.other-detail');
       const isOther = selectEl.value === 'Other';
-      otherInput.classList.toggle('hidden', !isOther);
+      if (wrap) {
+        wrap.classList.toggle('hidden', !isOther);
+      } else {
+        otherInput.classList.toggle('hidden', !isOther);
+      }
       otherInput.required = isOther;
       if (!isOther) otherInput.value = '';
     }
@@ -1031,7 +1051,7 @@ const base = import.meta.env.BASE_URL;
         const loc = (field) => ({ contactId: c.id, field });
         if (!trimVal(c.title)) return validationErr(`${label} #${n}：請選擇 Title。`, loc('.field-title'));
         if (c.title === 'Other' && !trimVal(c.titleOther)) {
-          return validationErr(`${label} #${n}：請填寫其他稱謂。`, loc('.field-title-other'));
+          return validationErr(`${label} #${n}：已選「其他」，請在下方欄位自行填寫。`, loc('.field-title-other'));
         }
         if (!trimVal(c.firstName)) return validationErr(`${label} #${n}：請填寫 First Name。`, loc('.field-first-name'));
         if (!trimVal(c.lastName)) return validationErr(`${label} #${n}：請填寫 Last Name。`, loc('.field-last-name'));
@@ -1039,18 +1059,18 @@ const base = import.meta.env.BASE_URL;
           return validationErr(`${label} #${n}：請選擇 ${type === 'academic' ? 'Job Title' : 'Position'}。`, loc('.field-job-title'));
         }
         if (c.jobTitle === 'Other' && !trimVal(c.jobOther)) {
-          return validationErr(`${label} #${n}：請填寫其他職稱說明。`, loc('.field-job-other'));
+          return validationErr(`${label} #${n}：已選「其他」，請在下方欄位自行填寫。`, loc('.field-job-other'));
         }
         if (type === 'academic') {
           if (!trimVal(c.department)) return validationErr(`${label} #${n}：請填寫 Department。`, loc('.field-department'));
           if (!trimVal(c.subject)) return validationErr(`${label} #${n}：請選擇 Subject。`, loc('.field-subject'));
           if (c.subject === 'Other' && !trimVal(c.subjectOther)) {
-            return validationErr(`${label} #${n}：請填寫其他學術領域說明。`, loc('.field-subject-other'));
+            return validationErr(`${label} #${n}：已選「其他」，請在下方欄位自行填寫。`, loc('.field-subject-other'));
           }
         } else {
           if (!trimVal(c.industry)) return validationErr(`${label} #${n}：請選擇 Industry。`, loc('.field-industry'));
           if (c.industry === 'Other' && !trimVal(c.industryOther)) {
-            return validationErr(`${label} #${n}：請填寫其他產業說明。`, loc('.field-industry-other'));
+            return validationErr(`${label} #${n}：已選「其他」，請在下方欄位自行填寫。`, loc('.field-industry-other'));
           }
         }
         if (!trimVal(c.institution)) {
@@ -1061,7 +1081,7 @@ const base = import.meta.env.BASE_URL;
         }
         if (!trimVal(c.country)) return validationErr(`${label} #${n}：請選擇 Country or Territory。`, loc('.field-country'));
         if (c.country === 'Other' && !trimVal(c.countryOther)) {
-          return validationErr(`${label} #${n}：請填寫其他國家／地區。`, loc('.field-country-other'));
+          return validationErr(`${label} #${n}：已選「其他」，請在下方欄位自行填寫。`, loc('.field-country-other'));
         }
         const emailErr = validateEmail(c.email);
         if (emailErr) return validationErr(`${label} #${n}：${emailErr}。`, loc('.field-email'));

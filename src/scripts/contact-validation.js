@@ -123,7 +123,9 @@ export function validateImportContact(c, type, rowNum, opts) {
   }
 
   if (!c.title) add('Title', '請填寫稱謂（Title）');
-  if (c.title === 'Other' && !trimVal(c.titleOther)) add('Title', '選擇 Other 時請在括號內填寫說明，例如 Other (法師)');
+  if (c.title === 'Other' && !trimVal(c.titleOther)) {
+    add('Title Other', '已選 Other，請在「Title Other」欄填寫說明');
+  }
 
   if (!trimVal(c.firstName)) add('First Name', '名字為必填');
   if (!trimVal(c.lastName)) add('Last Name', '姓氏為必填');
@@ -132,7 +134,7 @@ export function validateImportContact(c, type, rowNum, opts) {
   const jobField = type === 'academic' ? 'Job Title' : 'Position';
   if (!c.jobTitle) add(jobField, `請填寫${jobField}`);
   if (c.jobTitle === 'Other' && !trimVal(c.jobOther)) {
-    add(jobField, `選擇 Other 時請填寫說明，例如 Others (自訂職稱)`);
+    add(`${jobField} Other`, `已選 Other，請在「${jobField} Other」欄填寫說明`);
   } else if (c.jobTitle && !jobList.some((item) => item.en === c.jobTitle) && c.jobTitle !== 'Other') {
     add(jobField, `「${c._rawJob || c.jobTitle}」不在選項清單內`);
   }
@@ -141,14 +143,14 @@ export function validateImportContact(c, type, rowNum, opts) {
     if (!trimVal(c.department)) add('Department', '系所為必填');
     if (!c.subject) add('Subject', '請填寫學術領域（Subject）');
     if (c.subject === 'Other' && !trimVal(c.subjectOther)) {
-      add('Subject', '選擇 Other 時請填寫說明');
+      add('Subject Other', '已選 Other，請在「Subject Other」欄填寫說明');
     } else if (c.subject && !SUBJECTS.some((item) => item.en === c.subject) && c.subject !== 'Other') {
       add('Subject', `「${c._rawSubject || c.subject}」不在選項清單內`);
     }
   } else {
     if (!c.industry) add('Industry', '請填寫產業（Industry）');
     if (c.industry === 'Other' && !trimVal(c.industryOther)) {
-      add('Industry', '選擇 Other 時請填寫說明');
+      add('Industry Other', '已選 Other，請在「Industry Other」欄填寫說明');
     } else if (c.industry && !INDUSTRIES.some((item) => item.en === c.industry) && c.industry !== 'Other') {
       add('Industry', `「${c._rawIndustry || c.industry}」不在選項清單內`);
     }
@@ -159,7 +161,7 @@ export function validateImportContact(c, type, rowNum, opts) {
 
   if (!c.country) add('Country or Territory', '請填寫國家或地區');
   if (c.country === 'Other' && !trimVal(c.countryOther)) {
-    add('Country or Territory', '選擇 Other 時請填寫說明');
+    add('Country Other', '已選 Other，請在「Country Other」欄填寫說明');
   } else if (c.country && !COUNTRIES.some((item) => item.en === c.country) && c.country !== 'Other') {
     add('Country or Territory', `「${c._rawCountry || c.country}」不在選項清單內`);
   }
