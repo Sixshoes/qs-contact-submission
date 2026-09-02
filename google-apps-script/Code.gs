@@ -15,10 +15,8 @@
 /** 可選：試算表 ID（網址 https://docs.google.com/spreadsheets/d/【這裡】/edit） */
 var SHEET_ID = '';
 
-var NOTIFY_TO = [
-  'yitingchen@mail.fgu.edu.tw',
-  'chlchang@mail.fgu.edu.tw',
-];
+/** 設成 [] 或註解掉就不寄信；需要通知時再填信箱 */
+var NOTIFY_TO = [];
 
 var SHEET_SUBMISSIONS = '提交紀錄';
 var SHEET_ACADEMIC = '學術聯絡人';
@@ -31,6 +29,7 @@ function doPost(e) {
     var raw = extractPayload_(e);
     var data = JSON.parse(raw);
     var result = appendSubmission_(data);
+    // 已關閉寄信通知（NOTIFY_TO 為空）；資料仍會寫入試算表
     maybeNotify_(data, result);
     return jsonOut_({
       ok: true,

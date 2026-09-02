@@ -596,6 +596,26 @@ select.input-field {
   box-shadow: 0 -4px 24px color-mix(in srgb, var(--color-fgu) 5%, transparent);
 }
 
+.import-zone {
+  @apply rounded-xl border-2 border-dashed border-fgu/30 bg-fgu-light/40 px-6 py-8 text-center transition;
+}
+
+.import-zone--active {
+  @apply border-fgu bg-fgu-light;
+}
+
+.import-preview table {
+  @apply min-w-full border-collapse text-xs;
+}
+
+.import-preview th {
+  @apply whitespace-nowrap border-b border-slate-200 px-2 py-2 text-left font-semibold text-slate-600;
+}
+
+.import-preview td {
+  @apply whitespace-nowrap border-b border-slate-100 px-2 py-2 text-slate-700;
+}
+
 .action-bar {
   @apply flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/60 bg-white/60 px-4 py-3 backdrop-blur-sm;
 }

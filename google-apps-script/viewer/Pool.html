@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <base target="_top" />
+    <meta charset="UTF-8" />
+    <style>
+      :root {
+        --fgu: #a6245c;
+        --fgu-dark: #8a1e4c;
+        --fgu-deep: #6b1639;
+        --qs: #f2a900;
+        --cream: #faf7f2;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+        background: linear-gradient(180deg, var(--cream) 0%, #f5f0eb 100%);
+        color: #0f172a;
+      }
+      header {
+        border-bottom: 1px solid rgba(166, 36, 92, 0.3);
+        background: linear-gradient(135deg, var(--fgu), var(--fgu-dark), var(--fgu-deep));
+        color: #fff;
+        padding: 1.25rem 1rem 0;
+      }
+      h1 { margin: 0; font-size: 1.5rem; }
+      .header-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+      }
+      .btn {
+        border: 1px solid rgba(255,255,255,0.3);
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        border-radius: 0.5rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        cursor: pointer;
+        text-decoration: none;
+      }
+      .btn:hover { background: rgba(255,255,255,0.2); }
+      .pool-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        margin-top: 1.25rem;
+      }
+      .pool-tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: 0;
+        border-bottom: 3px solid transparent;
+        background: transparent;
+        color: rgba(255,255,255,0.72);
+        cursor: pointer;
+        font-size: 0.95rem;
+        font-weight: 600;
+        padding: 0.75rem 1rem;
+      }
+      .pool-tab:hover { color: #fff; background: rgba(255,255,255,0.08); }
+      .pool-tab--active {
+        color: #fff;
+        border-bottom-color: var(--qs);
+        background: rgba(255,255,255,0.12);
+      }
+      .pool-tab-count {
+        font-size: 0.75rem;
+        font-weight: 700;
+        background: rgba(255,255,255,0.18);
+        border-radius: 999px;
+        padding: 0.1rem 0.45rem;
+      }
+      main { padding: 1rem; }
+      .card {
+        background: #fff;
+        border-top: 1px solid #e2e8f0;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 1rem;
+      }
+      @media (min-width: 640px) {
+        .card {
+          border: 1px solid #e2e8f0;
+          border-radius: 0.75rem;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+      }
+      .panel-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 1rem;
+      }
+      .panel-title-mark {
+        display: inline-block;
+        width: 4px;
+        height: 1rem;
+        border-radius: 999px;
+        background: var(--fgu);
+      }
+      .status { font-size: 0.875rem; color: #64748b; margin-bottom: 1rem; }
+      .error { color: #b91c1c; font-size: 0.875rem; margin-bottom: 1rem; }
+      .hidden { display: none !important; }
+      .tab-panel { overflow-x: auto; }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.75rem;
+      }
+      th {
+        text-align: left;
+        white-space: nowrap;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 0.5rem;
+        color: #475569;
+        font-weight: 600;
+      }
+      td {
+        white-space: nowrap;
+        border-bottom: 1px solid #f1f5f9;
+        padding: 0.5rem;
+        color: #334155;
+      }
+      tr:hover td { background: #f8fafc; }
+      .loading { padding: 2rem; text-align: center; color: #64748b; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="header-row">
+        <h1>QS 聯絡人 Pool</h1>
+        <button type="button" class="btn" id="btn-refresh">重新整理</button>
+      </div>
+      <nav class="pool-tabs" aria-label="Pool 分頁">
+        <button type="button" class="pool-tab pool-tab--active" data-tab="academic">
+          學術聯絡人池 <span class="pool-tab-count" id="count-academic">0</span>
+        </button>
+        <button type="button" class="pool-tab" data-tab="employer">
+          雇主聯絡人池 <span class="pool-tab-count" id="count-employer">0</span>
+        </button>
+        <button type="button" class="pool-tab" data-tab="submissions">
+          提交紀錄 <span class="pool-tab-count" id="count-submissions">0</span>
+        </button>
+      </nav>
+      <div style="height:1.25rem"></div>
+    </header>
+
+    <main>
+      <div id="loading" class="loading">載入中…</div>
+      <p id="error" class="error hidden" role="alert"></p>
+
+      <section id="panel-academic" class="tab-panel card hidden" data-panel="academic">
+        <h2 class="panel-title"><span class="panel-title-mark"></span>學術聯絡人池</h2>
+        <div id="table-academic"></div>
+      </section>
+      <section id="panel-employer" class="tab-panel card hidden" data-panel="employer">
+        <h2 class="panel-title"><span class="panel-title-mark"></span>雇主聯絡人池</h2>
+        <div id="table-employer"></div>
+      </section>
+      <section id="panel-submissions" class="tab-panel card hidden" data-panel="submissions">
+        <h2 class="panel-title"><span class="panel-title-mark"></span>提交紀錄</h2>
+        <div id="table-submissions"></div>
+      </section>
+    </main>
+
+    <script>
+      function $(id) { return document.getElementById(id); }
+
+      function escapeHtml(s) {
+        return String(s ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function dataRowCount(matrix) {
+        return matrix && matrix.length > 1 ? matrix.length - 1 : 0;
+      }
+
+      function renderTable(containerId, matrix, maxRows) {
+        maxRows = maxRows || 200;
+        var el = $(containerId);
+        if (!matrix || matrix.length < 2) {
+          el.innerHTML = '<p class="status">尚無資料</p>';
+          return;
+        }
+        var headers = matrix[0];
+        var rows = matrix.slice(1).slice(-maxRows).reverse();
+        var th = headers.map(function (h) {
+          return '<th>' + escapeHtml(h) + '</th>';
+        }).join('');
+        var tbody = rows.map(function (row) {
+          var tds = headers.map(function (_, i) {
+            return '<td>' + escapeHtml(row[i] ?? '') + '</td>';
+          }).join('');
+          return '<tr>' + tds + '</tr>';
+        }).join('');
+        el.innerHTML = '<table><thead><tr>' + th + '</tr></thead><tbody>' + tbody + '</tbody></table>';
+      }
+
+      function switchTab(tabId) {
+        document.querySelectorAll('.pool-tab').forEach(function (btn) {
+          var active = btn.getAttribute('data-tab') === tabId;
+          btn.classList.toggle('pool-tab--active', active);
+        });
+        document.querySelectorAll('.tab-panel').forEach(function (panel) {
+          panel.classList.toggle('hidden', panel.getAttribute('data-panel') !== tabId);
+        });
+      }
+
+      function showError(msg) {
+        var el = $('error');
+        if (!msg) {
+          el.classList.add('hidden');
+          el.textContent = '';
+          return;
+        }
+        el.textContent = msg;
+        el.classList.remove('hidden');
+      }
+
+      function applyData(data) {
+        $('loading').classList.add('hidden');
+        if (!data || !data.ok) {
+          showError((data && data.error) || '讀取失敗');
+          return;
+        }
+        showError('');
+        $('count-academic').textContent = String(dataRowCount(data.academic));
+        $('count-employer').textContent = String(dataRowCount(data.employer));
+        $('count-submissions').textContent = String(dataRowCount(data.submissions));
+        renderTable('table-academic', data.academic);
+        renderTable('table-employer', data.employer);
+        renderTable('table-submissions', data.submissions);
+        switchTab('academic');
+      }
+
+      function loadData() {
+        $('loading').classList.remove('hidden');
+        showError('');
+        google.script.run
+          .withSuccessHandler(applyData)
+          .withFailureHandler(function (err) {
+            $('loading').classList.add('hidden');
+            showError(err && err.message ? err.message : String(err));
+          })
+          .getPoolData();
+      }
+
+      document.querySelectorAll('.pool-tab').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          switchTab(btn.getAttribute('data-tab'));
+        });
+      });
+      $('btn-refresh').addEventListener('click', loadData);
+      loadData();
+    </script>
+  </body>
+</html>
