@@ -157,7 +157,7 @@ const base = import.meta.env.BASE_URL;
             >
               匯入樣板
             </a>
-            。上傳後會先檢查欄位、選項、Email 等，<strong>全部通過</strong>即覆蓋並進入預覽頁；若表單已有聯絡人資料會先詢問是否覆蓋。表單選項請用下拉選擇；選 Other 後再填寫說明。Excel 匯入仍可直接輸入選單外文字（會自動視為 Other）。
+            。上傳後會先檢查欄位、選項、Email 等；<strong>全部通過</strong>即覆蓋並進入預覽頁。<strong>若有錯誤</strong>會先載入表單內容，並以右側浮標修正清單標示（可點選跳到欄位）。若表單已有聯絡人資料會先詢問是否覆蓋。表單選項請用下拉選擇；選 Other 後再填寫說明。Excel 匯入仍可直接輸入選單外文字（會自動視為 Other）。
           </p>
           <div class="import-zone" id="import-zone">
             <p class="text-sm text-slate-600">拖曳 .xlsx 到這裡，或</p>
@@ -1940,6 +1940,71 @@ const base = import.meta.env.BASE_URL;
         return academicContacts.length > 0 || employerContacts.length > 0;
       }
 
+      function loadContactsFromImport(result) {
+        const toContact = (c, type) => ({
+          ...emptyContact(type),
+          ...c,
+          id: uid(),
+          type,
+        });
+        academicContacts = result.academic.map((c) => toContact(c, 'academic'));
+        employerContacts = result.employer.map((c) => toContact(c, 'employer'));
+        saveState();
+        updateContactCount();
+        renderAllCards();
+      }
+
+      function structuralImportErrors(result) {
+        const structuralFields = new Set(['表頭', '工作表', '筆數', '檔案', '資料']);
+        return (result.errors || []).filter(
+          (e) => !e.row || structuralFields.has(e.field) || e.sheet === '—',
+        );
+      }
+
+      async function showImportFailureOnForm(result) {
+        academicContacts = result.academic.map((c) => ({
+          ...emptyContact('academic'),
+          ...c,
+          id: uid(),
+          type: 'academic',
+        }));
+        employerContacts = result.employer.map((c) => ({
+          ...emptyContact('employer'),
+          ...c,
+          id: uid(),
+          type: 'employer',
+        }));
+        saveState();
+        pendingImport = null;
+        setFile(null);
+        fileInput.value = '';
+
+        setImportProgress({ label: '載入表單以便修正…', percent: 5 });
+        await renderAllCardsBatched(({ label, percent }) => {
+          setImportProgress({ label, percent: Math.min(95, 5 + Math.round(percent * 0.9)) });
+        });
+        updateContactCount();
+        hideImportProgress();
+
+        $('#import-result').classList.remove('hidden');
+        $('#import-summary').textContent = `驗證未通過：已載入學術 ${result.summary.academicCount} 筆、雇主 ${result.summary.employerCount} 筆到表單，請依右側修正清單修改後再預覽。`;
+        $('#import-errors-wrap').classList.add('hidden');
+        $('#import-errors').innerHTML = '';
+
+        showStep(1);
+        const formErrors = validateAll();
+        const extras = structuralImportErrors(result).map((e) =>
+          validationErr(
+            `${e.sheet && e.sheet !== '—' ? e.sheet : '匯入'}${e.row ? ` 第 ${e.row} 列` : ''}：${e.message}`,
+          ),
+        );
+        const merged = [...formErrors];
+        for (const extra of extras) {
+          if (!merged.some((m) => m.message === extra.message)) merged.push(extra);
+        }
+        showErrors(merged.length ? merged : [validationErr('匯入驗證未通過，請檢查資料後再試。')]);
+      }
+
       function renderImportErrors(result) {
         pendingImport = null;
         $('#import-result').classList.remove('hidden');
@@ -1961,38 +2026,29 @@ const base = import.meta.env.BASE_URL;
         }
       }
 
+      async function confirmOverwriteIfNeeded(result, { forErrors = false } = {}) {
+        if (!hasExistingContactData()) return true;
+        const total = academicContacts.length + employerContacts.length;
+        const msg = forErrors
+          ? `目前已有 ${total} 筆聯絡人資料。匯入檔有錯誤，仍會覆蓋表單內容以便修改。\n\n確定要繼續嗎？`
+          : `目前已有 ${total} 筆聯絡人資料，匯入 Excel 將覆蓋現有內容。\n\n確定要繼續嗎？`;
+        return confirm(msg);
+      }
+
       async function confirmAndApplyImport(result) {
-        if (hasExistingContactData()) {
-          const total = academicContacts.length + employerContacts.length;
-          const ok = confirm(
-            `目前已有 ${total} 筆聯絡人資料，匯入 Excel 將覆蓋現有內容。\n\n確定要繼續嗎？`,
-          );
-          if (!ok) {
-            $('#import-result').classList.remove('hidden');
-            $('#import-summary').textContent = `已取消匯入（驗證已通過：學術 ${result.summary.academicCount} 筆、雇主 ${result.summary.employerCount} 筆）。`;
-            $('#import-errors-wrap').classList.add('hidden');
-            pendingImport = null;
-            return;
-          }
+        const ok = await confirmOverwriteIfNeeded(result, { forErrors: false });
+        if (!ok) {
+          $('#import-result').classList.remove('hidden');
+          $('#import-summary').textContent = `已取消匯入（驗證已通過：學術 ${result.summary.academicCount} 筆、雇主 ${result.summary.employerCount} 筆）。`;
+          $('#import-errors-wrap').classList.add('hidden');
+          pendingImport = null;
+          return;
         }
         await applyImportResult(result);
       }
 
       async function applyImportResult(result) {
-        const toContact = (c, type) => ({
-          ...emptyContact(type),
-          ...c,
-          id: uid(),
-          type,
-        });
-
-        const newAcademic = result.academic.map((c) => toContact(c, 'academic'));
-        const newEmployer = result.employer.map((c) => toContact(c, 'employer'));
-
-        academicContacts = newAcademic;
-        employerContacts = newEmployer;
-
-        saveState();
+        loadContactsFromImport(result);
         showError('');
         resetImportResult();
         setFile(null);
@@ -2000,7 +2056,6 @@ const base = import.meta.env.BASE_URL;
 
         setImportProgress({ label: '準備預覽名單…', percent: 40 });
         await new Promise((r) => requestAnimationFrame(r));
-        updateContactCount();
         renderPreview();
         setImportProgress({ label: '預覽完成', percent: 100 });
         await new Promise((r) => setTimeout(r, 200));
@@ -2043,6 +2098,24 @@ const base = import.meta.env.BASE_URL;
           });
           if (result.ok) {
             await confirmAndApplyImport(result);
+          } else if (result.academic.length || result.employer.length) {
+            const ok = await confirmOverwriteIfNeeded(result, { forErrors: true });
+            if (!ok) {
+              $('#import-result').classList.remove('hidden');
+              $('#import-summary').textContent = `已取消載入（驗證未通過：學術 ${result.summary.academicCount} 筆、雇主 ${result.summary.employerCount} 筆）。`;
+              const errWrap = $('#import-errors-wrap');
+              const errList = $('#import-errors');
+              errWrap.classList.remove('hidden');
+              errList.innerHTML = result.errors
+                .map(
+                  (e) =>
+                    `<li>${escapeHtml(e.sheet)}${e.row ? ` 第 ${e.row} 列` : ''} · ${escapeHtml(e.field)}：${escapeHtml(e.message)}</li>`,
+                )
+                .join('');
+              pendingImport = null;
+            } else {
+              await showImportFailureOnForm(result);
+            }
           } else {
             renderImportErrors(result);
           }

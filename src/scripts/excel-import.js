@@ -247,8 +247,9 @@ function parseSheet(workbook, sheetName, type, { onRow } = {}) {
       ? parseAcademicRow(map, rowNum, { hasOtherCols: format.hasOtherCols })
       : parseEmployerRow(map, rowNum, { hasOtherCols: format.hasOtherCols });
 
+    // 即使驗證失敗仍保留列資料，方便載入表單後用浮標修正
+    contacts.push(parsed.contact);
     if (parsed.errors.length) errors.push(...parsed.errors);
-    else contacts.push(parsed.contact);
 
     if (onRow) onRow(i, dataRowCount);
   }
