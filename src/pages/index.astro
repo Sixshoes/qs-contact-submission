@@ -1489,7 +1489,7 @@ const base = import.meta.env.BASE_URL;
 
     async function submitToGoogleSheetsWithProgress(payload, onProgress) {
       const totalContacts = payload.academic.length + payload.employer.length;
-      const sheetFootnote = '試算表寫入中，請稍候勿關閉頁面；網路較慢時進度可能暫停在 72% 左右，屬正常現象。';
+      const sheetFootnote = '試算表寫入中，請稍候勿關閉頁面。';
       onProgress({
         label: `上傳至試算表（${totalContacts} 筆）…`,
         percent: 22,
