@@ -1489,11 +1489,11 @@ const base = import.meta.env.BASE_URL;
 
     async function submitToGoogleSheetsWithProgress(payload, onProgress) {
       const totalContacts = payload.academic.length + payload.employer.length;
-      const sheetFootnote = '試算表寫入中，請稍候勿關閉頁面。';
+      const sheetLabel = `上傳至試算表（${totalContacts} 筆），請勿關閉頁面`;
       onProgress({
-        label: `上傳至試算表（${totalContacts} 筆）…`,
+        label: sheetLabel,
         percent: 22,
-        footnote: sheetFootnote,
+        footnote: '',
       });
 
       let pct = 22;
@@ -1501,9 +1501,9 @@ const base = import.meta.env.BASE_URL;
         if (pct < 72) {
           pct += 1;
           onProgress({
-            label: `上傳至試算表（${totalContacts} 筆）…`,
+            label: sheetLabel,
             percent: pct,
-            footnote: sheetFootnote,
+            footnote: '',
           });
         }
       }, 180);
