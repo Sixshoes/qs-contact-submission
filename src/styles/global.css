@@ -825,6 +825,13 @@ select.input-field {
   color: #7f1d1d;
 }
 
+.form-error-panel__hint {
+  margin: 0.2rem 0 0;
+  font-size: 0.75rem;
+  color: #9f1239;
+  opacity: 0.9;
+}
+
 .form-error-panel__close {
   border: 0;
   background: transparent;
@@ -834,6 +841,7 @@ select.input-field {
   line-height: 1;
   padding: 0.15rem 0.35rem;
   border-radius: 0.35rem;
+  flex-shrink: 0;
 }
 
 .form-error-panel__close:hover {
@@ -849,6 +857,8 @@ select.input-field {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  min-height: 0;
+  flex: 1 1 auto;
 }
 
 .form-error-panel__list button {
@@ -870,6 +880,25 @@ select.input-field {
 .form-error-panel__list button.is-active {
   background: #fecaca;
   outline: 1px solid #f87171;
+}
+
+.form-error-panel__jump {
+  margin-top: 0.65rem;
+  border: 1px solid color-mix(in srgb, #f87171 50%, #fecaca);
+  border-radius: 0.55rem;
+  background: white;
+  color: #9f1239;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.45rem 0.6rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.form-error-panel__jump:hover {
+  background: #fff1f2;
 }
 
 @media (prefers-reduced-motion: reduce) {

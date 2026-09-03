@@ -254,10 +254,16 @@ const base = import.meta.env.BASE_URL;
 
         <aside id="form-error" class="form-error-panel hidden" role="alert" aria-live="polite">
           <div class="form-error-panel__head">
-            <p class="form-error-panel__title">請修正以下問題</p>
+            <div>
+              <p class="form-error-panel__title">修正清單</p>
+              <p class="form-error-panel__hint">點選項目可跳到對應欄位</p>
+            </div>
             <button type="button" id="form-error-close" class="form-error-panel__close" aria-label="關閉錯誤清單">×</button>
           </div>
           <ul id="form-error-list" class="form-error-panel__list"></ul>
+          <button type="button" id="form-error-jump-bottom" class="form-error-panel__jump">
+            跳轉到最下面（預覽按鈕）
+          </button>
         </aside>
       </section>
 
@@ -1992,6 +1998,12 @@ const base = import.meta.env.BASE_URL;
 
       $('#form-error-close')?.addEventListener('click', () => {
         showError('');
+      });
+
+      $('#form-error-jump-bottom')?.addEventListener('click', () => {
+        const bar = document.querySelector('.action-bar');
+        (bar || $('#btn-preview'))?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        $('#btn-preview')?.focus({ preventScroll: true });
       });
 
       $('#btn-back').addEventListener('click', () => {
