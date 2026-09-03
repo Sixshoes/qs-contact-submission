@@ -83,18 +83,12 @@ body {
   z-index: 1;
 }
 
-/** 主內容區：盡量貼近視窗兩側，僅保留最小邊距 */
+/** 主內容區：置中並限制最大寬度，避免大螢幕把填寫格拉太長 */
 .page-shell {
   width: 100%;
-  max-width: 100%;
+  max-width: 72rem;
   margin-inline: auto;
-  padding-inline: clamp(0.5rem, 1.25vw, 0.875rem);
-}
-
-@media (min-width: 1536px) {
-  .page-shell {
-    padding-inline: clamp(0.75rem, 1.5vw, 1.25rem);
-  }
+  padding-inline: clamp(1rem, 2.5vw, 1.5rem);
 }
 
 /* ── Header ── */

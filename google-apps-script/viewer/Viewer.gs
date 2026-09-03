@@ -7,18 +7,21 @@
  * 設定步驟：
  * 1. 用後台帳號登入 script.google.com，新增專案（勿與公開提交腳本混用）
  * 2. 貼上本檔到「程式碼.gs」
- * 3. 檔案 → 新增 → HTML，檔名填 Pool（不要 .html），貼上 Pool.html
- * 4. 下方 SHEET_ID 填 Pool 試算表 ID（網址 /d/XXXX/edit 的 XXXX）
- * 5. 部署 → 新增部署 → 網頁應用程式（執行身分：我；誰可以存取：只有我自己）
- * 6. 更新 Pool.html 後需「新版本」重新部署才會生效
+ * 3. 檔案 → 新增 → HTML，檔名填 **Pool**（不要打 .html、不要用別的名字）
+ * 4. 把 Pool.html 全部貼進這個 Pool 檔並儲存
+ * 5. 下方 SHEET_ID 填 Pool 試算表 ID（網址 /d/XXXX/edit 的 XXXX）
+ * 6. 部署 → 新增部署 → 網頁應用程式（執行身分：我；誰可以存取：只有我自己）
+ * 7. 更新後需「新版本」重新部署才會生效
  */
 
 /** 試算表 ID（與提交 Pool 同一本） */
-var SHEET_ID = '';
+var SHEET_ID = '1pgNg_zFue_RQfiqejRNVcEEVTgi3dOWrLMT2TTX5O0s';
 
 var SHEET_SUBMISSIONS = '提交紀錄';
 var SHEET_ACADEMIC = '學術聯絡人';
 var SHEET_EMPLOYER = '雇主聯絡人';
+var SHEET_PRIOR_ACADEMIC = '2027學術聯絡人';
+var SHEET_PRIOR_EMPLOYER = '2027雇主聯絡人';
 var TZ = 'Asia/Taipei';
 
 function doGet() {
@@ -41,6 +44,8 @@ function getPoolData() {
       submissions: sheetToMatrix_(ss.getSheetByName(SHEET_SUBMISSIONS)),
       academic: sheetToMatrix_(ss.getSheetByName(SHEET_ACADEMIC)),
       employer: sheetToMatrix_(ss.getSheetByName(SHEET_EMPLOYER)),
+      priorAcademic: sheetToMatrix_(ss.getSheetByName(SHEET_PRIOR_ACADEMIC)),
+      priorEmployer: sheetToMatrix_(ss.getSheetByName(SHEET_PRIOR_EMPLOYER)),
       updatedAt: Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm:ss'),
       spreadsheetUrl: ss.getUrl(),
     };

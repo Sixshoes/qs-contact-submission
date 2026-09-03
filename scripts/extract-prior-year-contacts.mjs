@@ -87,7 +87,7 @@ for (const spec of FILES) {
         unit: clean(cellText(row.getCell(cols[spec.unitHeader]))),
         org: clean(cellText(row.getCell(cols[spec.orgHeader]))),
       };
-      const key = [rec.email, rec.pool, rec.sheet, rec.firstName, rec.lastName, rec.org].join('|');
+      const key = [rec.email, rec.pool, rec.firstName, rec.lastName, rec.org].join('|').toLowerCase();
       if (seen.has(key)) return;
       seen.add(key);
       records.push(rec);
@@ -101,4 +101,23 @@ export const PRIOR_YEAR_CONTACTS = ${JSON.stringify(records, null, 2)};
 `;
 
 fs.writeFileSync(OUT, body, 'utf8');
+
+const html = `<script>
+var PRIOR_YEAR_CONTACTS = ${JSON.stringify(records)};
+</script>`;
+
+const poolPath = path.join(ROOT, 'google-apps-script/viewer/Pool.html');
+let pool = fs.readFileSync(poolPath, 'utf8');
+const marker = '<!--PRIOR_YEAR_DATA-->';
+if (!pool.includes(marker)) {
+  throw new Error('Pool.html 缺少 <!--PRIOR_YEAR_DATA--> 標記');
+}
+pool = pool.replace(
+  /<!--PRIOR_YEAR_DATA-->[\s\S]*?(?=\n    <script>\n      var SUBMIT_SITE)/,
+  `${marker}\n    ${html}\n    `,
+);
+fs.writeFileSync(poolPath, pool, 'utf8');
+
 console.log(`wrote ${records.length} records (${uniqueEmails} unique emails) → ${path.relative(ROOT, OUT)}`);
+console.log('updated google-apps-script/viewer/Pool.html');
+

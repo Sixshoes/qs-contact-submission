@@ -12,8 +12,13 @@
         --cream: #faf7f2;
       }
       * { box-sizing: border-box; }
+      html,
       body {
         margin: 0;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+      body {
         font-family: "Segoe UI", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
         background: linear-gradient(180deg, var(--cream) 0%, #f5f0eb 100%);
         color: #0f172a;
@@ -21,8 +26,10 @@
       }
       .page-shell {
         width: 100%;
+        max-width: 100%;
         margin-inline: auto;
         padding-inline: clamp(0.75rem, 1.5vw, 1.25rem);
+        min-width: 0;
       }
       header {
         border-bottom: 1px solid rgba(166, 36, 92, 0.3);
@@ -98,6 +105,8 @@
         border-top: 1px solid #e2e8f0;
         border-bottom: 1px solid #e2e8f0;
         padding: 1rem;
+        max-width: 100%;
+        min-width: 0;
       }
       @media (min-width: 640px) {
         .card {
@@ -164,9 +173,21 @@
         padding: 0.75rem 1rem;
       }
       .hidden { display: none !important; }
-      .tab-panel { overflow-x: auto; }
-      table {
+      .tab-panel {
+        max-width: 100%;
+        min-width: 0;
+      }
+      .table-scroll {
         width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+      }
+      table {
+        width: max-content;
+        min-width: 100%;
+        max-width: none;
         border-collapse: collapse;
         font-size: 0.8125rem;
       }
@@ -187,6 +208,9 @@
         border-bottom: 1px solid #f1f5f9;
         padding: 0.5rem;
         color: #334155;
+        max-width: 18rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       tr:hover td { background: #f8fafc; }
       .loading {
@@ -203,7 +227,7 @@
         <div class="header-row">
           <div>
             <h1 class="header-title">QS 聯絡人 Pool</h1>
-            <p class="header-sub">永續辦內部工具 · 即時讀取共用試算表</p>
+            <p class="header-sub">永續辦內部工具 · 讀取共用試算表（含 2027 名單）</p>
           </div>
           <div class="header-actions">
             <button type="button" class="btn" id="btn-refresh">重新整理</button>
@@ -219,6 +243,12 @@
           </button>
           <button type="button" class="pool-tab" data-tab="employer">
             雇主聯絡人池 <span class="pool-tab-count" id="count-employer">0</span>
+          </button>
+          <button type="button" class="pool-tab" data-tab="prior-academic">
+            去年學術 <span class="pool-tab-count" id="count-prior-academic">0</span>
+          </button>
+          <button type="button" class="pool-tab" data-tab="prior-employer">
+            去年雇主 <span class="pool-tab-count" id="count-prior-employer">0</span>
           </button>
         </nav>
         <div style="height:1.25rem"></div>
@@ -258,16 +288,52 @@
         <p id="notice-employer" class="status hidden"></p>
         <div id="table-employer"></div>
       </section>
+      <section id="panel-prior-academic" class="tab-panel card hidden" data-panel="prior-academic">
+        <div class="panel-toolbar">
+          <h2 class="panel-title"><span class="panel-title-mark"></span>去年學術名單</h2>
+          <input type="search" class="search-input" data-search="prior-academic" placeholder="搜尋去年學術…" aria-label="搜尋去年學術" />
+        </div>
+        <p id="notice-prior-academic" class="status hidden"></p>
+        <div id="table-prior-academic"></div>
+      </section>
+      <section id="panel-prior-employer" class="tab-panel card hidden" data-panel="prior-employer">
+        <div class="panel-toolbar">
+          <h2 class="panel-title"><span class="panel-title-mark"></span>去年雇主名單</h2>
+          <input type="search" class="search-input" data-search="prior-employer" placeholder="搜尋去年雇主…" aria-label="搜尋去年雇主" />
+        </div>
+        <p id="notice-prior-employer" class="status hidden"></p>
+        <div id="table-prior-employer"></div>
+      </section>
     </main>
 
+    
     <script>
       var SUBMIT_SITE = 'https://sixshoes.github.io/qs-contact-submission/';
-      var MAX_ROWS = 200;
+      var MAX_LIVE_ROWS = 200;
       var activeTab = 'submissions';
-      var poolCache = { academic: [], employer: [], submissions: [] };
-      var searchQueries = { academic: '', employer: '', submissions: '' };
+      var poolCache = {
+        academic: [],
+        employer: [],
+        submissions: [],
+        'prior-academic': [],
+        'prior-employer': [],
+      };
+      var searchQueries = {
+        academic: '',
+        employer: '',
+        submissions: '',
+        'prior-academic': '',
+        'prior-employer': '',
+      };
 
       function $(id) { return document.getElementById(id); }
+
+      function tableOptions(tabId) {
+        if (String(tabId).indexOf('prior-') === 0) {
+          return { reverse: false, maxRows: 5000 };
+        }
+        return { reverse: true, maxRows: MAX_LIVE_ROWS };
+      }
 
       function escapeHtml(s) {
         return String(s ?? '')
@@ -307,11 +373,13 @@
         }
 
         var headers = matrix[0];
+        var opts = tableOptions(tabId);
+        var maxRows = opts.maxRows;
         var filtered = filterRows(matrix, query);
         var total = filtered.length;
-        var truncated = total > MAX_ROWS;
-        var rows = truncated ? filtered.slice(-MAX_ROWS) : filtered.slice();
-        rows.reverse();
+        var truncated = total > maxRows;
+        var rows = truncated ? filtered.slice(-maxRows) : filtered.slice();
+        if (opts.reverse) rows.reverse();
 
         if (query && total === 0) {
           el.innerHTML = '<p class="status">沒有符合「' + escapeHtml(query) + '」的資料</p>';
@@ -320,7 +388,7 @@
         }
 
         if (truncated) {
-          noticeEl.textContent = '共 ' + total + ' 筆' + (query ? '（符合搜尋）' : '') + '，顯示最近 ' + MAX_ROWS + ' 筆';
+          noticeEl.textContent = '共 ' + total + ' 筆' + (query ? '（符合搜尋）' : '') + '，顯示最近 ' + maxRows + ' 筆';
           noticeEl.classList.remove('hidden');
         } else if (query) {
           noticeEl.textContent = '符合搜尋：' + total + ' 筆';
@@ -335,15 +403,21 @@
         }).join('');
         var tbody = rows.map(function (row) {
           var tds = headers.map(function (_, i) {
-            return '<td>' + escapeHtml(row[i] ?? '') + '</td>';
+            var text = String(row[i] ?? '');
+            return '<td title="' + escapeHtml(text) + '">' + escapeHtml(text) + '</td>';
           }).join('');
           return '<tr>' + tds + '</tr>';
         }).join('');
-        el.innerHTML = '<table><thead><tr>' + th + '</tr></thead><tbody>' + tbody + '</tbody></table>';
+        el.innerHTML =
+          '<div class="table-scroll"><table><thead><tr>' +
+          th +
+          '</tr></thead><tbody>' +
+          tbody +
+          '</tbody></table></div>';
       }
 
       function renderAllTables() {
-        ['submissions', 'academic', 'employer'].forEach(function (tabId) {
+        ['submissions', 'academic', 'employer', 'prior-academic', 'prior-employer'].forEach(function (tabId) {
           renderTable(tabId, poolCache[tabId], searchQueries[tabId]);
         });
       }
@@ -387,10 +461,14 @@
         poolCache.academic = data.academic || [];
         poolCache.employer = data.employer || [];
         poolCache.submissions = data.submissions || [];
+        poolCache['prior-academic'] = data.priorAcademic || [];
+        poolCache['prior-employer'] = data.priorEmployer || [];
 
         $('count-academic').textContent = String(dataRowCount(poolCache.academic));
         $('count-employer').textContent = String(dataRowCount(poolCache.employer));
         $('count-submissions').textContent = String(dataRowCount(poolCache.submissions));
+        $('count-prior-academic').textContent = String(dataRowCount(poolCache['prior-academic']));
+        $('count-prior-employer').textContent = String(dataRowCount(poolCache['prior-employer']));
 
         if (data.updatedAt) {
           $('meta-updated').textContent = '更新時間：' + data.updatedAt;
