@@ -157,7 +157,7 @@ const base = import.meta.env.BASE_URL;
             >
               匯入樣板
             </a>
-            。上傳後會先檢查欄位、選項、Email 等，<strong>全部通過</strong>即覆蓋並進入預覽頁；若表單已有聯絡人資料會先詢問是否覆蓋。選項欄位有下拉提示，也可直接輸入；選單外文字會自動視為 Other。
+            。上傳後會先檢查欄位、選項、Email 等，<strong>全部通過</strong>即覆蓋並進入預覽頁；若表單已有聯絡人資料會先詢問是否覆蓋。表單選項請用下拉選擇；選 Other 後再填寫說明。Excel 匯入仍可直接輸入選單外文字（會自動視為 Other）。
           </p>
           <div class="import-zone" id="import-zone">
             <p class="text-sm text-slate-600">拖曳 .xlsx 到這裡，或</p>
@@ -374,14 +374,6 @@ const base = import.meta.env.BASE_URL;
     </footer>
   </div>
 
-  <!-- Option datalists (combobox suggestions) -->
-  <datalist id="datalist-titles"></datalist>
-  <datalist id="datalist-academic-jobs"></datalist>
-  <datalist id="datalist-employer-jobs"></datalist>
-  <datalist id="datalist-industries"></datalist>
-  <datalist id="datalist-countries"></datalist>
-  <datalist id="datalist-subjects"></datalist>
-
   <!-- Contact card template -->
   <template id="contact-card-template">
     <article class="contact-card border-slate-200" data-contact-id="">
@@ -398,15 +390,13 @@ const base = import.meta.env.BASE_URL;
           <label class="mb-1.5 block text-sm font-medium text-slate-700">
             Title <span class="text-red-500">*</span>
           </label>
-          <input
-            type="text"
-            class="field-title input-field combobox-field"
-            list="datalist-titles"
-            required
-            placeholder="請選擇或輸入"
-            autocomplete="off"
-          />
-          <p class="mt-1 text-xs text-slate-500">可從下拉選擇，或直接輸入；選單外會自動視為 Other</p>
+          <select class="field-title input-field" required>
+            <option value="">請選擇</option>
+          </select>
+          <div class="other-detail field-title-other-wrap hidden">
+            <p class="other-hint">請填寫 Title（Other）內容</p>
+            <input type="text" class="field-title-other other-detail-input input-field" placeholder="請輸入具體稱謂" />
+          </div>
         </div>
 
         <!-- First Name -->
@@ -430,15 +420,13 @@ const base = import.meta.env.BASE_URL;
           <label class="label-job-title mb-1.5 block text-sm font-medium text-slate-700">
             Job Title <span class="text-red-500">*</span>
           </label>
-          <input
-            type="text"
-            class="field-job-title input-field combobox-field"
-            list="datalist-academic-jobs"
-            required
-            placeholder="請選擇或輸入"
-            autocomplete="off"
-          />
-          <p class="mt-1 text-xs text-slate-500">可從下拉選擇，或直接輸入；選單外會自動視為 Other</p>
+          <select class="field-job-title input-field" required>
+            <option value="">請選擇</option>
+          </select>
+          <div class="other-detail field-job-other-wrap hidden">
+            <p class="other-hint field-job-other-hint">請填寫 Job Title（Other）內容</p>
+            <input type="text" class="field-job-other other-detail-input input-field" placeholder="請輸入具體職稱" />
+          </div>
         </div>
 
         <!-- Department / Industry -->
@@ -447,14 +435,13 @@ const base = import.meta.env.BASE_URL;
             Department <span class="text-red-500">*</span>
           </label>
           <input type="text" class="field-department input-field" placeholder="請填寫完整系所名稱" />
-          <input
-            type="text"
-            class="field-industry input-field combobox-field hidden"
-            list="datalist-industries"
-            placeholder="請選擇或輸入產業"
-            autocomplete="off"
-          />
-          <p class="field-industry-hint mt-1 hidden text-xs text-slate-500">可從下拉選擇，或直接輸入；選單外會自動視為 Other</p>
+          <select class="field-industry input-field hidden">
+            <option value="">請選擇產業</option>
+          </select>
+          <div class="other-detail field-industry-other-wrap hidden">
+            <p class="other-hint">請填寫 Industry（Other）內容</p>
+            <input type="text" class="field-industry-other other-detail-input input-field" placeholder="請輸入具體產業" />
+          </div>
         </div>
 
         <!-- Institution / Company Name -->
@@ -470,15 +457,13 @@ const base = import.meta.env.BASE_URL;
           <label class="mb-1.5 block text-sm font-medium text-slate-700">
             Country or Territory <span class="text-red-500">*</span>
           </label>
-          <input
-            type="text"
-            class="field-country input-field combobox-field"
-            list="datalist-countries"
-            required
-            placeholder="請選擇或輸入"
-            autocomplete="off"
-          />
-          <p class="mt-1 text-xs text-slate-500">可從下拉選擇，或直接輸入；選單外會自動視為 Other</p>
+          <select class="field-country input-field" required>
+            <option value="">請選擇</option>
+          </select>
+          <div class="other-detail field-country-other-wrap hidden">
+            <p class="other-hint">請填寫 Country（Other）內容</p>
+            <input type="text" class="field-country-other other-detail-input input-field" placeholder="請輸入國家或地區" />
+          </div>
         </div>
 
         <!-- Email -->
@@ -497,14 +482,13 @@ const base = import.meta.env.BASE_URL;
           <label class="mb-1.5 block text-sm font-medium text-slate-700">
             Subject <span class="text-red-500">*</span>
           </label>
-          <input
-            type="text"
-            class="field-subject input-field combobox-field"
-            list="datalist-subjects"
-            placeholder="請選擇或輸入學術領域"
-            autocomplete="off"
-          />
-          <p class="mt-1 text-xs text-slate-500">可從下拉選擇，或直接輸入；選單外會自動視為 Other</p>
+          <select class="field-subject input-field">
+            <option value="">請選擇學術領域</option>
+          </select>
+          <div class="other-detail field-subject-other-wrap hidden">
+            <p class="other-hint">請填寫 Subject（Other）內容</p>
+            <input type="text" class="field-subject-other other-detail-input input-field" placeholder="請輸入具體學術領域" />
+          </div>
         </div>
 
         <!-- Phone -->
@@ -526,7 +510,7 @@ const base = import.meta.env.BASE_URL;
       createEmployerWorkbookBlob,
     } from '../scripts/excel-export.js';
     import { parseImportFile } from '../scripts/excel-import.js';
-    import { normalizeEmail as normalizeEmailImport, priorYearEmailError, resolveFlexibleOption, displayOptionInput } from '../scripts/contact-validation.js';
+    import { normalizeEmail as normalizeEmailImport, priorYearEmailError } from '../scripts/contact-validation.js';
     import {
       TITLES,
       ACADEMIC_JOB_TITLES,
@@ -617,36 +601,62 @@ const base = import.meta.env.BASE_URL;
       return academicContacts.find((c) => c.id === id) || employerContacts.find((c) => c.id === id) || null;
     }
 
-    function fillDatalist(id, options) {
-      const dl = document.getElementById(id);
-      if (!dl) return;
-      dl.innerHTML = '';
+    function fillSelect(select, options, { emptyLabel = '請選擇' } = {}) {
+      if (!select) return;
+      const current = select.value;
+      select.innerHTML = '';
+      const empty = document.createElement('option');
+      empty.value = '';
+      empty.textContent = emptyLabel;
+      select.appendChild(empty);
       for (const item of options) {
         const en = typeof item === 'string' ? item : item.en;
         const opt = document.createElement('option');
         opt.value = en;
-        if (typeof item !== 'string') opt.label = bilingualLabel(item);
-        dl.appendChild(opt);
+        opt.textContent = typeof item === 'string' ? item : bilingualLabel(item);
+        select.appendChild(opt);
+      }
+      if (current && [...select.options].some((o) => o.value === current)) {
+        select.value = current;
       }
     }
 
-    function populateAllDatalists() {
-      fillDatalist('datalist-titles', TITLES);
-      fillDatalist('datalist-academic-jobs', ACADEMIC_JOB_TITLES);
-      fillDatalist('datalist-employer-jobs', EMPLOYER_JOB_TITLES);
-      fillDatalist('datalist-industries', INDUSTRIES);
-      fillDatalist('datalist-countries', COUNTRIES);
-      fillDatalist('datalist-subjects', SUBJECTS);
+    function setSelectWithOther(select, otherInput, wrap, list, en, other) {
+      if (!select) return;
+      const value = trimVal(en);
+      const detail = trimVal(other);
+      const matched = value ? findOption(list, value) : null;
+
+      if (!value) {
+        select.value = '';
+        if (otherInput) otherInput.value = '';
+      } else if (value === 'Other') {
+        select.value = 'Other';
+        if (otherInput) otherInput.value = detail;
+      } else if (matched) {
+        select.value = matched.en;
+        if (otherInput) otherInput.value = '';
+      } else {
+        select.value = 'Other';
+        if (otherInput) otherInput.value = detail || value;
+      }
+      if (wrap) wrap.classList.toggle('hidden', select.value !== 'Other');
     }
 
-    function readComboboxField(input, list, { pluralOther = false } = {}) {
-      const flex = resolveFlexibleOption(list, input?.value || '', { pluralOther });
-      return { en: flex.en, other: flex.other };
-    }
-
-    function setComboboxField(input, list, en, other, { pluralOther = false } = {}) {
-      if (!input) return;
-      input.value = displayOptionInput(en, other, list);
+    function syncOtherWraps(card) {
+      const pairs = [
+        ['.field-title', '.field-title-other-wrap'],
+        ['.field-job-title', '.field-job-other-wrap'],
+        ['.field-industry', '.field-industry-other-wrap'],
+        ['.field-country', '.field-country-other-wrap'],
+        ['.field-subject', '.field-subject-other-wrap'],
+      ];
+      for (const [sel, wrapSel] of pairs) {
+        const select = $(sel, card);
+        const wrap = $(wrapSel, card);
+        if (!select || !wrap) continue;
+        wrap.classList.toggle('hidden', select.value !== 'Other');
+      }
     }
 
     function displayOpt(list, en) {
@@ -825,15 +835,14 @@ const base = import.meta.env.BASE_URL;
       const labelInst = $('.label-institution', card);
       const dept = $('.field-department', card);
       const industry = $('.field-industry', card);
-      const industryHint = $('.field-industry-hint', card);
+      const industryOtherWrap = $('.field-industry-other-wrap', card);
       const subjectWrap = $('.subject-wrap', card);
-      const jobInput = $('.field-job-title', card);
+      const jobHint = $('.field-job-other-hint', card);
       const instInput = $('.field-institution', card);
-
-      jobInput.setAttribute('list', type === 'academic' ? 'datalist-academic-jobs' : 'datalist-employer-jobs');
 
       if (type === 'academic') {
         labelJob.innerHTML = 'Job Title <span class="text-red-500">*</span>';
+        if (jobHint) jobHint.textContent = '請填寫 Job Title（Other）內容';
         label.innerHTML = 'Department <span class="text-red-500">*</span>';
         labelInst.innerHTML = 'Institution <span class="text-red-500">*</span>';
         instInput.placeholder = '機構正式名稱（聯絡人所屬大學）';
@@ -841,11 +850,11 @@ const base = import.meta.env.BASE_URL;
         dept.required = true;
         industry.classList.add('hidden');
         industry.required = false;
-        industryHint?.classList.add('hidden');
         subjectWrap.classList.remove('hidden');
         $('.field-subject', card).required = true;
       } else {
         labelJob.innerHTML = 'Position <span class="text-red-500">*</span>';
+        if (jobHint) jobHint.textContent = '請填寫 Position（Other）內容';
         label.innerHTML = 'Industry <span class="text-red-500">*</span>';
         labelInst.innerHTML = 'Company Name <span class="text-red-500">*</span>';
         instInput.placeholder = '公司正式名稱';
@@ -853,9 +862,14 @@ const base = import.meta.env.BASE_URL;
         dept.required = false;
         industry.classList.remove('hidden');
         industry.required = true;
-        industryHint?.classList.remove('hidden');
         subjectWrap.classList.add('hidden');
         $('.field-subject', card).required = false;
+      }
+      syncOtherWraps(card);
+      if (type === 'academic') {
+        industryOtherWrap?.classList.add('hidden');
+      } else {
+        $('.field-subject-other-wrap', card)?.classList.add('hidden');
       }
     }
 
@@ -865,29 +879,34 @@ const base = import.meta.env.BASE_URL;
       const c = findContact(id);
       if (!c) return;
 
-      const jobList = type === 'academic' ? ACADEMIC_JOB_TITLES : EMPLOYER_JOB_TITLES;
-      const titleFlex = readComboboxField($('.field-title', card), TITLES);
-      const jobFlex = readComboboxField($('.field-job-title', card), jobList, { pluralOther: true });
-      const industryFlex = readComboboxField($('.field-industry', card), INDUSTRIES);
-      const countryFlex = readComboboxField($('.field-country', card), COUNTRIES);
-      const subjectFlex = readComboboxField($('.field-subject', card), SUBJECTS, { pluralOther: true });
+      syncOtherWraps(card);
 
       c.type = type;
-      c.title = titleFlex.en;
-      c.titleOther = titleFlex.other;
+      c.title = $('.field-title', card).value;
+      const titleOtherEl = $('.field-title-other', card);
+      c.titleOther = c.title === 'Other' ? titleOtherEl.value : '';
+      if (c.title !== 'Other') titleOtherEl.value = '';
       c.firstName = $('.field-first-name', card).value;
       c.lastName = $('.field-last-name', card).value;
-      c.jobTitle = jobFlex.en;
-      c.jobOther = jobFlex.other;
+      c.jobTitle = $('.field-job-title', card).value;
+      const jobOtherEl = $('.field-job-other', card);
+      c.jobOther = c.jobTitle === 'Other' ? jobOtherEl.value : '';
+      if (c.jobTitle !== 'Other') jobOtherEl.value = '';
       c.department = $('.field-department', card).value;
-      c.industry = industryFlex.en;
-      c.industryOther = industryFlex.other;
+      c.industry = $('.field-industry', card).value;
+      const industryOtherEl = $('.field-industry-other', card);
+      c.industryOther = c.industry === 'Other' ? industryOtherEl.value : '';
+      if (c.industry !== 'Other') industryOtherEl.value = '';
       c.institution = $('.field-institution', card).value;
-      c.country = countryFlex.en;
-      c.countryOther = countryFlex.other;
+      c.country = $('.field-country', card).value;
+      const countryOtherEl = $('.field-country-other', card);
+      c.countryOther = c.country === 'Other' ? countryOtherEl.value : '';
+      if (c.country !== 'Other') countryOtherEl.value = '';
       c.email = $('.field-email', card).value;
-      c.subject = subjectFlex.en;
-      c.subjectOther = subjectFlex.other;
+      c.subject = $('.field-subject', card).value;
+      const subjectOtherEl = $('.field-subject-other', card);
+      c.subjectOther = c.subject === 'Other' ? subjectOtherEl.value : '';
+      if (c.subject !== 'Other') subjectOtherEl.value = '';
       c.phone = $('.field-phone', card).value;
       saveState();
     }
@@ -909,18 +928,54 @@ const base = import.meta.env.BASE_URL;
       $('.contact-card-title', node).textContent = `${typeLabel}聯絡人 #${index + 1}`;
 
       const jobList = type === 'academic' ? ACADEMIC_JOB_TITLES : EMPLOYER_JOB_TITLES;
-      setComboboxField($('.field-title', node), TITLES, contact.title, contact.titleOther);
-      setComboboxField($('.field-job-title', node), jobList, contact.jobTitle, contact.jobOther, { pluralOther: true });
-      setComboboxField($('.field-industry', node), INDUSTRIES, contact.industry, contact.industryOther);
-      setComboboxField(
+      fillSelect($('.field-title', node), TITLES);
+      fillSelect($('.field-job-title', node), jobList, {
+        emptyLabel: type === 'academic' ? '請選擇 Job Title' : '請選擇 Position',
+      });
+      fillSelect($('.field-industry', node), INDUSTRIES, { emptyLabel: '請選擇產業' });
+      fillSelect($('.field-country', node), COUNTRIES);
+      fillSelect($('.field-subject', node), SUBJECTS, { emptyLabel: '請選擇學術領域' });
+
+      setSelectWithOther(
+        $('.field-title', node),
+        $('.field-title-other', node),
+        $('.field-title-other-wrap', node),
+        TITLES,
+        contact.title,
+        contact.titleOther,
+      );
+      setSelectWithOther(
+        $('.field-job-title', node),
+        $('.field-job-other', node),
+        $('.field-job-other-wrap', node),
+        jobList,
+        contact.jobTitle,
+        contact.jobOther,
+      );
+      setSelectWithOther(
+        $('.field-industry', node),
+        $('.field-industry-other', node),
+        $('.field-industry-other-wrap', node),
+        INDUSTRIES,
+        contact.industry,
+        contact.industryOther,
+      );
+      setSelectWithOther(
         $('.field-country', node),
+        $('.field-country-other', node),
+        $('.field-country-other-wrap', node),
         COUNTRIES,
         contact.country || DEFAULT_COUNTRY,
         contact.countryOther,
       );
-      setComboboxField($('.field-subject', node), SUBJECTS, contact.subject, contact.subjectOther, {
-        pluralOther: true,
-      });
+      setSelectWithOther(
+        $('.field-subject', node),
+        $('.field-subject-other', node),
+        $('.field-subject-other-wrap', node),
+        SUBJECTS,
+        contact.subject,
+        contact.subjectOther,
+      );
 
       $('.field-first-name', node).value = contact.firstName;
       $('.field-last-name', node).value = contact.lastName;
@@ -1085,6 +1140,11 @@ const base = import.meta.env.BASE_URL;
       return null;
     }
 
+    function revealOtherDetailIfNeeded(target) {
+      const wrap = target?.closest?.('.other-detail');
+      if (wrap) wrap.classList.remove('hidden');
+    }
+
     function markInvalidField(err) {
       const target = resolveInvalidTarget(err);
       if (!target) return;
@@ -1092,6 +1152,7 @@ const base = import.meta.env.BASE_URL;
         target.classList.add('section-flash');
         return;
       }
+      revealOtherDetailIfNeeded(target);
       if (target.classList.contains('hidden')) target.classList.remove('hidden');
       target.classList.add('field-flash');
       const removeFlash = () => {
@@ -1115,6 +1176,7 @@ const base = import.meta.env.BASE_URL;
         return;
       }
 
+      revealOtherDetailIfNeeded(target);
       if (target.classList.contains('hidden')) target.classList.remove('hidden');
       target.classList.add('field-flash');
 
@@ -1161,35 +1223,35 @@ const base = import.meta.env.BASE_URL;
         const c = list[i];
         const n = i + 1;
         const loc = (field) => ({ contactId: c.id, field });
-        if (!trimVal(c.title)) errors.push(validationErr(`${label} #${n}：請填寫 Title。`, loc('.field-title')));
+        if (!trimVal(c.title)) errors.push(validationErr(`${label} #${n}：請選擇 Title。`, loc('.field-title')));
         if (c.title === 'Other' && !trimVal(c.titleOther)) {
-          errors.push(validationErr(`${label} #${n}：Title 請填寫具體內容（不可只填 Other）。`, loc('.field-title')));
+          errors.push(validationErr(`${label} #${n}：Title 選擇 Other 後請填寫具體內容。`, loc('.field-title-other')));
         }
         if (!trimVal(c.firstName)) errors.push(validationErr(`${label} #${n}：請填寫 First Name。`, loc('.field-first-name')));
         if (!trimVal(c.lastName)) errors.push(validationErr(`${label} #${n}：請填寫 Last Name。`, loc('.field-last-name')));
         if (!trimVal(c.jobTitle)) {
           errors.push(
-            validationErr(`${label} #${n}：請填寫 ${type === 'academic' ? 'Job Title' : 'Position'}。`, loc('.field-job-title')),
+            validationErr(`${label} #${n}：請選擇 ${type === 'academic' ? 'Job Title' : 'Position'}。`, loc('.field-job-title')),
           );
         }
         if (c.jobTitle === 'Other' && !trimVal(c.jobOther)) {
           errors.push(
             validationErr(
-              `${label} #${n}：${type === 'academic' ? 'Job Title' : 'Position'} 請填寫具體內容。`,
-              loc('.field-job-title'),
+              `${label} #${n}：${type === 'academic' ? 'Job Title' : 'Position'} 選擇 Other 後請填寫具體內容。`,
+              loc('.field-job-other'),
             ),
           );
         }
         if (type === 'academic') {
           if (!trimVal(c.department)) errors.push(validationErr(`${label} #${n}：請填寫 Department。`, loc('.field-department')));
-          if (!trimVal(c.subject)) errors.push(validationErr(`${label} #${n}：請填寫 Subject。`, loc('.field-subject')));
+          if (!trimVal(c.subject)) errors.push(validationErr(`${label} #${n}：請選擇 Subject。`, loc('.field-subject')));
           if (c.subject === 'Other' && !trimVal(c.subjectOther)) {
-            errors.push(validationErr(`${label} #${n}：Subject 請填寫具體內容。`, loc('.field-subject')));
+            errors.push(validationErr(`${label} #${n}：Subject 選擇 Other 後請填寫具體內容。`, loc('.field-subject-other')));
           }
         } else {
-          if (!trimVal(c.industry)) errors.push(validationErr(`${label} #${n}：請填寫 Industry。`, loc('.field-industry')));
+          if (!trimVal(c.industry)) errors.push(validationErr(`${label} #${n}：請選擇 Industry。`, loc('.field-industry')));
           if (c.industry === 'Other' && !trimVal(c.industryOther)) {
-            errors.push(validationErr(`${label} #${n}：Industry 請填寫具體內容。`, loc('.field-industry')));
+            errors.push(validationErr(`${label} #${n}：Industry 選擇 Other 後請填寫具體內容。`, loc('.field-industry-other')));
           }
         }
         if (!trimVal(c.institution)) {
@@ -1200,9 +1262,9 @@ const base = import.meta.env.BASE_URL;
             ),
           );
         }
-        if (!trimVal(c.country)) errors.push(validationErr(`${label} #${n}：請填寫 Country or Territory。`, loc('.field-country')));
+        if (!trimVal(c.country)) errors.push(validationErr(`${label} #${n}：請選擇 Country or Territory。`, loc('.field-country')));
         if (c.country === 'Other' && !trimVal(c.countryOther)) {
-          errors.push(validationErr(`${label} #${n}：Country 請填寫具體內容。`, loc('.field-country')));
+          errors.push(validationErr(`${label} #${n}：Country 選擇 Other 後請填寫具體內容。`, loc('.field-country-other')));
         }
         const emailErr = validateEmail(c.email);
         if (emailErr) errors.push(validationErr(`${label} #${n}：${emailErr}。`, loc('.field-email')));
@@ -2022,7 +2084,6 @@ const base = import.meta.env.BASE_URL;
     }
 
     function init() {
-      populateAllDatalists();
       bindGlobal();
       bindImport();
       bindClearModal();
