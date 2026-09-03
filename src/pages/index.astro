@@ -243,7 +243,7 @@ const base = import.meta.env.BASE_URL;
           </div>
         </section>
 
-        <div class="action-bar">
+        <div class="action-bar" id="action-bar">
           <button type="button" id="btn-open-clear" class="btn-secondary px-5 py-2.5">
             清空所有欄位
           </button>
@@ -251,6 +251,10 @@ const base = import.meta.env.BASE_URL;
             預覽與確認名單 →
           </button>
         </div>
+
+        <button type="button" id="btn-preview-float" class="preview-float hidden" aria-label="預覽與確認名單">
+          預覽與確認 →
+        </button>
 
         <aside id="form-error" class="form-error-panel hidden" role="alert" aria-live="polite">
           <div class="form-error-panel__head">
@@ -827,6 +831,27 @@ const base = import.meta.env.BASE_URL;
       setStepIndicators(step);
       saveState();
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      updatePreviewFloat();
+    }
+
+    function goToPreview() {
+      normalizeAllData();
+      const errors = validateAll();
+      if (errors.length) {
+        showErrors(errors);
+        return;
+      }
+      showError('');
+      renderPreview();
+      showStep(2);
+    }
+
+    let actionBarVisible = true;
+    function updatePreviewFloat() {
+      const btn = $('#btn-preview-float');
+      if (!btn) return;
+      const show = currentStep === 1 && !actionBarVisible;
+      btn.classList.toggle('hidden', !show);
     }
 
     function applyTypeUI(card, type) {
@@ -2046,24 +2071,28 @@ const base = import.meta.env.BASE_URL;
 
       $('#btn-add-employer').addEventListener('click', () => addContact('employer'));
 
-      $('#btn-preview').addEventListener('click', () => {
-        normalizeAllData();
-        const errors = validateAll();
-        if (errors.length) {
-          showErrors(errors);
-          return;
-        }
-        showError('');
-        renderPreview();
-        showStep(2);
-      });
+      $('#btn-preview').addEventListener('click', goToPreview);
+      $('#btn-preview-float')?.addEventListener('click', goToPreview);
+
+      const actionBar = $('#action-bar');
+      if (actionBar && typeof IntersectionObserver !== 'undefined') {
+        const io = new IntersectionObserver(
+          ([entry]) => {
+            actionBarVisible = entry.isIntersecting;
+            updatePreviewFloat();
+          },
+          { root: null, threshold: 0.15 },
+        );
+        io.observe(actionBar);
+      }
+      updatePreviewFloat();
 
       $('#form-error-close')?.addEventListener('click', () => {
         showError('');
       });
 
       $('#form-error-jump-bottom')?.addEventListener('click', () => {
-        const bar = document.querySelector('.action-bar');
+        const bar = $('#action-bar') || document.querySelector('.action-bar');
         (bar || $('#btn-preview'))?.scrollIntoView({ behavior: 'smooth', block: 'end' });
         $('#btn-preview')?.focus({ preventScroll: true });
       });
