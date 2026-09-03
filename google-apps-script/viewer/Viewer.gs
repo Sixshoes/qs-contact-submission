@@ -1,18 +1,16 @@
 /**
- * QS 聯絡人 Pool 瀏覽（yitingchen@gm.fgu.edu.tw 專用）
+ * QS 聯絡人 Pool 瀏覽（永續辦內部後台）
  *
- * 前提：wl03112816 那邊的 Pool 試算表已「共用」給 yitingchen@gm.fgu.edu.tw（至少檢視者）。
+ * 與提交用 Code.gs 分開部署：此頁「誰可以存取」請設為只有我自己（或校內帳號）。
+ * 前提：Pool 試算表已共用給此腳本「執行身分」帳號（至少檢視者）。
  *
  * 設定步驟：
- * 1. 用 yitingchen 登入 script.google.com，開啟「View」專案
- * 2. 把本檔內容貼到「程式碼.gs」（覆蓋 myFunction）
- * 3. 檔案 → 新增 → HTML，檔名填 Pool（不要 .html）
- * 4. 把 Pool.html 全部貼進 Pool 檔
- * 5. 下方 SHEET_ID 填 wl03112816 試算表 ID（網址 /d/XXXX/edit 的 XXXX）
- * 6. 儲存 → 部署 → 新增部署 → 網頁應用程式
- *    - 執行身分：我
- *    - 誰可以存取：只有我自己
- * 7. 用 yitingchen 登入的瀏覽器開啟部署網址
+ * 1. 用後台帳號登入 script.google.com，新增專案（勿與公開提交腳本混用）
+ * 2. 貼上本檔到「程式碼.gs」
+ * 3. 檔案 → 新增 → HTML，檔名填 Pool（不要 .html），貼上 Pool.html
+ * 4. 下方 SHEET_ID 填 Pool 試算表 ID（網址 /d/XXXX/edit 的 XXXX）
+ * 5. 部署 → 新增部署 → 網頁應用程式（執行身分：我；誰可以存取：只有我自己）
+ * 6. 更新 Pool.html 後需「新版本」重新部署才會生效
  */
 
 /** 試算表 ID（與提交 Pool 同一本） */
