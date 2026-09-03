@@ -776,6 +776,102 @@ select.input-field {
   @apply flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/60 bg-white/60 px-4 py-3 backdrop-blur-sm;
 }
 
+.form-error-panel {
+  position: fixed;
+  top: 5.5rem;
+  right: 0.75rem;
+  z-index: 45;
+  display: flex;
+  width: min(22rem, calc(100vw - 1.5rem));
+  max-height: min(70vh, 28rem);
+  flex-direction: column;
+  border: 1px solid color-mix(in srgb, #ef4444 35%, #fecaca);
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, #fef2f2 92%, white);
+  box-shadow:
+    0 12px 32px color-mix(in srgb, #7f1d1d 18%, transparent),
+    0 1px 0 color-mix(in srgb, white 70%, transparent);
+  padding: 0.85rem 0.9rem 0.75rem;
+  backdrop-filter: blur(8px);
+}
+
+@media (max-width: 639px) {
+  .form-error-panel {
+    top: auto;
+    bottom: 0.75rem;
+    right: 0.75rem;
+    left: 0.75rem;
+    width: auto;
+    max-height: 40vh;
+  }
+}
+
+.form-error-panel.hidden {
+  display: none !important;
+}
+
+.form-error-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+
+.form-error-panel__title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #7f1d1d;
+}
+
+.form-error-panel__close {
+  border: 0;
+  background: transparent;
+  color: #991b1b;
+  cursor: pointer;
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.35rem;
+}
+
+.form-error-panel__close:hover {
+  background: color-mix(in srgb, #fecaca 70%, white);
+}
+
+.form-error-panel__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-error-panel__list button {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, white 70%, #fee2e2);
+  color: #7f1d1d;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  padding: 0.45rem 0.55rem;
+  text-align: left;
+}
+
+.form-error-panel__list button:hover,
+.form-error-panel__list button.is-active {
+  background: #fecaca;
+  outline: 1px solid #f87171;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .page-deco::before,
   .page-deco::after,

@@ -243,8 +243,6 @@ const base = import.meta.env.BASE_URL;
           </div>
         </section>
 
-        <p id="form-error" class="hidden rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-sm" role="alert"></p>
-
         <div class="action-bar">
           <button type="button" id="btn-open-clear" class="btn-secondary px-5 py-2.5">
             清空所有欄位
@@ -253,6 +251,14 @@ const base = import.meta.env.BASE_URL;
             預覽與確認名單 →
           </button>
         </div>
+
+        <aside id="form-error" class="form-error-panel hidden" role="alert" aria-live="polite">
+          <div class="form-error-panel__head">
+            <p class="form-error-panel__title">請修正以下問題</p>
+            <button type="button" id="form-error-close" class="form-error-panel__close" aria-label="關閉錯誤清單">×</button>
+          </div>
+          <ul id="form-error-list" class="form-error-panel__list"></ul>
+        </aside>
       </section>
 
       <!-- ========== STEP 2 ========== -->
@@ -1009,18 +1015,51 @@ const base = import.meta.env.BASE_URL;
     }
 
     function showError(err) {
-      const el = $('#form-error');
-      const msg = typeof err === 'string' ? err : err?.message;
-      if (!msg) {
-        el.classList.add('hidden');
-        el.textContent = '';
-        clearFieldFlash();
+      if (Array.isArray(err)) {
+        showErrors(err);
         return;
       }
-      el.textContent = msg;
+      if (!err) {
+        showErrors([]);
+        return;
+      }
+      if (typeof err === 'string') {
+        showErrors([{ message: err }]);
+        return;
+      }
+      showErrors([err]);
+    }
+
+    function showErrors(errors) {
+      const el = $('#form-error');
+      const list = $('#form-error-list');
+      clearFieldFlash();
+      if (!errors?.length) {
+        el.classList.add('hidden');
+        list.innerHTML = '';
+        return;
+      }
+
+      list.innerHTML = errors
+        .map((e, i) => {
+          const msg = escapeHtml(e.message || String(e));
+          return `<li><button type="button" data-error-index="${i}">${msg}</button></li>`;
+        })
+        .join('');
       el.classList.remove('hidden');
-      if (err && typeof err === 'object') focusInvalidField(err);
-      else el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      list.querySelectorAll('button[data-error-index]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          list.querySelectorAll('button.is-active').forEach((b) => b.classList.remove('is-active'));
+          btn.classList.add('is-active');
+          const idx = Number(btn.getAttribute('data-error-index'));
+          const targetErr = errors[idx];
+          if (targetErr) focusInvalidField(targetErr, { clearOthers: true });
+        });
+      });
+
+      errors.forEach((e) => markInvalidField(e));
+      focusInvalidField(errors[0], { clearOthers: false });
     }
 
     function clearFieldFlash() {
@@ -1029,37 +1068,52 @@ const base = import.meta.env.BASE_URL;
       });
     }
 
-    /** @param {{ message: string, globalId?: string, contactId?: string, field?: string, section?: string }} err */
-    function focusInvalidField(err) {
-      clearFieldFlash();
-      let target = null;
-
-      if (err.globalId) {
-        target = document.getElementById(err.globalId);
-      } else if (err.contactId && err.field) {
+    function resolveInvalidTarget(err) {
+      if (err.globalId) return document.getElementById(err.globalId);
+      if (err.contactId && err.field) {
         const card = document.querySelector(`[data-contact-id="${err.contactId}"]`);
-        if (card) {
-          target = card.querySelector(err.field);
-          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      } else if (err.section === 'academic') {
-        target = $('#section-academic');
-        target?.classList.add('section-flash');
-        target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return card?.querySelector(err.field) || null;
+      }
+      if (err.section === 'academic') return $('#section-academic');
+      if (err.section === 'employer') return $('#section-employer');
+      return null;
+    }
+
+    function markInvalidField(err) {
+      const target = resolveInvalidTarget(err);
+      if (!target) return;
+      if (err.section === 'academic' || err.section === 'employer') {
+        target.classList.add('section-flash');
         return;
-      } else if (err.section === 'employer') {
-        target = $('#section-employer');
-        target?.classList.add('section-flash');
-        target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      if (target.classList.contains('hidden')) target.classList.remove('hidden');
+      target.classList.add('field-flash');
+      const removeFlash = () => {
+        target.classList.remove('field-flash');
+        target.removeEventListener('input', removeFlash);
+        target.removeEventListener('change', removeFlash);
+      };
+      target.addEventListener('input', removeFlash, { once: true });
+      target.addEventListener('change', removeFlash, { once: true });
+    }
+
+    /** @param {{ message: string, globalId?: string, contactId?: string, field?: string, section?: string }} err */
+    function focusInvalidField(err, { clearOthers = true } = {}) {
+      if (clearOthers) clearFieldFlash();
+      const target = resolveInvalidTarget(err);
+      if (!target) return;
+
+      if (err.section === 'academic' || err.section === 'employer') {
+        target.classList.add('section-flash');
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
 
-      if (!target) return;
-
       if (target.classList.contains('hidden')) target.classList.remove('hidden');
-
       target.classList.add('field-flash');
-      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      const card = target.closest?.('[data-contact-id]');
+      (card || target).scrollIntoView({ behavior: 'smooth', block: 'center' });
       if (typeof target.focus === 'function') {
         try {
           target.focus({ preventScroll: true });
@@ -1093,61 +1147,102 @@ const base = import.meta.env.BASE_URL;
     }
 
     /** @param {typeof academicContacts} list @param {'academic'|'employer'} type */
-    function validateContactList(list, type) {
+    function collectContactErrors(list, type) {
       const label = type === 'academic' ? '學術聯絡人' : '雇主聯絡人';
+      /** @type {ReturnType<typeof validationErr>[]} */
+      const errors = [];
       for (let i = 0; i < list.length; i++) {
         const c = list[i];
         const n = i + 1;
         const loc = (field) => ({ contactId: c.id, field });
-        if (!trimVal(c.title)) return validationErr(`${label} #${n}：請填寫 Title。`, loc('.field-title'));
+        if (!trimVal(c.title)) errors.push(validationErr(`${label} #${n}：請填寫 Title。`, loc('.field-title')));
         if (c.title === 'Other' && !trimVal(c.titleOther)) {
-          return validationErr(`${label} #${n}：Title 請填寫具體內容（不可只填 Other）。`, loc('.field-title'));
+          errors.push(validationErr(`${label} #${n}：Title 請填寫具體內容（不可只填 Other）。`, loc('.field-title')));
         }
-        if (!trimVal(c.firstName)) return validationErr(`${label} #${n}：請填寫 First Name。`, loc('.field-first-name'));
-        if (!trimVal(c.lastName)) return validationErr(`${label} #${n}：請填寫 Last Name。`, loc('.field-last-name'));
+        if (!trimVal(c.firstName)) errors.push(validationErr(`${label} #${n}：請填寫 First Name。`, loc('.field-first-name')));
+        if (!trimVal(c.lastName)) errors.push(validationErr(`${label} #${n}：請填寫 Last Name。`, loc('.field-last-name')));
         if (!trimVal(c.jobTitle)) {
-          return validationErr(`${label} #${n}：請填寫 ${type === 'academic' ? 'Job Title' : 'Position'}。`, loc('.field-job-title'));
+          errors.push(
+            validationErr(`${label} #${n}：請填寫 ${type === 'academic' ? 'Job Title' : 'Position'}。`, loc('.field-job-title')),
+          );
         }
         if (c.jobTitle === 'Other' && !trimVal(c.jobOther)) {
-          return validationErr(`${label} #${n}：${type === 'academic' ? 'Job Title' : 'Position'} 請填寫具體內容。`, loc('.field-job-title'));
+          errors.push(
+            validationErr(
+              `${label} #${n}：${type === 'academic' ? 'Job Title' : 'Position'} 請填寫具體內容。`,
+              loc('.field-job-title'),
+            ),
+          );
         }
         if (type === 'academic') {
-          if (!trimVal(c.department)) return validationErr(`${label} #${n}：請填寫 Department。`, loc('.field-department'));
-          if (!trimVal(c.subject)) return validationErr(`${label} #${n}：請填寫 Subject。`, loc('.field-subject'));
+          if (!trimVal(c.department)) errors.push(validationErr(`${label} #${n}：請填寫 Department。`, loc('.field-department')));
+          if (!trimVal(c.subject)) errors.push(validationErr(`${label} #${n}：請填寫 Subject。`, loc('.field-subject')));
           if (c.subject === 'Other' && !trimVal(c.subjectOther)) {
-            return validationErr(`${label} #${n}：Subject 請填寫具體內容。`, loc('.field-subject'));
+            errors.push(validationErr(`${label} #${n}：Subject 請填寫具體內容。`, loc('.field-subject')));
           }
         } else {
-          if (!trimVal(c.industry)) return validationErr(`${label} #${n}：請填寫 Industry。`, loc('.field-industry'));
+          if (!trimVal(c.industry)) errors.push(validationErr(`${label} #${n}：請填寫 Industry。`, loc('.field-industry')));
           if (c.industry === 'Other' && !trimVal(c.industryOther)) {
-            return validationErr(`${label} #${n}：Industry 請填寫具體內容。`, loc('.field-industry'));
+            errors.push(validationErr(`${label} #${n}：Industry 請填寫具體內容。`, loc('.field-industry')));
           }
         }
         if (!trimVal(c.institution)) {
-          return validationErr(
-            `${label} #${n}：請填寫 ${type === 'academic' ? 'Institution' : 'Company Name'}。`,
-            loc('.field-institution'),
+          errors.push(
+            validationErr(
+              `${label} #${n}：請填寫 ${type === 'academic' ? 'Institution' : 'Company Name'}。`,
+              loc('.field-institution'),
+            ),
           );
         }
-        if (!trimVal(c.country)) return validationErr(`${label} #${n}：請填寫 Country or Territory。`, loc('.field-country'));
+        if (!trimVal(c.country)) errors.push(validationErr(`${label} #${n}：請填寫 Country or Territory。`, loc('.field-country')));
         if (c.country === 'Other' && !trimVal(c.countryOther)) {
-          return validationErr(`${label} #${n}：Country 請填寫具體內容。`, loc('.field-country'));
+          errors.push(validationErr(`${label} #${n}：Country 請填寫具體內容。`, loc('.field-country')));
         }
         const emailErr = validateEmail(c.email);
-        if (emailErr) return validationErr(`${label} #${n}：${emailErr}。`, loc('.field-email'));
+        if (emailErr) errors.push(validationErr(`${label} #${n}：${emailErr}。`, loc('.field-email')));
       }
-      return null;
+      return errors;
+    }
+
+    function collectDuplicateEmailErrors() {
+      const errors = [];
+      const seen = new Map();
+      const check = (list, typeLabel) => {
+        list.forEach((c, i) => {
+          const email = normalizeEmail(c.email);
+          if (!email) return;
+          if (seen.has(email)) {
+            const prev = seen.get(email);
+            errors.push(
+              validationErr(
+                `${typeLabel} #${i + 1}：Email 與${prev.label} #${prev.n} 重複（${email}）。`,
+                { contactId: c.id, field: '.field-email' },
+              ),
+            );
+          } else {
+            seen.set(email, { label: typeLabel, n: i + 1 });
+          }
+        });
+      };
+      check(academicContacts, '學術聯絡人');
+      check(employerContacts, '雇主聯絡人');
+      return errors;
     }
 
     function validateAll() {
+      /** @type {ReturnType<typeof validationErr>[]} */
+      const errors = [];
       const unit = trimVal($('#submitter-unit').value);
       const submitter = trimVal($('#submitter-name').value);
-      if (!unit) return validationErr('請填寫提交單位。', { globalId: 'submitter-unit' });
-      if (!submitter) return validationErr('請填寫提交人姓名。', { globalId: 'submitter-name' });
+      if (!unit) errors.push(validationErr('請填寫提交單位。', { globalId: 'submitter-unit' }));
+      if (!submitter) errors.push(validationErr('請填寫提交人姓名。', { globalId: 'submitter-name' }));
       if (!academicContacts.length && !employerContacts.length) {
-        return validationErr('請至少新增一筆學術或雇主聯絡人。', { section: 'academic' });
+        errors.push(validationErr('請至少新增一筆學術或雇主聯絡人。', { section: 'academic' }));
       }
-      return validateContactList(academicContacts, 'academic') || validateContactList(employerContacts, 'employer');
+      errors.push(...collectContactErrors(academicContacts, 'academic'));
+      errors.push(...collectContactErrors(employerContacts, 'employer'));
+      errors.push(...collectDuplicateEmailErrors());
+      return errors;
     }
 
     /** @param {'en'|'zh'} lang */
@@ -1885,14 +1980,18 @@ const base = import.meta.env.BASE_URL;
 
       $('#btn-preview').addEventListener('click', () => {
         normalizeAllData();
-        const err = validateAll();
-        if (err) {
-          showError(err);
+        const errors = validateAll();
+        if (errors.length) {
+          showErrors(errors);
           return;
         }
         showError('');
         renderPreview();
         showStep(2);
+      });
+
+      $('#form-error-close')?.addEventListener('click', () => {
+        showError('');
       });
 
       $('#btn-back').addEventListener('click', () => {
@@ -1937,8 +2036,8 @@ const base = import.meta.env.BASE_URL;
         }));
         renderAllCards();
         if (saved.step === 2) {
-          const err = validateAll();
-          if (!err) {
+          const errors = validateAll();
+          if (!errors.length) {
             renderPreview();
             showStep(2);
             return;
