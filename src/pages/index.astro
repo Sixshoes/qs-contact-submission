@@ -157,7 +157,7 @@ const base = import.meta.env.BASE_URL;
             >
               匯入樣板
             </a>
-            。上傳後會先檢查欄位、選項、Email 等；<strong>全部通過</strong>即覆蓋並進入預覽頁。<strong>若有錯誤</strong>會先載入表單內容，並以右側浮標修正清單標示（可點選跳到欄位）。若表單已有聯絡人資料會先詢問是否覆蓋。表單選項請用下拉選擇；選 Other 後再填寫說明。Excel 匯入仍可直接輸入選單外文字（會自動視為 Other）。
+            。驗證通過會覆蓋並進入預覽；有錯誤則載入表單，並以右側浮標標示可點選修正。表單已有資料時會先確認。網頁請用下拉選單（Other 再開欄填寫）；Excel 可直接填選單外文字，會自動視為 Other。
           </p>
           <div class="import-zone" id="import-zone">
             <p class="text-sm text-slate-600">拖曳 .xlsx 到這裡，或</p>
@@ -266,7 +266,7 @@ const base = import.meta.env.BASE_URL;
           </div>
           <ul id="form-error-list" class="form-error-panel__list"></ul>
           <button type="button" id="form-error-jump-bottom" class="form-error-panel__jump">
-            跳轉到最下面（預覽按鈕）
+            跳轉到最下面
           </button>
         </aside>
       </section>
