@@ -179,7 +179,7 @@ const base = import.meta.env.BASE_URL;
           <div id="import-progress" class="import-progress hidden" role="status" aria-live="polite" aria-busy="false">
             <div class="import-progress__meta">
               <span class="import-progress__label">
-                <span id="import-progress-label">處理中…</span>
+                <span id="import-progress-label">處理中</span>
                 <span class="import-progress__dots" aria-hidden="true"><i></i><i></i><i></i></span>
               </span>
               <span id="import-progress-percent">0%</span>
@@ -281,7 +281,7 @@ const base = import.meta.env.BASE_URL;
           <div id="submit-progress" class="import-progress mt-4 hidden" role="status" aria-live="polite" aria-busy="false">
             <div class="import-progress__meta">
               <span class="import-progress__label">
-                <span id="submit-progress-label">提交中…</span>
+                <span id="submit-progress-label">提交中</span>
                 <span class="import-progress__dots" aria-hidden="true"><i></i><i></i><i></i></span>
               </span>
               <span id="submit-progress-percent">0%</span>
@@ -289,7 +289,7 @@ const base = import.meta.env.BASE_URL;
             <div class="import-progress__track" aria-hidden="true">
               <div id="submit-progress-bar" class="import-progress__bar"></div>
             </div>
-            <p id="submit-progress-footnote" class="import-progress__footnote hidden"></p>
+            <p id="submit-progress-footnote" class="import-progress__footnote hidden" role="note"></p>
           </div>
         </div>
       </section>
@@ -556,6 +556,10 @@ const base = import.meta.env.BASE_URL;
 
     const $ = (sel, root = document) => root.querySelector(sel);
     const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+
+    function formatProgressLabel(text, fallback = '處理中') {
+      return String(text || fallback).replace(/[.…⋯]+$/u, '').trim();
+    }
 
     function uid() {
       return `c_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -1445,7 +1449,7 @@ const base = import.meta.env.BASE_URL;
       });
     }
 
-    function setSubmitProgress({ label, percent, visible = true, footnote = '' }) {
+    function setSubmitProgress({ label, percent, visible = true, footnote = undefined }) {
       const wrap = $('#submit-progress');
       const bar = $('#submit-progress-bar');
       const labelEl = $('#submit-progress-label');
@@ -1454,7 +1458,7 @@ const base = import.meta.env.BASE_URL;
       if (!wrap) return;
       if (!visible) {
         wrap.classList.add('hidden');
-        wrap.classList.remove('import-progress--busy');
+        wrap.classList.remove('import-progress--busy', 'import-progress--sheet');
         wrap.setAttribute('aria-busy', 'false');
         footnoteEl?.classList.add('hidden');
         return;
@@ -1462,17 +1466,19 @@ const base = import.meta.env.BASE_URL;
       wrap.classList.remove('hidden');
       wrap.classList.add('import-progress--busy');
       wrap.setAttribute('aria-busy', 'true');
-      if (labelEl) labelEl.textContent = label || '提交中…';
+      if (labelEl) labelEl.textContent = formatProgressLabel(label, '提交中');
       const pct = Math.min(100, Math.max(0, percent ?? 0));
       if (bar) bar.style.width = `${pct}%`;
       if (pctEl) pctEl.textContent = `${pct}%`;
-      if (footnoteEl) {
+      if (footnoteEl && footnote !== undefined) {
         if (footnote) {
           footnoteEl.textContent = footnote;
           footnoteEl.classList.remove('hidden');
+          wrap.classList.add('import-progress--sheet');
         } else {
           footnoteEl.textContent = '';
           footnoteEl.classList.add('hidden');
+          wrap.classList.remove('import-progress--sheet');
         }
       }
     }
@@ -1483,7 +1489,7 @@ const base = import.meta.env.BASE_URL;
 
     async function submitToGoogleSheetsWithProgress(payload, onProgress) {
       const totalContacts = payload.academic.length + payload.employer.length;
-      const sheetFootnote = '試算表寫入中，請稍候勿關閉頁面；網路較慢時進度可能暫停，屬正常現象。';
+      const sheetFootnote = '試算表寫入中，請稍候勿關閉頁面；網路較慢時進度可能暫停在 72% 左右，屬正常現象。';
       onProgress({
         label: `上傳至試算表（${totalContacts} 筆）…`,
         percent: 22,
@@ -1543,8 +1549,8 @@ const base = import.meta.env.BASE_URL;
 
         if (GOOGLE_SCRIPT_URL) {
           try {
-            const cloud = await submitToGoogleSheetsWithProgress(payload, ({ label, percent }) =>
-              setSubmitProgress({ label, percent }),
+            const cloud = await submitToGoogleSheetsWithProgress(payload, (progress) =>
+              setSubmitProgress(progress),
             );
             lastSubmissionId = cloud.submissionId;
             lastSubmitTimestamp = cloud.timestamp || '';
@@ -1554,7 +1560,7 @@ const base = import.meta.env.BASE_URL;
             console.error(cloudErr);
             lastSubmitError = cloudErr?.message || String(cloudErr);
             lastSubmitMode = 'offline';
-            setSubmitProgress({ label: '試算表寫入失敗，改產生備份…', percent: 75 });
+            setSubmitProgress({ label: '試算表寫入失敗，改產生備份…', percent: 75, footnote: '' });
           }
         } else {
           lastSubmitMode = 'offline';
@@ -1721,7 +1727,7 @@ const base = import.meta.env.BASE_URL;
         wrap.classList.remove('hidden');
         wrap.classList.add('import-progress--busy');
         wrap.setAttribute('aria-busy', 'true');
-        if (labelEl) labelEl.textContent = label || '處理中…';
+        if (labelEl) labelEl.textContent = formatProgressLabel(label, '處理中');
         const pct = Math.min(100, Math.max(0, percent ?? 0));
         if (bar) bar.style.width = `${pct}%`;
         if (pctEl) pctEl.textContent = `${pct}%`;
