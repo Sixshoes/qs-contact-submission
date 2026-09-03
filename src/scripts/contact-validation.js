@@ -2,6 +2,8 @@
  * 聯絡人欄位驗證（表單與 Excel 匯入共用）
  */
 
+import { PRIOR_YEAR_CONTACTS } from '../data/prior-year-contacts.js';
+
 export const EMAIL_FORBIDDEN = /[\[\]{}();:,<>'#~=+"¬`!]/;
 
 /** 常見共用／團隊信箱前綴（匯入時擋下） */
@@ -30,6 +32,32 @@ export function collapseSpaces(v) {
 
 export function normalizeEmail(v) {
   return trimVal(v).replace(/\s+/g, '').toLowerCase();
+}
+
+/** @type {Map<string, typeof PRIOR_YEAR_CONTACTS>} */
+const priorYearByEmail = new Map();
+for (const rec of PRIOR_YEAR_CONTACTS) {
+  const list = priorYearByEmail.get(rec.email) || [];
+  list.push(rec);
+  priorYearByEmail.set(rec.email, list);
+}
+
+export function formatPriorYearRecord(rec) {
+  const poolLabel = rec.pool === 'academic' ? '學術' : '雇主';
+  const name = [rec.title, rec.firstName, rec.lastName].filter(Boolean).join(' ');
+  return [poolLabel + '／' + rec.sheet, name, rec.role, rec.unit, rec.org].filter(Boolean).join('｜');
+}
+
+/** @returns {typeof PRIOR_YEAR_CONTACTS} */
+export function findPriorYearMatches(email) {
+  return priorYearByEmail.get(normalizeEmail(email)) || [];
+}
+
+/** @returns {string|null} */
+export function priorYearEmailError(email) {
+  const matches = findPriorYearMatches(email);
+  if (!matches.length) return null;
+  return '此 Email 與去年已提交名單重複：' + matches.map(formatPriorYearRecord).join('；');
 }
 
 export function normalizePhone(v) {

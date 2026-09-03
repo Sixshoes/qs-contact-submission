@@ -18,6 +18,7 @@ import {
   validateImportContact,
   normalizeImportContact,
   normalizeEmail,
+  priorYearEmailError,
 } from './contact-validation.js';
 
 const MAX_CONTACTS = 100;
@@ -283,6 +284,25 @@ function checkDuplicateEmails(academic, employer) {
   return errors;
 }
 
+function checkPriorYearEmails(academic, employer) {
+  const errors = [];
+  const check = (list, sheet) => {
+    list.forEach((c, idx) => {
+      const msg = priorYearEmailError(c.email);
+      if (!msg) return;
+      errors.push({
+        sheet,
+        row: idx + 2,
+        field: 'Email',
+        message: msg,
+      });
+    });
+  };
+  check(academic, SHEET_ACADEMIC);
+  check(employer, SHEET_EMPLOYER);
+  return errors;
+}
+
 export async function parseImportWorkbook(buffer, options = {}) {
   const maxContacts = options.maxContacts ?? MAX_CONTACTS;
   const onProgress = options.onProgress;
@@ -339,6 +359,7 @@ export async function parseImportWorkbook(buffer, options = {}) {
   }
 
   errors.push(...checkDuplicateEmails(academicResult.contacts, employerResult.contacts));
+  errors.push(...checkPriorYearEmails(academicResult.contacts, employerResult.contacts));
 
   const academic = academicResult.contacts.slice(0, maxContacts).map((c) => normalizeImportContact(c, 'academic'));
   const employer = employerResult.contacts.slice(0, maxContacts).map((c) => normalizeImportContact(c, 'employer'));

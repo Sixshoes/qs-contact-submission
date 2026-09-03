@@ -117,6 +117,7 @@ const base = import.meta.env.BASE_URL;
             <li>• 請填寫聯絡人<strong>個人信箱或個人公務信箱</strong>，避免使用 team@、info@、admissions@ 等共用或團隊信箱。</li>
             <li>• 每位聯絡人僅填<strong>一組</strong> email。</li>
             <li>• 不同聯絡人請使用<strong>不同信箱</strong>；多人共用同一信箱時，QS 僅會寄送一次問卷邀請。</li>
+            <li>• 不可與<strong>去年已上載／替代（交換）名單</strong>重複；系統會擋下並顯示去年那筆資料。</li>
             <li>• 不可含空白，亦不可含 <code class="rounded bg-white px-1">[ ] { } ( ) ; : , &lt; &gt; ' # ~ = +</code> 等符號。</li>
           </ul>
         </details>
@@ -475,7 +476,7 @@ const base = import.meta.env.BASE_URL;
           </label>
           <input type="email" class="field-email input-field" required placeholder="例：name@univ.edu.tw（個人信箱或個人公務信箱）" />
           <p class="mt-1.5 text-xs leading-relaxed text-slate-500">
-            依 QS §2.8：個人信箱或個人公務信箱、僅填一組、勿填共用信箱、勿與其他聯絡人重複。
+            依 QS §2.8：個人信箱或個人公務信箱、僅填一組、勿填共用信箱、勿與其他聯絡人或去年已提交名單重複。
           </p>
         </div>
 
@@ -513,7 +514,7 @@ const base = import.meta.env.BASE_URL;
       createEmployerWorkbookBlob,
     } from '../scripts/excel-export.js';
     import { parseImportFile } from '../scripts/excel-import.js';
-    import { normalizeEmail as normalizeEmailImport, resolveFlexibleOption, displayOptionInput } from '../scripts/contact-validation.js';
+    import { normalizeEmail as normalizeEmailImport, priorYearEmailError, resolveFlexibleOption, displayOptionInput } from '../scripts/contact-validation.js';
     import {
       TITLES,
       ACADEMIC_JOB_TITLES,
@@ -1086,6 +1087,8 @@ const base = import.meta.env.BASE_URL;
       if (!e) return 'Email 為必填';
       if (EMAIL_FORBIDDEN.test(e)) return 'Email 含有不允許的字元';
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return 'Email 格式不正確';
+      const priorErr = priorYearEmailError(e);
+      if (priorErr) return priorErr;
       return null;
     }
 
