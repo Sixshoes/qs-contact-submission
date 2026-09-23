@@ -41,9 +41,9 @@ export function normalizeEmail(v) {
   return toHalfWidthAscii(trimVal(v)).replace(/\s+/g, '');
 }
 
-/** 比對用：去空白／全形後再轉小寫，不改實際寫入的大小寫 */
+/** 比對用：只清空白／全形，大小寫視為不同帳號 */
 export function emailKey(v) {
-  return normalizeEmail(v).toLowerCase();
+  return normalizeEmail(v);
 }
 
 /** @type {Map<string, typeof PRIOR_YEAR_CONTACTS>} */
@@ -85,7 +85,7 @@ export function validateEmail(email, { checkGeneric = true } = {}) {
   if (!e) return 'Email 為必填';
   if (EMAIL_FORBIDDEN.test(e)) return 'Email 含有不允許的字元';
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return 'Email 格式不正確';
-  if (checkGeneric && GENERIC_EMAIL_PREFIXES.some((p) => emailKey(e).startsWith(p))) {
+  if (checkGeneric && GENERIC_EMAIL_PREFIXES.some((p) => e.toLowerCase().startsWith(p))) {
     return '請勿使用 team@、info@ 等共用或團隊信箱';
   }
   return null;
