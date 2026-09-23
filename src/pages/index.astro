@@ -514,7 +514,7 @@ const base = import.meta.env.BASE_URL;
       createEmployerWorkbookBlob,
     } from '../scripts/excel-export.js';
     import { parseImportFile } from '../scripts/excel-import.js';
-    import { normalizeEmail as normalizeEmailImport, priorYearEmailError } from '../scripts/contact-validation.js';
+    import { normalizeEmail, emailKey, priorYearEmailError } from '../scripts/contact-validation.js';
     import {
       TITLES,
       ACADEMIC_JOB_TITLES,
@@ -675,11 +675,6 @@ const base = import.meta.env.BASE_URL;
     /** 去除前後空白，並將連續空白合併為單一空格 */
     function collapseSpaces(v) {
       return trimVal(v).replace(/\s+/g, ' ');
-    }
-
-    /** QS §2.8：email 不含空白，統一小寫 */
-    function normalizeEmail(v) {
-      return trimVal(v).replace(/\s+/g, '').toLowerCase();
     }
 
     /** Phone 去除空白（保留 + 與數字等符號） */
@@ -1303,9 +1298,10 @@ const base = import.meta.env.BASE_URL;
       const check = (list, typeLabel) => {
         list.forEach((c, i) => {
           const email = normalizeEmail(c.email);
-          if (!email) return;
-          if (seen.has(email)) {
-            const prev = seen.get(email);
+          const key = emailKey(email);
+          if (!key) return;
+          if (seen.has(key)) {
+            const prev = seen.get(key);
             errors.push(
               validationErr(
                 `${typeLabel} #${i + 1}：Email 與${prev.label} #${prev.n} 重複（${email}）。`,
@@ -1313,7 +1309,7 @@ const base = import.meta.env.BASE_URL;
               ),
             );
           } else {
-            seen.set(email, { label: typeLabel, n: i + 1 });
+            seen.set(key, { label: typeLabel, n: i + 1 });
           }
         });
       };

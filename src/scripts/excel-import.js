@@ -18,6 +18,7 @@ import {
   validateImportContact,
   normalizeImportContact,
   normalizeEmail,
+  emailKey,
   priorYearEmailError,
 } from './contact-validation.js';
 
@@ -264,10 +265,11 @@ function checkDuplicateEmails(academic, employer) {
   const check = (list, sheet) => {
     list.forEach((c, idx) => {
       const email = normalizeEmail(c.email);
-      if (!email) return;
+      const key = emailKey(email);
+      if (!key) return;
       const row = idx + 2;
-      if (seen.has(email)) {
-        const prev = seen.get(email);
+      if (seen.has(key)) {
+        const prev = seen.get(key);
         errors.push({
           sheet,
           row,
@@ -275,7 +277,7 @@ function checkDuplicateEmails(academic, employer) {
           message: `Email 與「${prev.sheet}」第 ${prev.row} 列重複（${email}）`,
         });
       } else {
-        seen.set(email, { sheet, row });
+        seen.set(key, { sheet, row });
       }
     });
   };

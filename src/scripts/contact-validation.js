@@ -30,16 +30,29 @@ export function collapseSpaces(v) {
   return trimVal(v).replace(/\s+/g, ' ');
 }
 
+/** 全形 ASCII（含 ＠、．）轉半形，避免中文輸入法造成 Email 格式誤判 */
+export function toHalfWidthAscii(v) {
+  return String(v ?? '')
+    .replace(/[\uFF01-\uFF5E]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
+    .replace(/\u3000/g, ' ');
+}
+
 export function normalizeEmail(v) {
-  return trimVal(v).replace(/\s+/g, '').toLowerCase();
+  return toHalfWidthAscii(trimVal(v)).replace(/\s+/g, '');
+}
+
+/** 比對用：去空白／全形後再轉小寫，不改實際寫入的大小寫 */
+export function emailKey(v) {
+  return normalizeEmail(v).toLowerCase();
 }
 
 /** @type {Map<string, typeof PRIOR_YEAR_CONTACTS>} */
 const priorYearByEmail = new Map();
 for (const rec of PRIOR_YEAR_CONTACTS) {
-  const list = priorYearByEmail.get(rec.email) || [];
+  const key = emailKey(rec.email);
+  const list = priorYearByEmail.get(key) || [];
   list.push(rec);
-  priorYearByEmail.set(rec.email, list);
+  priorYearByEmail.set(key, list);
 }
 
 export function formatPriorYearRecord(rec) {
@@ -50,7 +63,9 @@ export function formatPriorYearRecord(rec) {
 
 /** @returns {typeof PRIOR_YEAR_CONTACTS} */
 export function findPriorYearMatches(email) {
-  return priorYearByEmail.get(normalizeEmail(email)) || [];
+  const key = emailKey(email);
+  if (!key) return [];
+  return priorYearByEmail.get(key) || [];
 }
 
 /** @returns {string|null} */
@@ -70,7 +85,7 @@ export function validateEmail(email, { checkGeneric = true } = {}) {
   if (!e) return 'Email 為必填';
   if (EMAIL_FORBIDDEN.test(e)) return 'Email 含有不允許的字元';
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return 'Email 格式不正確';
-  if (checkGeneric && GENERIC_EMAIL_PREFIXES.some((p) => e.startsWith(p))) {
+  if (checkGeneric && GENERIC_EMAIL_PREFIXES.some((p) => emailKey(e).startsWith(p))) {
     return '請勿使用 team@、info@ 等共用或團隊信箱';
   }
   return null;
