@@ -273,6 +273,80 @@ select.input-field {
   transform: rotate(90deg);
 }
 
+.email-check-result {
+  @apply rounded-xl border border-slate-200 bg-white/90;
+}
+
+.email-check-table-wrap {
+  max-height: min(24rem, 50vh);
+  overflow: auto;
+}
+
+.email-check-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.email-check-table th,
+.email-check-table td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.email-check-table th {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  font-weight: 600;
+  color: #334155;
+  z-index: 1;
+}
+
+.email-check-table code {
+  font-size: 0.78rem;
+  word-break: break-all;
+}
+
+.email-check-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.email-check-badge--ok {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.email-check-badge--invalid {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.email-check-badge--prior,
+.email-check-badge--dup {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.email-check-row--ok td:nth-child(3) {
+  color: #047857;
+}
+
+.email-check-prior {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #7f1d1d;
+}
+
 .sticky-panel {
   box-shadow:
     0 1px 0 color-mix(in srgb, white 90%, transparent) inset,

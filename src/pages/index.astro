@@ -122,6 +122,28 @@ const base = import.meta.env.BASE_URL;
           </ul>
         </details>
 
+        <div class="card-panel space-y-4" id="email-check-panel">
+          <h2 class="panel-title">
+            <span class="panel-title-mark" aria-hidden="true"></span>
+            Email 快速檢查
+          </h2>
+          <p class="text-sm text-slate-600">
+            可貼上單筆或多筆信箱（換行、逗號、分號、空白皆可），檢查格式是否正確、是否與去年名單重複、以及清單內是否重複。
+          </p>
+          <label for="email-check-input" class="sr-only">貼上 Email</label>
+          <textarea
+            id="email-check-input"
+            class="input-field min-h-[8rem] font-mono text-sm"
+            placeholder="例：&#10;name@univ.edu.tw&#10;other@company.com&#10;或用逗號分隔：a@x.com, b@y.com"
+          ></textarea>
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" id="btn-email-check" class="btn-primary">檢查信箱</button>
+            <button type="button" id="btn-email-check-clear" class="btn-secondary">清除</button>
+            <p id="email-check-summary" class="text-sm text-slate-600"></p>
+          </div>
+          <div id="email-check-result" class="email-check-result hidden" role="status" aria-live="polite"></div>
+        </div>
+
         <div class="sticky-panel card-panel sticky top-0 z-20 space-y-4 supports-[backdrop-filter]:bg-white/95">
           <h2 class="panel-title">
             <span class="panel-title-mark" aria-hidden="true"></span>
@@ -514,7 +536,7 @@ const base = import.meta.env.BASE_URL;
       createEmployerWorkbookBlob,
     } from '../scripts/excel-export.js';
     import { parseImportFile } from '../scripts/excel-import.js';
-    import { normalizeEmail, emailKey, priorYearEmailError } from '../scripts/contact-validation.js';
+    import { normalizeEmail, emailKey, priorYearEmailError, inspectEmailList } from '../scripts/contact-validation.js';
     import {
       TITLES,
       ACADEMIC_JOB_TITLES,
@@ -2132,6 +2154,78 @@ const base = import.meta.env.BASE_URL;
       });
     }
 
+    function bindEmailCheck() {
+      const input = $('#email-check-input');
+      const result = $('#email-check-result');
+      const summary = $('#email-check-summary');
+      const btn = $('#btn-email-check');
+      const clearBtn = $('#btn-email-check-clear');
+      if (!input || !result || !btn) return;
+
+      const statusLabel = {
+        ok: '可使用',
+        invalid: '格式錯誤',
+        prior: '去年重複',
+        dup: '清單重複',
+      };
+
+      function runCheck() {
+        const report = inspectEmailList(input.value);
+        if (!report.total) {
+          summary.textContent = '';
+          result.classList.add('hidden');
+          result.innerHTML = '';
+          return;
+        }
+        const bad = report.total - report.ok;
+        summary.textContent = `共 ${report.total} 筆：可使用 ${report.ok}、需修正 ${bad}`;
+        result.classList.remove('hidden');
+        result.innerHTML = `
+          <div class="email-check-table-wrap">
+            <table class="email-check-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Email</th>
+                  <th>結果</th>
+                  <th>說明</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${report.rows
+                  .map((row, i) => {
+                    const detail = row.priorDetail
+                      ? `<div class="email-check-prior">${escapeHtml(row.priorDetail)}</div>`
+                      : '';
+                    return `<tr class="email-check-row--${row.status}">
+                      <td>${i + 1}</td>
+                      <td><code>${escapeHtml(row.email || row.raw)}</code></td>
+                      <td><span class="email-check-badge email-check-badge--${row.status}">${statusLabel[row.status]}</span></td>
+                      <td>${escapeHtml(row.message)}${detail}</td>
+                    </tr>`;
+                  })
+                  .join('')}
+              </tbody>
+            </table>
+          </div>`;
+      }
+
+      btn.addEventListener('click', runCheck);
+      clearBtn?.addEventListener('click', () => {
+        input.value = '';
+        summary.textContent = '';
+        result.classList.add('hidden');
+        result.innerHTML = '';
+        input.focus();
+      });
+      input.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          e.preventDefault();
+          runCheck();
+        }
+      });
+    }
+
     function bindGlobal() {
       $('#submitter-unit').addEventListener('input', saveState);
       $('#submitter-name').addEventListener('input', saveState);
@@ -2183,6 +2277,7 @@ const base = import.meta.env.BASE_URL;
 
     function init() {
       bindGlobal();
+      bindEmailCheck();
       bindImport();
       bindClearModal();
       const hint = $('#submit-hint');

@@ -68,11 +68,112 @@ export function findPriorYearMatches(email) {
   return priorYearByEmail.get(key) || [];
 }
 
+/** 寬鬆比對鍵：去尾點、不分大小寫（貼上檢查／常見貼錯用） */
+export function emailLookupKeyLoose(v) {
+  return normalizeEmail(v).replace(/\.+$/g, '').toLowerCase();
+}
+
+/** @type {Map<string, typeof PRIOR_YEAR_CONTACTS>} */
+const priorYearByEmailLoose = new Map();
+for (const rec of PRIOR_YEAR_CONTACTS) {
+  const key = emailLookupKeyLoose(rec.email);
+  if (!key) continue;
+  const list = priorYearByEmailLoose.get(key) || [];
+  list.push(rec);
+  priorYearByEmailLoose.set(key, list);
+}
+
+/** @returns {typeof PRIOR_YEAR_CONTACTS} */
+export function findPriorYearMatchesLoose(email) {
+  const key = emailLookupKeyLoose(email);
+  if (!key) return [];
+  return priorYearByEmailLoose.get(key) || [];
+}
+
 /** @returns {string|null} */
 export function priorYearEmailError(email) {
   const matches = findPriorYearMatches(email);
   if (!matches.length) return null;
   return '此 Email 與去年已提交名單重複：' + matches.map(formatPriorYearRecord).join('；');
+}
+
+/**
+ * 從文字拆出信箱候選（換行、逗號、分號、空白、頓號皆可）
+ * @param {string} text
+ * @returns {string[]}
+ */
+export function splitEmailCandidates(text) {
+  return String(text ?? '')
+    .split(/[\n\r\t,;，；、|]+/u)
+    .flatMap((part) => part.split(/\s+/u))
+    .map((s) => trimVal(s))
+    .filter(Boolean);
+}
+
+/**
+ * 單筆／多筆信箱檢查（格式＋去年重複＋清單內重複）
+ * @param {string} text
+ * @returns {{ total: number, ok: number, rows: { raw: string, email: string, status: 'ok'|'invalid'|'prior'|'dup', message: string, priorDetail?: string }[] }}
+ */
+export function inspectEmailList(text) {
+  const candidates = splitEmailCandidates(text);
+  /** @type {{ raw: string, email: string, status: 'ok'|'invalid'|'prior'|'dup', message: string, priorDetail?: string }[]} */
+  const rows = [];
+  const seenLoose = new Map();
+
+  for (const raw of candidates) {
+    const email = normalizeEmail(raw);
+    const formatErr = validateEmail(email, { checkGeneric: true });
+    if (formatErr) {
+      // 尾點常見貼錯：格式可能仍過，但再補一刀
+      rows.push({ raw, email, status: 'invalid', message: formatErr });
+      continue;
+    }
+        if (/\.$/.test(email)) {
+          const prior = findPriorYearMatchesLoose(email);
+          rows.push({
+            raw,
+            email,
+            status: prior.length ? 'prior' : 'invalid',
+            message: prior.length
+              ? '結尾多了句點，且與去年名單重複'
+              : 'Email 結尾多了句點，請檢查',
+            priorDetail: prior.length ? prior.map(formatPriorYearRecord).join('；') : undefined,
+          });
+          continue;
+        }
+
+    const loose = emailLookupKeyLoose(email);
+    const prior = findPriorYearMatchesLoose(email);
+    if (prior.length) {
+      rows.push({
+        raw,
+        email,
+        status: 'prior',
+        message: '與去年名單重複',
+        priorDetail: prior.map(formatPriorYearRecord).join('；'),
+      });
+      continue;
+    }
+
+    if (seenLoose.has(loose)) {
+      rows.push({
+        raw,
+        email,
+        status: 'dup',
+        message: `與清單第 ${seenLoose.get(loose)} 筆重複`,
+      });
+      continue;
+    }
+    seenLoose.set(loose, rows.length + 1);
+    rows.push({ raw, email, status: 'ok', message: '可使用' });
+  }
+
+  return {
+    total: rows.length,
+    ok: rows.filter((r) => r.status === 'ok').length,
+    rows,
+  };
 }
 
 export function normalizePhone(v) {
