@@ -18,8 +18,8 @@
 var SHEET_ID = '1pgNg_zFue_RQfiqejRNVcEEVTgi3dOWrLMT2TTX5O0s';
 
 var SHEET_SUBMISSIONS = '提交紀錄';
-var SHEET_ACADEMIC = '學術聯絡人';
-var SHEET_EMPLOYER = '雇主聯絡人';
+var SHEET_ACADEMIC = '2028學術聯絡人';
+var SHEET_EMPLOYER = '2028雇主聯絡人';
 var SHEET_PRIOR_ACADEMIC = '2027學術聯絡人';
 var SHEET_PRIOR_EMPLOYER = '2027雇主聯絡人';
 var TZ = 'Asia/Taipei';
