@@ -118,9 +118,12 @@ const base = import.meta.env.BASE_URL;
             <li>• 每位聯絡人僅填一組 email。</li>
             <li>• 不同聯絡人請使用不同信箱；多人共用同一信箱時，QS 僅會寄送一次問卷邀請。</li>
             <li>• 不可與去年名單重複；系統會擋下並顯示去年那筆資料。</li>
+            <li>• 若與<strong>今年已提交</strong>的信箱重複，系統會提示；您仍可送出，但重複筆會自動略過，只寫入尚未提交的。</li>
             <li>• 不可含空白，亦不可含 <code class="rounded bg-white px-1">[ ] ( ) ; : , &lt; &gt; ' # ~ = +</code> 等符號。</li>
           </ul>
         </details>
+
+        <div id="pool-dup-banner" class="pool-dup-banner hidden" role="status" aria-live="polite"></div>
 
         <div class="card-panel space-y-4" id="email-check-panel">
           <h2 class="panel-title">
@@ -128,7 +131,7 @@ const base = import.meta.env.BASE_URL;
             Email 快速檢查
           </h2>
           <p class="text-sm text-slate-600">
-            可貼上單筆或多筆信箱（換行、逗號、分號、空白皆可），檢查格式是否正確、是否與去年名單重複、以及清單內是否重複。
+            可貼上單筆或多筆信箱（換行、逗號、分號、空白皆可），檢查格式、去年重複、今年已提交，以及清單內重複。
           </p>
           <label for="email-check-input" class="sr-only">貼上 Email</label>
           <textarea
@@ -295,6 +298,7 @@ const base = import.meta.env.BASE_URL;
 
       <!-- ========== STEP 2 ========== -->
       <section id="step-2" class="hidden space-y-6">
+        <div id="pool-dup-banner-preview" class="pool-dup-banner hidden" role="status" aria-live="polite"></div>
         <div class="card-panel shadow-md">
           <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 class="text-lg font-semibold text-slate-900">確認提報名單</h2>
@@ -342,6 +346,7 @@ const base = import.meta.env.BASE_URL;
             下方 Excel 可下載備份。
           </p>
           <p id="submission-id-line" class="mt-3 hidden text-xs text-slate-500"></p>
+          <div id="submit-skip-summary" class="submit-skip-summary mt-4 hidden" role="status"></div>
         </div>
 
         <div class="card-panel shadow-md">
@@ -536,7 +541,14 @@ const base = import.meta.env.BASE_URL;
       createEmployerWorkbookBlob,
     } from '../scripts/excel-export.js';
     import { parseImportFile } from '../scripts/excel-import.js';
-    import { normalizeEmail, emailKey, priorYearEmailError, inspectEmailList } from '../scripts/contact-validation.js';
+    import {
+      normalizeEmail,
+      emailKey,
+      emailLookupKeyLoose,
+      priorYearEmailError,
+      inspectEmailList,
+      formatPoolRecord,
+    } from '../scripts/contact-validation.js';
     import {
       TITLES,
       ACADEMIC_JOB_TITLES,
@@ -574,6 +586,17 @@ const base = import.meta.env.BASE_URL;
     let lastSubmissionId = '';
     let lastSubmitTimestamp = '';
     let lastSubmitError = '';
+    /** @type {{ email: string, unit?: string, submitter?: string, firstName?: string, lastName?: string }[]} */
+    let lastSkippedAcademic = [];
+    /** @type {typeof lastSkippedAcademic} */
+    let lastSkippedEmployer = [];
+    let lastAcceptedAcademic = 0;
+    let lastAcceptedEmployer = 0;
+    /** @type {Map<string, { email: string, unit: string, submitter: string, firstName: string, lastName: string, type: 'academic'|'employer' }>} */
+    const poolAcademicByEmail = new Map();
+    /** @type {typeof poolAcademicByEmail} */
+    const poolEmployerByEmail = new Map();
+    let poolEmailsLoaded = false;
     /** @type {import('../scripts/excel-import.js').parseImportFile extends (f: any) => Promise<infer R> ? R | null : null} */
     let pendingImport = null;
 
@@ -860,7 +883,128 @@ const base = import.meta.env.BASE_URL;
       }
       showError('');
       renderPreview();
+      updatePoolDupBanners();
       showStep(2);
+    }
+
+    function findPoolMatch(email, type) {
+      const key = emailLookupKeyLoose(email);
+      if (!key) return null;
+      if (type === 'employer') return poolEmployerByEmail.get(key) || null;
+      if (type === 'academic') return poolAcademicByEmail.get(key) || null;
+      return poolAcademicByEmail.get(key) || poolEmployerByEmail.get(key) || null;
+    }
+
+    function collectPoolDupWarnings() {
+      /** @type {{ type: string, n: number, email: string, hit: NonNullable<ReturnType<typeof findPoolMatch>> }[]} */
+      const warnings = [];
+      academicContacts.forEach((c, i) => {
+        const hit = findPoolMatch(c.email, 'academic');
+        if (hit) warnings.push({ type: '學術', n: i + 1, email: normalizeEmail(c.email), hit });
+      });
+      employerContacts.forEach((c, i) => {
+        const hit = findPoolMatch(c.email, 'employer');
+        if (hit) warnings.push({ type: '雇主', n: i + 1, email: normalizeEmail(c.email), hit });
+      });
+      return warnings;
+    }
+
+    function updatePoolDupBanners() {
+      const warnings = collectPoolDupWarnings();
+      const html = warnings.length
+        ? `<p class="pool-dup-banner__title">有 ${warnings.length} 筆 Email 今年已提交過</p>
+           <p class="pool-dup-banner__desc">仍可送出：系統會<strong>自動略過重複</strong>，只寫入尚未進 Pool 的聯絡人。</p>
+           <ul class="pool-dup-banner__list">${warnings
+             .map(
+               (w) =>
+                 `<li>${w.type} #${w.n}：<code>${escapeHtml(w.email)}</code>　（已由 ${escapeHtml(formatPoolRecord(w.hit))}）</li>`,
+             )
+             .join('')}</ul>`
+        : '';
+      for (const id of ['pool-dup-banner', 'pool-dup-banner-preview']) {
+        const el = $(`#${id}`);
+        if (!el) continue;
+        if (!html) {
+          el.classList.add('hidden');
+          el.innerHTML = '';
+        } else {
+          el.classList.remove('hidden');
+          el.innerHTML = html;
+        }
+      }
+    }
+
+    function ingestPoolEmailLists(academic = [], employer = []) {
+      poolAcademicByEmail.clear();
+      poolEmployerByEmail.clear();
+      for (const rec of academic) {
+        const key = emailLookupKeyLoose(rec.email);
+        if (!key || poolAcademicByEmail.has(key)) continue;
+        poolAcademicByEmail.set(key, { ...rec, type: 'academic' });
+      }
+      for (const rec of employer) {
+        const key = emailLookupKeyLoose(rec.email);
+        if (!key || poolEmployerByEmail.has(key)) continue;
+        poolEmployerByEmail.set(key, { ...rec, type: 'employer' });
+      }
+      poolEmailsLoaded = true;
+      updatePoolDupBanners();
+    }
+
+    async function loadPoolEmails() {
+      if (!GOOGLE_SCRIPT_URL) return;
+      try {
+        const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=poolEmails`, {
+          method: 'GET',
+          redirect: 'follow',
+        });
+        const text = await res.text();
+        let parsed = null;
+        try {
+          parsed = JSON.parse(text);
+        } catch {
+          return;
+        }
+        if (!parsed || parsed.ok !== true) return;
+        ingestPoolEmailLists(parsed.academic || [], parsed.employer || []);
+      } catch (err) {
+        console.warn('無法載入今年 Pool 信箱清單', err);
+      }
+    }
+
+    function rememberAcceptedIntoPool(payload, skippedAcademic, skippedEmployer) {
+      const skippedA = new Set(
+        (skippedAcademic || []).map((s) => emailLookupKeyLoose(s.email)).filter(Boolean),
+      );
+      const skippedE = new Set(
+        (skippedEmployer || []).map((s) => emailLookupKeyLoose(s.email)).filter(Boolean),
+      );
+      for (const row of payload.academic || []) {
+        const email = normalizeEmail(row.Email);
+        const key = emailLookupKeyLoose(email);
+        if (!key || skippedA.has(key)) continue;
+        poolAcademicByEmail.set(key, {
+          email,
+          unit: payload.unit,
+          submitter: payload.submitter,
+          firstName: row['First Name'] || '',
+          lastName: row['Last Name'] || '',
+          type: 'academic',
+        });
+      }
+      for (const row of payload.employer || []) {
+        const email = normalizeEmail(row.Email);
+        const key = emailLookupKeyLoose(email);
+        if (!key || skippedE.has(key)) continue;
+        poolEmployerByEmail.set(key, {
+          email,
+          unit: payload.unit,
+          submitter: payload.submitter,
+          firstName: row['First Name'] || '',
+          lastName: row['Last Name'] || '',
+          type: 'employer',
+        });
+      }
     }
 
     let actionBarVisible = true;
@@ -951,6 +1095,7 @@ const base = import.meta.env.BASE_URL;
       if (c.subject !== 'Other') subjectOtherEl.value = '';
       c.phone = $('.field-phone', card).value;
       saveState();
+      updatePoolDupBanners();
     }
 
     /** @param {'academic'|'employer'} type */
@@ -1056,6 +1201,7 @@ const base = import.meta.env.BASE_URL;
         return;
       }
       updateContactCount();
+      updatePoolDupBanners();
     }
 
     /** @param {(info: { label: string, percent: number }) => void} [onProgress] */
@@ -1101,6 +1247,7 @@ const base = import.meta.env.BASE_URL;
       }
 
       updateContactCount();
+      updatePoolDupBanners();
       onProgress?.({ label: '載入完成', percent: 100 });
     }
 
@@ -1491,6 +1638,7 @@ const base = import.meta.env.BASE_URL;
 
       $('#confirm-unlock').value = '';
       $('#btn-submit').disabled = true;
+      updatePoolDupBanners();
     }
 
     function escapeHtml(str) {
@@ -1607,6 +1755,10 @@ const base = import.meta.env.BASE_URL;
         submissionId: parsed.submissionId || payload.submissionId,
         timestamp: parsed.timestamp || '',
         spreadsheetUrl: parsed.spreadsheetUrl || '',
+        academicCount: parsed.academicCount,
+        employerCount: parsed.employerCount,
+        skippedAcademic: Array.isArray(parsed.skippedAcademic) ? parsed.skippedAcademic : [],
+        skippedEmployer: Array.isArray(parsed.skippedEmployer) ? parsed.skippedEmployer : [],
         via: 'fetch',
       };
     }
@@ -1734,6 +1886,10 @@ const base = import.meta.env.BASE_URL;
       lastSubmissionId = '';
       lastSubmitTimestamp = '';
       lastSubmitError = '';
+      lastSkippedAcademic = [];
+      lastSkippedEmployer = [];
+      lastAcceptedAcademic = 0;
+      lastAcceptedEmployer = 0;
 
       const btn = $('#btn-submit');
       const backBtn = $('#btn-back');
@@ -1763,6 +1919,17 @@ const base = import.meta.env.BASE_URL;
             );
             lastSubmissionId = cloud.submissionId;
             lastSubmitTimestamp = cloud.timestamp || '';
+            lastSkippedAcademic = cloud.skippedAcademic || [];
+            lastSkippedEmployer = cloud.skippedEmployer || [];
+            lastAcceptedAcademic =
+              typeof cloud.academicCount === 'number'
+                ? cloud.academicCount
+                : Math.max(0, payload.academic.length - lastSkippedAcademic.length);
+            lastAcceptedEmployer =
+              typeof cloud.employerCount === 'number'
+                ? cloud.employerCount
+                : Math.max(0, payload.employer.length - lastSkippedEmployer.length);
+            rememberAcceptedIntoPool(payload, lastSkippedAcademic, lastSkippedEmployer);
             cloudOk = true;
             lastSubmitMode = 'online';
           } catch (cloudErr) {
@@ -1822,17 +1989,43 @@ const base = import.meta.env.BASE_URL;
       const titleEl = $('#success-title');
       const descEl = $('#success-desc');
       const idLine = $('#submission-id-line');
+      const skipEl = $('#submit-skip-summary');
 
       if (cloudOk) {
-        titleEl.textContent = '已提交成功';
-        descEl.textContent = '下方 Excel 可下載備份。';
+        const skippedN = lastSkippedAcademic.length + lastSkippedEmployer.length;
+        const acceptedN = lastAcceptedAcademic + lastAcceptedEmployer;
+        titleEl.textContent = skippedN ? '已提交成功（已略過重複）' : '已提交成功';
+        descEl.textContent = skippedN
+          ? `已寫入 Pool ${acceptedN} 筆；另有 ${skippedN} 筆 Email 今年已存在，已自動略過。下方 Excel 仍含您填寫的完整名單備份。`
+          : '下方 Excel 可下載備份。';
         if (lastSubmissionId) {
           idLine.textContent = lastSubmitTimestamp
-            ? `提交編號：${lastSubmissionId}　｜　時間戳：${lastSubmitTimestamp}`
-            : `提交編號：${lastSubmissionId}`;
+            ? `提交編號：${lastSubmissionId}　｜　時間戳：${lastSubmitTimestamp}　｜　寫入學術 ${lastAcceptedAcademic}／雇主 ${lastAcceptedEmployer}`
+            : `提交編號：${lastSubmissionId}　｜　寫入學術 ${lastAcceptedAcademic}／雇主 ${lastAcceptedEmployer}`;
           idLine.classList.remove('hidden');
         } else {
           idLine.classList.add('hidden');
+        }
+        if (skipEl) {
+          if (skippedN) {
+            const lines = [
+              ...lastSkippedAcademic.map(
+                (s) =>
+                  `學術：${escapeHtml(s.email)}（已由 ${escapeHtml(formatPoolRecord({ ...s, type: 'academic' }))}）`,
+              ),
+              ...lastSkippedEmployer.map(
+                (s) =>
+                  `雇主：${escapeHtml(s.email)}（已由 ${escapeHtml(formatPoolRecord({ ...s, type: 'employer' }))}）`,
+              ),
+            ];
+            skipEl.innerHTML = `<p class="submit-skip-summary__title">已自動略過的重複 Email</p><ul>${lines
+              .map((t) => `<li>${t}</li>`)
+              .join('')}</ul>`;
+            skipEl.classList.remove('hidden');
+          } else {
+            skipEl.classList.add('hidden');
+            skipEl.innerHTML = '';
+          }
         }
       } else {
         titleEl.textContent = '送出失敗';
@@ -1840,6 +2033,10 @@ const base = import.meta.env.BASE_URL;
           ? `無法寫入試算表（${lastSubmitError}）。請下載下方 Excel 備份。`
           : '無法寫入試算表。請下載下方 Excel 備份。';
         idLine.classList.add('hidden');
+        if (skipEl) {
+          skipEl.classList.add('hidden');
+          skipEl.innerHTML = '';
+        }
       }
 
       renderDownloadPanel();
@@ -1857,8 +2054,13 @@ const base = import.meta.env.BASE_URL;
       lastSubmissionId = '';
       lastSubmitTimestamp = '';
       lastSubmitError = '';
+      lastSkippedAcademic = [];
+      lastSkippedEmployer = [];
+      lastAcceptedAcademic = 0;
+      lastAcceptedEmployer = 0;
       renderAllCards();
       showError('');
+      updatePoolDupBanners();
       $('#confirm-unlock').value = '';
       $('#btn-submit').disabled = true;
       showStep(1);
@@ -2166,11 +2368,22 @@ const base = import.meta.env.BASE_URL;
         ok: '可使用',
         invalid: '格式錯誤',
         prior: '去年重複',
+        pool: '今年已提交',
         dup: '清單重複',
       };
 
       function runCheck() {
-        const report = inspectEmailList(input.value);
+        if (!poolEmailsLoaded && GOOGLE_SCRIPT_URL) {
+          loadPoolEmails().finally(() => runCheckCore());
+          return;
+        }
+        runCheckCore();
+      }
+
+      function runCheckCore() {
+        const report = inspectEmailList(input.value, {
+          findPool: (email) => findPoolMatch(email, null),
+        });
         if (!report.total) {
           summary.textContent = '';
           result.classList.add('hidden');
@@ -2178,7 +2391,7 @@ const base = import.meta.env.BASE_URL;
           return;
         }
         const bad = report.total - report.ok;
-        summary.textContent = `共 ${report.total} 筆：可使用 ${report.ok}、需修正 ${bad}`;
+        summary.textContent = `共 ${report.total} 筆：可使用 ${report.ok}、需注意 ${bad}`;
         result.classList.remove('hidden');
         result.innerHTML = `
           <div class="email-check-table-wrap">
@@ -2200,7 +2413,7 @@ const base = import.meta.env.BASE_URL;
                     return `<tr class="email-check-row--${row.status}">
                       <td>${i + 1}</td>
                       <td><code>${escapeHtml(row.email || row.raw)}</code></td>
-                      <td><span class="email-check-badge email-check-badge--${row.status}">${statusLabel[row.status]}</span></td>
+                      <td><span class="email-check-badge email-check-badge--${row.status}">${statusLabel[row.status] || row.status}</span></td>
                       <td>${escapeHtml(row.message)}${detail}</td>
                     </tr>`;
                   })
@@ -2284,6 +2497,7 @@ const base = import.meta.env.BASE_URL;
       if (hint && !GOOGLE_SCRIPT_URL) {
         hint.textContent = '可複製上方「我確定提交」以完成提交。送出後請下載 Excel 備份。';
       }
+      loadPoolEmails();
       const saved = loadState();
       if (saved && (saved.academicContacts?.length || saved.employerContacts?.length)) {
         $('#submitter-unit').value = saved.unit || '';

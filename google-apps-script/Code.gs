@@ -10,6 +10,10 @@
  * 2.（建議）把試算表網址中 /d/XXXX/edit 的 XXXX 貼到下方 SHEET_ID
  * 3. 部署 → 管理部署作業 → 編輯 → 版本選「新版本」→ 部署
  *    （執行身分：我；誰可以存取：所有人）
+ *
+ * 行為：
+ * - 同年同類型（學術／雇主）Email 已在 Pool → 寫入時自動略過，回傳 skipped 清單
+ * - GET ?action=poolEmails → 回傳現有信箱供前端提示
  */
 
 /** 可選：試算表 ID（網址 https://docs.google.com/spreadsheets/d/【這裡】/edit） */
@@ -29,25 +33,52 @@ function doPost(e) {
     var raw = extractPayload_(e);
     var data = JSON.parse(raw);
     var result = appendSubmission_(data);
-    // 已關閉寄信通知（NOTIFY_TO 為空）；資料仍會寫入試算表
     maybeNotify_(data, result);
     return jsonOut_({
       ok: true,
       submissionId: result.submissionId,
       timestamp: result.timestamp,
       spreadsheetUrl: result.spreadsheetUrl,
+      academicCount: result.academicCount,
+      employerCount: result.employerCount,
+      skippedAcademic: result.skippedAcademic,
+      skippedEmployer: result.skippedEmployer,
     });
   } catch (err) {
     return jsonOut_({ ok: false, error: String(err && err.message ? err.message : err) });
   }
 }
 
-function doGet() {
-  var ss = null;
+function doGet(e) {
+  var action = '';
+  try {
+    action = String((e && e.parameter && e.parameter.action) || '').trim();
+  } catch (err) {
+    action = '';
+  }
+
+  if (action === 'poolEmails') {
+    try {
+      var ss = getSpreadsheet_();
+      ensureSheets_(ss);
+      return jsonOut_({
+        ok: true,
+        academic: listPoolEmails_(ss.getSheetByName(SHEET_ACADEMIC)),
+        employer: listPoolEmails_(ss.getSheetByName(SHEET_EMPLOYER)),
+      });
+    } catch (err) {
+      return jsonOut_({
+        ok: false,
+        error: String(err && err.message ? err.message : err),
+        academic: [],
+        employer: [],
+      });
+    }
+  }
+
   var url = '';
   try {
-    ss = getSpreadsheet_();
-    url = ss.getUrl();
+    url = getSpreadsheet_().getUrl();
   } catch (err) {
     /* ignore */
   }
@@ -55,7 +86,7 @@ function doGet() {
     ok: true,
     service: 'QS contact pool receiver',
     spreadsheetUrl: url,
-    hint: 'Anyone can POST; rows append to one shared spreadsheet pool.',
+    hint: 'POST to append; GET ?action=poolEmails for existing emails. Same-year same-type duplicates are skipped on write.',
   });
 }
 
@@ -65,11 +96,9 @@ function extractPayload_(e) {
   }
   if (e && e.postData && e.postData.contents) {
     var contents = String(e.postData.contents);
-    // text/plain JSON
     if (contents.charAt(0) === '{' || contents.charAt(0) === '[') {
       return contents;
     }
-    // application/x-www-form-urlencoded
     if (e.parameter && e.parameter.payload) {
       return String(e.parameter.payload);
     }
@@ -94,6 +123,26 @@ function asText_(value) {
   return "'" + s;
 }
 
+function toHalfWidthAscii_(v) {
+  return String(v == null ? '' : v).replace(/[\uFF01-\uFF5E]/g, function (ch) {
+    return String.fromCharCode(ch.charCodeAt(0) - 0xfee0);
+  }).replace(/\u3000/g, ' ');
+}
+
+/** 寬鬆比對：去空白／全形、去尾點、不分大小寫 */
+function emailKeyLoose_(email) {
+  return toHalfWidthAscii_(email)
+    .replace(/\s+/g, '')
+    .replace(/\.+$/g, '')
+    .toLowerCase();
+}
+
+function cleanCellEmail_(value) {
+  var s = String(value == null ? '' : value).trim();
+  if (s.charAt(0) === "'") s = s.substring(1).trim();
+  return s;
+}
+
 /**
  * 優先順序：程式內 SHEET_ID → ScriptProperties → 綁定試算表 → 新建一本
  */
@@ -116,6 +165,89 @@ function getSpreadsheet_() {
   return created;
 }
 
+function colIndex_(headers, name) {
+  for (var i = 0; i < headers.length; i++) {
+    if (String(headers[i] || '').trim() === name) return i;
+  }
+  return -1;
+}
+
+/** @returns {Array<{email:string,unit:string,submitter:string,firstName:string,lastName:string}>} */
+function listPoolEmails_(sheet) {
+  var out = [];
+  if (!sheet || sheet.getLastRow() < 2) return out;
+  var data = sheet.getDataRange().getValues();
+  var headers = data[0];
+  var emailCol = colIndex_(headers, 'Email');
+  var unitCol = colIndex_(headers, '提交單位');
+  var submitterCol = colIndex_(headers, '提交人');
+  var firstCol = colIndex_(headers, 'First Name');
+  var lastCol = colIndex_(headers, 'Last Name');
+  if (emailCol < 0) return out;
+
+  var seen = {};
+  for (var r = 1; r < data.length; r++) {
+    var email = cleanCellEmail_(data[r][emailCol]);
+    var key = emailKeyLoose_(email);
+    if (!key || seen[key]) continue;
+    seen[key] = true;
+    out.push({
+      email: email,
+      unit: unitCol >= 0 ? String(data[r][unitCol] || '').trim() : '',
+      submitter: submitterCol >= 0 ? String(data[r][submitterCol] || '').trim() : '',
+      firstName: firstCol >= 0 ? String(data[r][firstCol] || '').trim() : '',
+      lastName: lastCol >= 0 ? String(data[r][lastCol] || '').trim() : '',
+    });
+  }
+  return out;
+}
+
+/** @returns {Object<string, {email:string,unit:string,submitter:string,firstName:string,lastName:string}>} */
+function indexPoolEmails_(sheet) {
+  var list = listPoolEmails_(sheet);
+  var map = {};
+  for (var i = 0; i < list.length; i++) {
+    map[emailKeyLoose_(list[i].email)] = list[i];
+  }
+  return map;
+}
+
+/**
+ * 略過已在 index 的信箱；本批寫入後也寫入 index，避免同一 POST 內重複。
+ * @returns {{kept: Object[], skipped: Object[]}}
+ */
+function filterNewContacts_(rows, index) {
+  var kept = [];
+  var skipped = [];
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i] || {};
+    var email = cleanCellEmail_(row.Email);
+    var key = emailKeyLoose_(email);
+    if (key && index[key]) {
+      skipped.push({
+        email: email,
+        unit: index[key].unit || '',
+        submitter: index[key].submitter || '',
+        firstName: index[key].firstName || '',
+        lastName: index[key].lastName || '',
+        existingEmail: index[key].email || email,
+      });
+      continue;
+    }
+    kept.push(row);
+    if (key) {
+      index[key] = {
+        email: email,
+        unit: '本批提交',
+        submitter: '',
+        firstName: String(row['First Name'] || '').trim(),
+        lastName: String(row['Last Name'] || '').trim(),
+      };
+    }
+  }
+  return { kept: kept, skipped: skipped };
+}
+
 function appendSubmission_(data) {
   var ss = getSpreadsheet_();
   ensureSheets_(ss);
@@ -123,15 +255,34 @@ function appendSubmission_(data) {
   var unit = String(data.unit || '').trim();
   var submitter = String(data.submitter || '').trim();
   var stamp = formatTimestamp_(new Date());
-  var academic = Array.isArray(data.academic) ? data.academic : [];
-  var employer = Array.isArray(data.employer) ? data.employer : [];
+  var academicIn = Array.isArray(data.academic) ? data.academic : [];
+  var employerIn = Array.isArray(data.employer) ? data.employer : [];
   var submissionId = String(data.submissionId || Utilities.getUuid());
 
   if (!unit || !submitter) {
     throw new Error('缺少提交單位或提交人姓名');
   }
-  if (!academic.length && !employer.length) {
+  if (!academicIn.length && !employerIn.length) {
     throw new Error('至少需要一筆學術或雇主聯絡人');
+  }
+
+  var academicIndex = indexPoolEmails_(ss.getSheetByName(SHEET_ACADEMIC));
+  var employerIndex = indexPoolEmails_(ss.getSheetByName(SHEET_EMPLOYER));
+  var academicFiltered = filterNewContacts_(academicIn, academicIndex);
+  var employerFiltered = filterNewContacts_(employerIn, employerIndex);
+  var academic = academicFiltered.kept;
+  var employer = employerFiltered.kept;
+  var skippedAcademic = academicFiltered.skipped;
+  var skippedEmployer = employerFiltered.skipped;
+
+  if (!academic.length && !employer.length) {
+    throw new Error(
+      '全部 Email 皆已在今年 Pool 中（學術略過 ' +
+        skippedAcademic.length +
+        '、雇主略過 ' +
+        skippedEmployer.length +
+        '），未寫入新資料',
+    );
   }
 
   ss.getSheetByName(SHEET_SUBMISSIONS).appendRow([
@@ -188,6 +339,8 @@ function appendSubmission_(data) {
     submissionId: submissionId,
     academicCount: academic.length,
     employerCount: employer.length,
+    skippedAcademic: skippedAcademic,
+    skippedEmployer: skippedEmployer,
     timestamp: stamp,
     spreadsheetUrl: ss.getUrl(),
   };
@@ -246,7 +399,6 @@ function ensureSheet_(ss, name, headers) {
     sheet.appendRow(headers);
     sheet.setFrozenRows(1);
   }
-  // Phone 欄位設為純文字，避免開頭 0 被吃掉
   var phoneCol = headers.indexOf('Phone (Optional)') + 1;
   if (phoneCol > 0) {
     sheet.getRange(1, phoneCol, Math.max(sheet.getMaxRows(), 1), 1).setNumberFormat('@');
@@ -258,14 +410,16 @@ function maybeNotify_(data, result) {
   var unit = String(data.unit || '');
   var submitter = String(data.submitter || '');
   var subject = '【QS聯絡人提報】' + unit + '－' + submitter;
+  var skippedA = (result.skippedAcademic && result.skippedAcademic.length) || 0;
+  var skippedE = (result.skippedEmployer && result.skippedEmployer.length) || 0;
   var body = [
     '已有單位寫入共用試算表 Pool。',
     '',
     '提交單位：' + unit,
     '提交人：' + submitter,
     '提交編號：' + result.submissionId,
-    '學術筆數：' + result.academicCount,
-    '雇主筆數：' + result.employerCount,
+    '學術筆數：' + result.academicCount + (skippedA ? '（略過重複 ' + skippedA + '）' : ''),
+    '雇主筆數：' + result.employerCount + (skippedE ? '（略過重複 ' + skippedE + '）' : ''),
     '時間戳：' + result.timestamp,
     '試算表：' + (result.spreadsheetUrl || ''),
   ].join('\n');

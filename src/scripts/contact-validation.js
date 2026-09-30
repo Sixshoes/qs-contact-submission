@@ -111,13 +111,26 @@ export function splitEmailCandidates(text) {
 }
 
 /**
- * 單筆／多筆信箱檢查（格式＋去年重複＋清單內重複）
- * @param {string} text
- * @returns {{ total: number, ok: number, rows: { raw: string, email: string, status: 'ok'|'invalid'|'prior'|'dup', message: string, priorDetail?: string }[] }}
+ * @param {{ email?: string, unit?: string, submitter?: string, firstName?: string, lastName?: string, type?: string }} rec
  */
-export function inspectEmailList(text) {
+export function formatPoolRecord(rec) {
+  const typeLabel = rec.type === 'employer' ? '雇主' : rec.type === 'academic' ? '學術' : '';
+  const name = [rec.firstName, rec.lastName].filter(Boolean).join(' ');
+  return [typeLabel, rec.unit, name, rec.submitter ? `提交人 ${rec.submitter}` : '']
+    .filter(Boolean)
+    .join('｜');
+}
+
+/**
+ * 單筆／多筆信箱檢查（格式＋去年重複＋今年 Pool＋清單內重複）
+ * @param {string} text
+ * @param {{ findPool?: (email: string) => null | { email?: string, unit?: string, submitter?: string, firstName?: string, lastName?: string, type?: string } }} [options]
+ * @returns {{ total: number, ok: number, rows: { raw: string, email: string, status: 'ok'|'invalid'|'prior'|'pool'|'dup', message: string, priorDetail?: string }[] }}
+ */
+export function inspectEmailList(text, options = {}) {
+  const findPool = options.findPool;
   const candidates = splitEmailCandidates(text);
-  /** @type {{ raw: string, email: string, status: 'ok'|'invalid'|'prior'|'dup', message: string, priorDetail?: string }[]} */
+  /** @type {{ raw: string, email: string, status: 'ok'|'invalid'|'prior'|'pool'|'dup', message: string, priorDetail?: string }[]} */
   const rows = [];
   const seenLoose = new Map();
 
@@ -125,23 +138,22 @@ export function inspectEmailList(text) {
     const email = normalizeEmail(raw);
     const formatErr = validateEmail(email, { checkGeneric: true });
     if (formatErr) {
-      // 尾點常見貼錯：格式可能仍過，但再補一刀
       rows.push({ raw, email, status: 'invalid', message: formatErr });
       continue;
     }
-        if (/\.$/.test(email)) {
-          const prior = findPriorYearMatchesLoose(email);
-          rows.push({
-            raw,
-            email,
-            status: prior.length ? 'prior' : 'invalid',
-            message: prior.length
-              ? '結尾多了句點，且與去年名單重複'
-              : 'Email 結尾多了句點，請檢查',
-            priorDetail: prior.length ? prior.map(formatPriorYearRecord).join('；') : undefined,
-          });
-          continue;
-        }
+    if (/\.$/.test(email)) {
+      const prior = findPriorYearMatchesLoose(email);
+      rows.push({
+        raw,
+        email,
+        status: prior.length ? 'prior' : 'invalid',
+        message: prior.length
+          ? '結尾多了句點，且與去年名單重複'
+          : 'Email 結尾多了句點，請檢查',
+        priorDetail: prior.length ? prior.map(formatPriorYearRecord).join('；') : undefined,
+      });
+      continue;
+    }
 
     const loose = emailLookupKeyLoose(email);
     const prior = findPriorYearMatchesLoose(email);
@@ -152,6 +164,18 @@ export function inspectEmailList(text) {
         status: 'prior',
         message: '與去年名單重複',
         priorDetail: prior.map(formatPriorYearRecord).join('；'),
+      });
+      continue;
+    }
+
+    const poolHit = typeof findPool === 'function' ? findPool(email) : null;
+    if (poolHit) {
+      rows.push({
+        raw,
+        email,
+        status: 'pool',
+        message: '今年已提交過（送出時會自動略過）',
+        priorDetail: formatPoolRecord(poolHit),
       });
       continue;
     }
