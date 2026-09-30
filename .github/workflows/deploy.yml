@@ -34,7 +34,7 @@ jobs:
         env:
           SITE: https://sixshoes.github.io
           BASE: /qs-contact-submission/
-          PUBLIC_GOOGLE_SCRIPT_URL: https://script.google.com/macros/s/AKfycbwDOeSWr18y1-mirydOudp3EVTmS481h0JSPkeeUoO3beoVr05sL5XhDU6uVCOvrjxp_g/exec
+          PUBLIC_GOOGLE_SCRIPT_URL: https://script.google.com/macros/s/AKfycbzRS2On9J60R37GHPm7_dwlTP4tzLQDob5yDWHIQ3Fl-W12cPogA3wkc1Qa1DOipV7NOA/exec
         run: npm run build
 
       - name: Upload Pages artifact
