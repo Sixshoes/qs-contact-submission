@@ -94,7 +94,18 @@ export function findPriorYearMatchesLoose(email) {
 export function priorYearEmailError(email) {
   const matches = findPriorYearMatches(email);
   if (!matches.length) return null;
-  return '此 Email 與去年已提交名單重複：' + matches.map(formatPriorYearRecord).join('；');
+  return '與去年重複';
+}
+
+/**
+ * @param {{ email?: string, unit?: string, submitter?: string, firstName?: string, lastName?: string, type?: string }} rec
+ * @returns {string}
+ */
+export function poolYearEmailError(rec) {
+  const who = [rec?.unit, rec?.submitter ? `提交人 ${rec.submitter}` : '']
+    .filter(Boolean)
+    .join('／');
+  return who ? `今年已由「${who}」提交` : '今年已提交過';
 }
 
 /**
@@ -147,10 +158,7 @@ export function inspectEmailList(text, options = {}) {
         raw,
         email,
         status: prior.length ? 'prior' : 'invalid',
-        message: prior.length
-          ? '結尾多了句點，且與去年名單重複'
-          : 'Email 結尾多了句點，請檢查',
-        priorDetail: prior.length ? prior.map(formatPriorYearRecord).join('；') : undefined,
+        message: prior.length ? '結尾多了句點，且與去年重複' : 'Email 結尾多了句點，請檢查',
       });
       continue;
     }
@@ -162,8 +170,7 @@ export function inspectEmailList(text, options = {}) {
         raw,
         email,
         status: 'prior',
-        message: '與去年名單重複',
-        priorDetail: prior.map(formatPriorYearRecord).join('；'),
+        message: '與去年重複',
       });
       continue;
     }
@@ -174,7 +181,7 @@ export function inspectEmailList(text, options = {}) {
         raw,
         email,
         status: 'pool',
-        message: '今年已提交過（送出時會自動略過）',
+        message: poolYearEmailError(poolHit),
         priorDetail: formatPoolRecord(poolHit),
       });
       continue;

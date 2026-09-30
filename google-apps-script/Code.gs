@@ -12,8 +12,8 @@
  *    （執行身分：我；誰可以存取：所有人）
  *
  * 行為：
- * - 同年同類型（學術／雇主）Email 已在 Pool → 寫入時自動略過，回傳 skipped 清單
- * - GET ?action=poolEmails → 回傳現有信箱供前端提示
+ * - 同年同類型（學術／雇主）Email 已在 Pool → 整批拒絕（前端亦會擋）
+ * - GET ?action=poolEmails → 回傳現有信箱供前端擋重複並顯示提交單位
  */
 
 /** 可選：試算表 ID（網址 https://docs.google.com/spreadsheets/d/【這裡】/edit） */
@@ -41,8 +41,6 @@ function doPost(e) {
       spreadsheetUrl: result.spreadsheetUrl,
       academicCount: result.academicCount,
       employerCount: result.employerCount,
-      skippedAcademic: result.skippedAcademic,
-      skippedEmployer: result.skippedEmployer,
     });
   } catch (err) {
     return jsonOut_({ ok: false, error: String(err && err.message ? err.message : err) });
@@ -86,7 +84,7 @@ function doGet(e) {
     ok: true,
     service: 'QS contact pool receiver',
     spreadsheetUrl: url,
-    hint: 'POST to append; GET ?action=poolEmails for existing emails. Same-year same-type duplicates are skipped on write.',
+    hint: 'POST to append; GET ?action=poolEmails for existing emails. Same-year same-type duplicates are rejected.',
   });
 }
 
@@ -212,40 +210,25 @@ function indexPoolEmails_(sheet) {
   return map;
 }
 
-/**
- * 略過已在 index 的信箱；本批寫入後也寫入 index，避免同一 POST 內重複。
- * @returns {{kept: Object[], skipped: Object[]}}
- */
-function filterNewContacts_(rows, index) {
-  var kept = [];
-  var skipped = [];
+function findPoolDupes_(rows, index, typeLabel) {
+  var hits = [];
+  var seenBatch = {};
   for (var i = 0; i < rows.length; i++) {
     var row = rows[i] || {};
     var email = cleanCellEmail_(row.Email);
     var key = emailKeyLoose_(email);
-    if (key && index[key]) {
-      skipped.push({
-        email: email,
-        unit: index[key].unit || '',
-        submitter: index[key].submitter || '',
-        firstName: index[key].firstName || '',
-        lastName: index[key].lastName || '',
-        existingEmail: index[key].email || email,
-      });
-      continue;
-    }
-    kept.push(row);
-    if (key) {
-      index[key] = {
-        email: email,
-        unit: '本批提交',
-        submitter: '',
-        firstName: String(row['First Name'] || '').trim(),
-        lastName: String(row['Last Name'] || '').trim(),
-      };
+    if (!key) continue;
+    if (index[key]) {
+      var who = index[key].unit || '';
+      if (index[key].submitter) who += (who ? '／' : '') + '提交人 ' + index[key].submitter;
+      hits.push(typeLabel + ' ' + email + (who ? '（今年已由「' + who + '」提交）' : '（今年已提交過）'));
+    } else if (seenBatch[key]) {
+      hits.push(typeLabel + ' ' + email + '（本批名單內重複）');
+    } else {
+      seenBatch[key] = true;
     }
   }
-  return { kept: kept, skipped: skipped };
+  return hits;
 }
 
 function appendSubmission_(data) {
@@ -255,34 +238,24 @@ function appendSubmission_(data) {
   var unit = String(data.unit || '').trim();
   var submitter = String(data.submitter || '').trim();
   var stamp = formatTimestamp_(new Date());
-  var academicIn = Array.isArray(data.academic) ? data.academic : [];
-  var employerIn = Array.isArray(data.employer) ? data.employer : [];
+  var academic = Array.isArray(data.academic) ? data.academic : [];
+  var employer = Array.isArray(data.employer) ? data.employer : [];
   var submissionId = String(data.submissionId || Utilities.getUuid());
 
   if (!unit || !submitter) {
     throw new Error('缺少提交單位或提交人姓名');
   }
-  if (!academicIn.length && !employerIn.length) {
+  if (!academic.length && !employer.length) {
     throw new Error('至少需要一筆學術或雇主聯絡人');
   }
 
   var academicIndex = indexPoolEmails_(ss.getSheetByName(SHEET_ACADEMIC));
   var employerIndex = indexPoolEmails_(ss.getSheetByName(SHEET_EMPLOYER));
-  var academicFiltered = filterNewContacts_(academicIn, academicIndex);
-  var employerFiltered = filterNewContacts_(employerIn, employerIndex);
-  var academic = academicFiltered.kept;
-  var employer = employerFiltered.kept;
-  var skippedAcademic = academicFiltered.skipped;
-  var skippedEmployer = employerFiltered.skipped;
-
-  if (!academic.length && !employer.length) {
-    throw new Error(
-      '全部 Email 皆已在今年 Pool 中（學術略過 ' +
-        skippedAcademic.length +
-        '、雇主略過 ' +
-        skippedEmployer.length +
-        '），未寫入新資料',
-    );
+  var dupHits = []
+    .concat(findPoolDupes_(academic, academicIndex, '學術'))
+    .concat(findPoolDupes_(employer, employerIndex, '雇主'));
+  if (dupHits.length) {
+    throw new Error('Email 與今年 Pool 重複，未寫入：' + dupHits.join('；'));
   }
 
   ss.getSheetByName(SHEET_SUBMISSIONS).appendRow([
@@ -339,8 +312,6 @@ function appendSubmission_(data) {
     submissionId: submissionId,
     academicCount: academic.length,
     employerCount: employer.length,
-    skippedAcademic: skippedAcademic,
-    skippedEmployer: skippedEmployer,
     timestamp: stamp,
     spreadsheetUrl: ss.getUrl(),
   };
@@ -410,16 +381,14 @@ function maybeNotify_(data, result) {
   var unit = String(data.unit || '');
   var submitter = String(data.submitter || '');
   var subject = '【QS聯絡人提報】' + unit + '－' + submitter;
-  var skippedA = (result.skippedAcademic && result.skippedAcademic.length) || 0;
-  var skippedE = (result.skippedEmployer && result.skippedEmployer.length) || 0;
   var body = [
     '已有單位寫入共用試算表 Pool。',
     '',
     '提交單位：' + unit,
     '提交人：' + submitter,
     '提交編號：' + result.submissionId,
-    '學術筆數：' + result.academicCount + (skippedA ? '（略過重複 ' + skippedA + '）' : ''),
-    '雇主筆數：' + result.employerCount + (skippedE ? '（略過重複 ' + skippedE + '）' : ''),
+    '學術筆數：' + result.academicCount,
+    '雇主筆數：' + result.employerCount,
     '時間戳：' + result.timestamp,
     '試算表：' + (result.spreadsheetUrl || ''),
   ].join('\n');
