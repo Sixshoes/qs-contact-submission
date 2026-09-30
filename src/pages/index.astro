@@ -929,11 +929,15 @@ const base = import.meta.env.BASE_URL;
       poolEmailsLoaded = true;
     }
 
-    async function loadPoolEmails() {
-      if (!GOOGLE_SCRIPT_URL) return;
+    async function loadPoolEmails({ force = false } = {}) {
+      if (!GOOGLE_SCRIPT_URL) return false;
+      if (poolEmailsLoaded && !force) return true;
       try {
-        const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=poolEmails`, {
-          method: 'GET',
+        // 用 POST，避免 Apps Script 轉址時弄丟 ?action=
+        const res = await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'poolEmails' }),
           redirect: 'follow',
         });
         const text = await res.text();
@@ -941,12 +945,18 @@ const base = import.meta.env.BASE_URL;
         try {
           parsed = JSON.parse(text);
         } catch {
-          return;
+          console.warn('今年 Pool 回應不是 JSON', text.slice(0, 200));
+          return false;
         }
-        if (!parsed || parsed.ok !== true) return;
+        if (!parsed || parsed.ok !== true) {
+          console.warn('無法載入今年 Pool 信箱清單', parsed && parsed.error);
+          return false;
+        }
         ingestPoolEmailLists(parsed.academic || [], parsed.employer || []);
+        return true;
       } catch (err) {
         console.warn('無法載入今年 Pool 信箱清單', err);
+        return false;
       }
     }
 
@@ -2313,10 +2323,10 @@ const base = import.meta.env.BASE_URL;
         dup: '清單重複',
       };
 
-      function runCheck() {
-        if (!poolEmailsLoaded && GOOGLE_SCRIPT_URL) {
-          loadPoolEmails().finally(() => runCheckCore());
-          return;
+      async function runCheck() {
+        summary.textContent = '檢查中…';
+        if (GOOGLE_SCRIPT_URL) {
+          await loadPoolEmails({ force: !poolEmailsLoaded });
         }
         runCheckCore();
       }
@@ -2326,13 +2336,16 @@ const base = import.meta.env.BASE_URL;
           findPool: (email) => findPoolMatch(email, null),
         });
         if (!report.total) {
-          summary.textContent = '';
+          summary.textContent = poolEmailsLoaded
+            ? ''
+            : '尚未載入今年 Pool（請確認 Apps Script 已部署新版本）';
           result.classList.add('hidden');
           result.innerHTML = '';
           return;
         }
         const bad = report.total - report.ok;
-        summary.textContent = `共 ${report.total} 筆：可使用 ${report.ok}、需注意 ${bad}`;
+        const poolNote = poolEmailsLoaded ? '' : '（今年名單未載入）';
+        summary.textContent = `共 ${report.total} 筆：可使用 ${report.ok}、需注意 ${bad}${poolNote}`;
         result.classList.remove('hidden');
         result.innerHTML = `
           <div class="email-check-table-wrap">

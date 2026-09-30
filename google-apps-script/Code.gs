@@ -13,11 +13,11 @@
  *
  * 行為：
  * - 同年同類型（學術／雇主）Email 已在 Pool → 整批拒絕（前端亦會擋）
- * - GET ?action=poolEmails → 回傳現有信箱供前端擋重複並顯示提交單位
+ * - POST { "action":"poolEmails" } → 回傳現有信箱（供表單／信箱檢測擋今年重複）
  */
 
-/** 可選：試算表 ID（網址 https://docs.google.com/spreadsheets/d/【這裡】/edit） */
-var SHEET_ID = '';
+/** 試算表 ID（網址 https://docs.google.com/spreadsheets/d/【這裡】/edit） */
+var SHEET_ID = '1pgNg_zFue_RQfiqejRNVcEEVTgi3dOWrLMT2TTX5O0s';
 
 /** 設成 [] 或註解掉就不寄信；需要通知時再填信箱 */
 var NOTIFY_TO = [];
@@ -32,6 +32,9 @@ function doPost(e) {
   try {
     var raw = extractPayload_(e);
     var data = JSON.parse(raw);
+    if (data && data.action === 'poolEmails') {
+      return poolEmailsOut_();
+    }
     var result = appendSubmission_(data);
     maybeNotify_(data, result);
     return jsonOut_({
@@ -56,22 +59,7 @@ function doGet(e) {
   }
 
   if (action === 'poolEmails') {
-    try {
-      var ss = getSpreadsheet_();
-      ensureSheets_(ss);
-      return jsonOut_({
-        ok: true,
-        academic: listPoolEmails_(ss.getSheetByName(SHEET_ACADEMIC)),
-        employer: listPoolEmails_(ss.getSheetByName(SHEET_EMPLOYER)),
-      });
-    } catch (err) {
-      return jsonOut_({
-        ok: false,
-        error: String(err && err.message ? err.message : err),
-        academic: [],
-        employer: [],
-      });
-    }
+    return poolEmailsOut_();
   }
 
   var url = '';
@@ -84,8 +72,27 @@ function doGet(e) {
     ok: true,
     service: 'QS contact pool receiver',
     spreadsheetUrl: url,
-    hint: 'POST to append; GET ?action=poolEmails for existing emails. Same-year same-type duplicates are rejected.',
+    hint: 'POST JSON to append contacts, or POST/GET action=poolEmails for existing emails.',
   });
+}
+
+function poolEmailsOut_() {
+  try {
+    var ss = getSpreadsheet_();
+    ensureSheets_(ss);
+    return jsonOut_({
+      ok: true,
+      academic: listPoolEmails_(ss.getSheetByName(SHEET_ACADEMIC)),
+      employer: listPoolEmails_(ss.getSheetByName(SHEET_EMPLOYER)),
+    });
+  } catch (err) {
+    return jsonOut_({
+      ok: false,
+      error: String(err && err.message ? err.message : err),
+      academic: [],
+      employer: [],
+    });
+  }
 }
 
 function extractPayload_(e) {
