@@ -123,8 +123,6 @@ const base = import.meta.env.BASE_URL;
           </ul>
         </details>
 
-        <div id="pool-dup-banner" class="pool-dup-banner hidden" role="status" aria-live="polite"></div>
-
         <div class="card-panel space-y-4" id="email-check-panel">
           <h2 class="panel-title">
             <span class="panel-title-mark" aria-hidden="true"></span>
@@ -298,7 +296,6 @@ const base = import.meta.env.BASE_URL;
 
       <!-- ========== STEP 2 ========== -->
       <section id="step-2" class="hidden space-y-6">
-        <div id="pool-dup-banner-preview" class="pool-dup-banner hidden" role="status" aria-live="polite"></div>
         <div class="card-panel shadow-md">
           <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 class="text-lg font-semibold text-slate-900">確認提報名單</h2>
@@ -874,13 +871,11 @@ const base = import.meta.env.BASE_URL;
       }
       const errors = validateAll();
       if (errors.length) {
-        updatePoolDupBanners();
         showErrors(errors);
         return;
       }
       showError('');
       renderPreview();
-      updatePoolDupBanners();
       showStep(2);
     }
 
@@ -918,39 +913,6 @@ const base = import.meta.env.BASE_URL;
       return errors;
     }
 
-    function updatePoolDupBanners() {
-      const hits = [];
-      academicContacts.forEach((c, i) => {
-        const hit = findPoolMatch(c.email, 'academic');
-        if (hit) hits.push({ type: '學術', n: i + 1, email: normalizeEmail(c.email), hit });
-      });
-      employerContacts.forEach((c, i) => {
-        const hit = findPoolMatch(c.email, 'employer');
-        if (hit) hits.push({ type: '雇主', n: i + 1, email: normalizeEmail(c.email), hit });
-      });
-      const html = hits.length
-        ? `<p class="pool-dup-banner__title">有 ${hits.length} 筆 Email 今年已提交，無法送出</p>
-           <p class="pool-dup-banner__desc">請移除或更換下列信箱後再預覽／提交。</p>
-           <ul class="pool-dup-banner__list">${hits
-             .map(
-               (w) =>
-                 `<li>${w.type} #${w.n}：<code>${escapeHtml(w.email)}</code>　（${escapeHtml(poolYearEmailError(w.hit))}）</li>`,
-             )
-             .join('')}</ul>`
-        : '';
-      for (const id of ['pool-dup-banner', 'pool-dup-banner-preview']) {
-        const el = $(`#${id}`);
-        if (!el) continue;
-        if (!html) {
-          el.classList.add('hidden');
-          el.innerHTML = '';
-        } else {
-          el.classList.remove('hidden');
-          el.innerHTML = html;
-        }
-      }
-    }
-
     function ingestPoolEmailLists(academic = [], employer = []) {
       poolAcademicByEmail.clear();
       poolEmployerByEmail.clear();
@@ -965,7 +927,6 @@ const base = import.meta.env.BASE_URL;
         poolEmployerByEmail.set(key, { ...rec, type: 'employer' });
       }
       poolEmailsLoaded = true;
-      updatePoolDupBanners();
     }
 
     async function loadPoolEmails() {
@@ -1106,7 +1067,6 @@ const base = import.meta.env.BASE_URL;
       if (c.subject !== 'Other') subjectOtherEl.value = '';
       c.phone = $('.field-phone', card).value;
       saveState();
-      updatePoolDupBanners();
     }
 
     /** @param {'academic'|'employer'} type */
@@ -1212,7 +1172,6 @@ const base = import.meta.env.BASE_URL;
         return;
       }
       updateContactCount();
-      updatePoolDupBanners();
     }
 
     /** @param {(info: { label: string, percent: number }) => void} [onProgress] */
@@ -1258,7 +1217,6 @@ const base = import.meta.env.BASE_URL;
       }
 
       updateContactCount();
-      updatePoolDupBanners();
       onProgress?.({ label: '載入完成', percent: 100 });
     }
 
@@ -1650,7 +1608,6 @@ const base = import.meta.env.BASE_URL;
 
       $('#confirm-unlock').value = '';
       $('#btn-submit').disabled = true;
-      updatePoolDupBanners();
     }
 
     function escapeHtml(str) {
@@ -2022,7 +1979,6 @@ const base = import.meta.env.BASE_URL;
       lastSubmitError = '';
       renderAllCards();
       showError('');
-      updatePoolDupBanners();
       $('#confirm-unlock').value = '';
       $('#btn-submit').disabled = true;
       showStep(1);

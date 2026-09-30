@@ -352,38 +352,6 @@ select.input-field {
   color: #7f1d1d;
 }
 
-.pool-dup-banner {
-  border-radius: 0.9rem;
-  border: 1px solid #fecaca;
-  background: #fef2f2;
-  padding: 0.9rem 1rem;
-  color: #991b1b;
-}
-
-.pool-dup-banner__title {
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.pool-dup-banner__desc {
-  margin-top: 0.25rem;
-  font-size: 0.8rem;
-  line-height: 1.5;
-}
-
-.pool-dup-banner__list {
-  margin-top: 0.55rem;
-  font-size: 0.78rem;
-  line-height: 1.55;
-  list-style: disc;
-  padding-left: 1.1rem;
-}
-
-.pool-dup-banner__list code {
-  font-size: 0.75rem;
-  word-break: break-all;
-}
-
 .sticky-panel {
   box-shadow:
     0 1px 0 color-mix(in srgb, white 90%, transparent) inset,
