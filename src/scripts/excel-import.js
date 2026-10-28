@@ -2,6 +2,8 @@ import ExcelJS from 'exceljs';
 import {
   ACADEMIC_EXCEL_HEADERS_EN,
   EMPLOYER_EXCEL_HEADERS_EN,
+  ACADEMIC_FILL_HEADERS,
+  EMPLOYER_FILL_HEADERS,
   ACADEMIC_IMPORT_TEMPLATE_HEADERS,
   EMPLOYER_IMPORT_TEMPLATE_HEADERS,
   TITLES,
@@ -27,7 +29,32 @@ const MAX_CONTACTS = 100;
 const SHEET_ACADEMIC = '學術聯絡人';
 const SHEET_EMPLOYER = '雇主聯絡人';
 
-const PLACEHOLDER_HINTS = ['請改為實際', 'example', '範例', '（請改', '(請改'];
+const PLACEHOLDER_HINTS = ['請改為實際', 'example', '範例', '參考範例', '（請改', '(請改'];
+
+/** 表頭別名 → 內部標準欄名（填寫樣板／舊版 QS 樣板共用） */
+const HEADER_ALIASES = [
+  [/^(source|來源)$/i, 'Source'],
+  [/^(title|稱謂)$/i, 'Title'],
+  [/^(title\s*other)$/i, 'Title Other'],
+  [/^(first\s*name|名字|名)$/i, 'First Name'],
+  [/^(last\s*name|姓氏|姓)$/i, 'Last Name'],
+  [/^(job\s*title|職稱)$/i, 'Job Title'],
+  [/^(job\s*title\s*other)$/i, 'Job Title Other'],
+  [/^(position|職位)$/i, 'Position'],
+  [/^(position\s*other)$/i, 'Position Other'],
+  [/^(department|系所)$/i, 'Department'],
+  [/^(industry|產業)$/i, 'Industry'],
+  [/^(industry\s*other)$/i, 'Industry Other'],
+  [/^(institution|機構)$/i, 'Institution'],
+  [/^(company\s*name|公司名稱|公司)$/i, 'Company Name'],
+  [/^(country(\s*or\s*territory)?|國家或地區|國家)$/i, 'Country or Territory'],
+  [/^(country\s*other)$/i, 'Country Other'],
+  [/^email/i, 'Email'],
+  [/^(subject|學術領域|學科)$/i, 'Subject'],
+  [/^(subject\s*other)$/i, 'Subject Other'],
+  [/^phone/i, 'Phone (Optional)'],
+  [/^(電話)/i, 'Phone (Optional)'],
+];
 
 const OPTS = {
   TITLES,
@@ -57,6 +84,16 @@ function normalizeHeader(h) {
   return trimVal(h).replace(/\s+/g, ' ').toLowerCase();
 }
 
+function canonicalizeHeader(h) {
+  const raw = trimVal(h);
+  if (!raw) return '';
+  const n = normalizeHeader(raw);
+  for (const [re, canon] of HEADER_ALIASES) {
+    if (re.test(n) || re.test(raw)) return canon;
+  }
+  return raw;
+}
+
 function headersMatch(actual, expected) {
   const a = actual.map(normalizeHeader);
   const e = expected.map(normalizeHeader);
@@ -64,21 +101,47 @@ function headersMatch(actual, expected) {
   return e.every((h, i) => a[i] === h);
 }
 
+/**
+ * 辨識表頭：填寫樣板（無 Source）／舊 QS 官方欄／含 Other 欄
+ * @returns {{ canonicalHeaders: string[], hasOtherCols: boolean, defaultSource: boolean } | null}
+ */
 function detectHeaderFormat(headers, type) {
-  if (type === 'academic') {
-    if (headersMatch(headers, ACADEMIC_IMPORT_TEMPLATE_HEADERS)) {
-      return { headers: ACADEMIC_IMPORT_TEMPLATE_HEADERS, hasOtherCols: true };
+  const candidates =
+    type === 'academic'
+      ? [
+          { headers: ACADEMIC_FILL_HEADERS, hasOtherCols: false, defaultSource: true },
+          { headers: ACADEMIC_IMPORT_TEMPLATE_HEADERS, hasOtherCols: true, defaultSource: false },
+          { headers: ACADEMIC_EXCEL_HEADERS_EN, hasOtherCols: false, defaultSource: false },
+        ]
+      : [
+          { headers: EMPLOYER_FILL_HEADERS, hasOtherCols: false, defaultSource: true },
+          { headers: EMPLOYER_IMPORT_TEMPLATE_HEADERS, hasOtherCols: true, defaultSource: false },
+          { headers: EMPLOYER_EXCEL_HEADERS_EN, hasOtherCols: false, defaultSource: false },
+        ];
+
+  for (const c of candidates) {
+    if (headersMatch(headers, c.headers)) {
+      return {
+        canonicalHeaders: c.headers.map(canonicalizeHeader),
+        hasOtherCols: c.hasOtherCols,
+        defaultSource: c.defaultSource,
+      };
     }
-    if (headersMatch(headers, ACADEMIC_EXCEL_HEADERS_EN)) {
-      return { headers: ACADEMIC_EXCEL_HEADERS_EN, hasOtherCols: false };
-    }
-  } else {
-    if (headersMatch(headers, EMPLOYER_IMPORT_TEMPLATE_HEADERS)) {
-      return { headers: EMPLOYER_IMPORT_TEMPLATE_HEADERS, hasOtherCols: true };
-    }
-    if (headersMatch(headers, EMPLOYER_EXCEL_HEADERS_EN)) {
-      return { headers: EMPLOYER_EXCEL_HEADERS_EN, hasOtherCols: false };
-    }
+  }
+
+  // 模糊：只要必要欄位齊全即可（容忍 Email／Phone 提示文字差異）
+  const canonical = headers.map(canonicalizeHeader);
+  const required =
+    type === 'academic'
+      ? ['Title', 'First Name', 'Last Name', 'Job Title', 'Department', 'Institution', 'Country or Territory', 'Email', 'Subject']
+      : ['Title', 'First Name', 'Last Name', 'Position', 'Industry', 'Company Name', 'Country or Territory', 'Email'];
+  const present = new Set(canonical.filter(Boolean));
+  if (required.every((k) => present.has(k))) {
+    return {
+      canonicalHeaders: canonical,
+      hasOtherCols: present.has('Title Other') || present.has('Job Title Other') || present.has('Position Other'),
+      defaultSource: !present.has('Source'),
+    };
   }
   return null;
 }
@@ -111,10 +174,13 @@ function isEmptyDataRow(map) {
   return !trimVal(map['First Name']) && !trimVal(map['Last Name']) && !trimVal(map.Email);
 }
 
-function rowToMap(headers, values) {
+function rowToMap(canonicalHeaders, values) {
   const map = {};
-  headers.forEach((h, i) => {
-    map[h] = trimVal(values[i]);
+  canonicalHeaders.forEach((h, i) => {
+    if (!h) return;
+    // 同名欄取第一個非空
+    const v = trimVal(values[i]);
+    if (!(h in map) || (!map[h] && v)) map[h] = v;
   });
   return map;
 }
@@ -138,7 +204,7 @@ function parseAcademicRow(map, rowNum, { hasOtherCols = false } = {}) {
   });
 
   const contact = {
-    _source: map.Source,
+    _source: trimVal(map.Source) || SOURCE_EN,
     title: title.en,
     titleOther: title.other,
     _rawTitle: title.raw,
@@ -173,7 +239,7 @@ function parseEmployerRow(map, rowNum, { hasOtherCols = false } = {}) {
   const country = pickFlexible(map, 'Country or Territory', hasOtherCols ? 'Country Other' : null, COUNTRIES);
 
   const contact = {
-    _source: map.Source,
+    _source: trimVal(map.Source) || SOURCE_EN,
     title: title.en,
     titleOther: title.other,
     _rawTitle: title.raw,
@@ -218,8 +284,8 @@ function parseSheet(workbook, sheetName, type, { onRow } = {}) {
   if (!format) {
     const expected =
       type === 'academic'
-        ? `${ACADEMIC_EXCEL_HEADERS_EN.slice(0, 4).join('、')}…`
-        : `${EMPLOYER_EXCEL_HEADERS_EN.slice(0, 4).join('、')}…`;
+        ? `${ACADEMIC_FILL_HEADERS.slice(0, 4).join('、')}…`
+        : `${EMPLOYER_FILL_HEADERS.slice(0, 4).join('、')}…`;
     return {
       contacts: [],
       errors: [
@@ -227,7 +293,7 @@ function parseSheet(workbook, sheetName, type, { onRow } = {}) {
           sheet: sheetName,
           row: 1,
           field: '表頭',
-          message: `表頭欄位不符，請下載最新匯入樣板（預期欄位：${expected}…）`,
+          message: `表頭欄位不符，請下載最新「單位填寫」匯入樣板（預期欄位：${expected}…）`,
         },
       ],
     };
@@ -241,7 +307,8 @@ function parseSheet(workbook, sheetName, type, { onRow } = {}) {
   for (let i = 1; i < matrix.length; i++) {
     const rowNum = i + 1;
     const values = matrix[i];
-    const map = rowToMap(format.headers, values);
+    const map = rowToMap(format.canonicalHeaders, values);
+    if (format.defaultSource && !trimVal(map.Source)) map.Source = SOURCE_EN;
     if (isEmptyDataRow(map) || isPlaceholderRow(values)) continue;
 
     const parsed = type === 'academic'

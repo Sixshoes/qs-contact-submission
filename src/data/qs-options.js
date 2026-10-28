@@ -436,6 +436,35 @@ export const EMPLOYER_EXCEL_HEADERS_ZH = [
 /** @deprecated use EMPLOYER_EXCEL_HEADERS_EN */
 export const EMPLOYER_EXCEL_HEADERS = EMPLOYER_EXCEL_HEADERS_EN;
 
+/**
+ * 單位填寫／線上匯入用易讀樣板表頭（無 Source；Email／Phone 含中文提示）
+ * 提交後下載給 QS 的檔案仍使用上方 ACADEMIC/EMPLOYER_EXCEL_HEADERS_EN
+ */
+export const ACADEMIC_FILL_HEADERS = [
+  'Title',
+  'First Name',
+  'Last Name',
+  'Job Title',
+  'Department',
+  'Institution',
+  'Country or Territory',
+  'Email（學術請填EDU信箱）',
+  'Subject',
+  'Phone (選填/可不填)',
+];
+
+export const EMPLOYER_FILL_HEADERS = [
+  'Title',
+  'First Name',
+  'Last Name',
+  'Position',
+  'Industry',
+  'Company Name',
+  'Country or Territory',
+  'Email（雇主請勿填EDU信箱）',
+  'Phone (選填/可不填)',
+];
+
 /** 匯入樣板表頭（含 Other 說明欄，選 Other 時填寫旁邊欄位） */
 export const ACADEMIC_IMPORT_TEMPLATE_HEADERS = [
   'Source',

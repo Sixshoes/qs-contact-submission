@@ -1,9 +1,12 @@
+/**
+ * 產生「單位填寫／線上匯入」易讀樣板（無 Source；Email／Phone 含中文提示）
+ * 提交後下載給 QS Hub 的檔案仍由網站 excel-export 使用官方欄位（含 Source）。
+ */
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import ExcelJS from 'exceljs';
 import {
-  SOURCE_EN,
   TITLES,
   ACADEMIC_JOB_TITLES,
   EMPLOYER_JOB_TITLES,
@@ -11,15 +14,14 @@ import {
   COUNTRIES,
   SUBJECTS,
   DEFAULT_COUNTRY,
-  ACADEMIC_EXCEL_HEADERS_EN,
-  EMPLOYER_EXCEL_HEADERS_EN,
+  ACADEMIC_FILL_HEADERS,
+  EMPLOYER_FILL_HEADERS,
 } from '../src/data/qs-options.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const outDir = path.resolve(__dirname, '../public/templates');
 const outFile = path.join(outDir, 'QS_聯絡人匯入樣板.xlsx');
 
-/** 資料列數（第 2 列起） */
 const DATA_ROW_COUNT = 100;
 const FIRST_DATA_ROW = 2;
 const LAST_DATA_ROW = FIRST_DATA_ROW + DATA_ROW_COUNT - 1;
@@ -35,7 +37,6 @@ const HEADER_FONT = {
   bold: true,
   color: { argb: 'FFFFFFFF' },
 };
-/** 範例列與填寫區共用同一預設字型；中英混排字型於網站匯出時再套用 */
 const CELL_FONT = {
   name: 'Calibri',
   size: 11,
@@ -76,7 +77,7 @@ function styleDataSheet(ws, headers, rows, { fillDataRows = 0 } = {}) {
     cell.border = THIN_BORDER;
     cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
   });
-  headerRow.height = 24;
+  headerRow.height = 28;
 
   rows.forEach((rowValues, rowIdx) => {
     const row = ws.getRow(rowIdx + 2);
@@ -144,26 +145,27 @@ function addGuideSheet(workbook) {
   });
 
   const lines = [
-    ['QS 聯絡人匯入樣板 — 填寫說明'],
+    ['QS 聯絡人匯入樣板（單位填寫／易讀版）'],
     [''],
     ['一、用途'],
-    ['本檔供各單位先離線整理聯絡人資料，欄位與線上提交系統／QS 官方格式一致。'],
+    ['本檔供各單位離線整理聯絡人，欄位較易閱讀，並可填中文姓名／機構等。'],
     ['填寫完成後，請至線上提交網站「從 Excel 匯入」上傳本檔；通過驗證後可匯入表單並提交。'],
+    ['提交成功後，系統另會產生「QS 官方欄位」Excel（含 Source 等），供後台彙整上傳 QS Hub。'],
     [''],
     ['二、工作表說明'],
     ['• 「學術聯絡人」「雇主聯絡人」：選項欄位有下拉提示（▼），也可直接輸入；選單外文字匯入時會自動視為 Other。'],
-    ['• 第 2 列為範例，填寫前請刪除；可從第 2 列起填寫，最多 100 筆。'],
+    ['• 第 2 列為參考範例，填寫前請刪除；可從第 2 列起填寫，最多 100 筆。'],
     ['• 其他分頁為選項對照表（下拉選單來源），亦可手動查閱。'],
     [''],
     ['三、共通規則'],
-    ['• Source 請選 Fo Guang University。'],
-    ['• Title／職稱／產業／學科／國家等：可從下拉選擇，或直接輸入自訂內容（系統會自動當作 Other）。'],
-    ['• 姓名、系所、機構、Email、電話請手動輸入。'],
-    ['• Email：個人信箱，勿用 team@、info@ 等共用信箱；不可重複。'],
+    ['• 無需填 Source；匯入網站時系統會自動帶入 Fo Guang University。'],
+    ['• Title／職稱／產業／學科／國家等：可從下拉選擇（建議選英文值），或直接輸入自訂內容（系統會自動當作 Other）。'],
+    ['• 姓名、系所、機構、Email、電話請手動輸入；姓名與機構可填中文。'],
+    ['• 學術 Email 請填學校／教育信箱；雇主 Email 請勿填 EDU 信箱；皆勿用 team@、info@ 等共用信箱。'],
     ['• Phone 可留空；若填寫請含開頭 0（例如 0912345678）。'],
     [''],
     ['四、提交資訊（網站另填，不在本檔）'],
-    ['• 提交單位、提交人姓名：請在線上系統第一步填寫。'],
+    ['• 提交單位、提交人姓名：請在線上系統填寫。'],
     [''],
     ['若有疑問請聯絡永續發展辦公室。'],
   ];
@@ -176,7 +178,6 @@ function addGuideSheet(workbook) {
   guide.getColumn(1).width = 95;
 }
 
-/** @returns {{ name: string, count: number, range: string }} */
 function addOptionSheet(workbook, name, items, tabColor) {
   const ws = workbook.addWorksheet(name, { properties: { tabColor: { argb: tabColor } } });
   const headers = ['英文（下拉選單值）', '中文對照'];
@@ -195,11 +196,7 @@ function colIndex(headers, headerName) {
 }
 
 function applyAcademicValidations(ws, ranges) {
-  const H = ACADEMIC_EXCEL_HEADERS_EN;
-  applyColumnListValidation(ws, colIndex(H, 'Source'), `"${SOURCE_EN}"`, {
-    allowBlank: false,
-    prompt: { title: 'Source', text: '請選擇 Fo Guang University' },
-  });
+  const H = ACADEMIC_FILL_HEADERS;
   applyColumnListValidation(ws, colIndex(H, 'Title'), ranges.titles.range, {
     prompt: { title: 'Title', text: '可選擇或輸入；選單外會自動視為 Other' },
   });
@@ -215,11 +212,7 @@ function applyAcademicValidations(ws, ranges) {
 }
 
 function applyEmployerValidations(ws, ranges) {
-  const H = EMPLOYER_EXCEL_HEADERS_EN;
-  applyColumnListValidation(ws, colIndex(H, 'Source'), `"${SOURCE_EN}"`, {
-    allowBlank: false,
-    prompt: { title: 'Source', text: '請選擇 Fo Guang University' },
-  });
+  const H = EMPLOYER_FILL_HEADERS;
   applyColumnListValidation(ws, colIndex(H, 'Title'), ranges.titles.range, {
     prompt: { title: 'Title', text: '可選擇或輸入；選單外會自動視為 Other' },
   });
@@ -241,6 +234,60 @@ async function main() {
   workbook.creator = 'Fo Guang University QS Contact Form';
   workbook.created = new Date();
 
+  const academicExample = [
+    'Miss',
+    '愛利',
+    '羅',
+    'Assistant Professor',
+    'Department of History',
+    '台灣大學',
+    DEFAULT_COUNTRY,
+    'alicelo@ntu.edu.tw',
+    'History',
+    '',
+  ];
+
+  const employerExample = [
+    'Ms',
+    '羅拉',
+    '艾',
+    'Manager/Executive',
+    'Consulting/Professional Service',
+    'Example Company Ltd.',
+    DEFAULT_COUNTRY,
+    'rola@company.com',
+    '',
+  ];
+
+  // 分頁順序：學術 → 雇主 → 說明 → 對照表
+  const wsAcademic = workbook.addWorksheet('學術聯絡人', {
+    properties: { tabColor: { argb: 'FFDC2626' } },
+  });
+  styleDataSheet(wsAcademic, ACADEMIC_FILL_HEADERS, [academicExample], {
+    fillDataRows: DATA_ROW_COUNT,
+  });
+  wsAcademic.getCell(2, ACADEMIC_FILL_HEADERS.length + 1).value = '參考範例（可填中文）';
+  wsAcademic.getCell(2, ACADEMIC_FILL_HEADERS.length + 1).font = {
+    name: 'Calibri',
+    size: 10,
+    italic: true,
+    color: { argb: 'FF64748B' },
+  };
+
+  const wsEmployer = workbook.addWorksheet('雇主聯絡人', {
+    properties: { tabColor: { argb: 'FFF59E0B' } },
+  });
+  styleDataSheet(wsEmployer, EMPLOYER_FILL_HEADERS, [employerExample], {
+    fillDataRows: DATA_ROW_COUNT,
+  });
+  wsEmployer.getCell(2, EMPLOYER_FILL_HEADERS.length + 1).value = '參考範例（可填中文）';
+  wsEmployer.getCell(2, EMPLOYER_FILL_HEADERS.length + 1).font = {
+    name: 'Calibri',
+    size: 10,
+    italic: true,
+    color: { argb: 'FF64748B' },
+  };
+
   addGuideSheet(workbook);
 
   const ranges = {
@@ -252,47 +299,7 @@ async function main() {
     countries: addOptionSheet(workbook, '國家或地區', COUNTRIES, 'FF94A3B8'),
   };
 
-  const academicExample = [
-    SOURCE_EN,
-    'Dr',
-    'Ming',
-    'Chen',
-    'Professor/Associate Professor',
-    'Department of History',
-    SOURCE_EN,
-    DEFAULT_COUNTRY,
-    '（請改為實際 email）',
-    'History',
-    '0912345678',
-  ];
-
-  const employerExample = [
-    SOURCE_EN,
-    'Ms',
-    'Jane',
-    'Doe',
-    'Manager/Executive',
-    'Education',
-    'Example Company Ltd.',
-    DEFAULT_COUNTRY,
-    '（請改為實際 email）',
-    '0912345678',
-  ];
-
-  const wsAcademic = workbook.addWorksheet('學術聯絡人', {
-    properties: { tabColor: { argb: 'FFDC2626' } },
-  });
-  styleDataSheet(wsAcademic, ACADEMIC_EXCEL_HEADERS_EN, [academicExample], {
-    fillDataRows: DATA_ROW_COUNT,
-  });
   applyAcademicValidations(wsAcademic, ranges);
-
-  const wsEmployer = workbook.addWorksheet('雇主聯絡人', {
-    properties: { tabColor: { argb: 'FFF59E0B' } },
-  });
-  styleDataSheet(wsEmployer, EMPLOYER_EXCEL_HEADERS_EN, [employerExample], {
-    fillDataRows: DATA_ROW_COUNT,
-  });
   applyEmployerValidations(wsEmployer, ranges);
 
   const buffer = await workbook.xlsx.writeBuffer();
