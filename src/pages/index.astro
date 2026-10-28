@@ -98,74 +98,62 @@ const base = import.meta.env.BASE_URL;
       <section id="step-1" class="space-y-6">
         <p class="info-banner">
           學術聯絡人與雇主聯絡人各最多 100 筆。
-          可先
+          可先於下方手動新增，或以
           <a
             href={`${import.meta.env.BASE_URL}templates/QS_聯絡人匯入樣板.xlsx`}
             class="font-semibold text-fgu underline decoration-fgu/40 underline-offset-2 hover:text-fgu-dark"
             download
           >
-            下載匯入樣板（Excel）
+            Excel 樣板
           </a>
-          離線整理後，可
-          <strong>上傳 Excel 匯入</strong>
-          （會先驗證再匯入），或於下方手動新增聯絡人。
+          整理後匯入（會先驗證再匯入）。提交前請填寫提交資訊，並可用 Email 檢查確認信箱。
         </p>
 
-        <details class="details-panel">
-          <summary>Email 填寫說明（依 QS 方法論 §2.8）</summary>
-          <ul class="mt-3 space-y-2 text-xs leading-relaxed text-slate-600">
-            <li>• 請填寫聯絡人個人信箱或個人公務信箱，避免使用 team@、info@、admissions@ 等共用或團隊信箱。</li>
-            <li>• 每位聯絡人僅填一組 email。</li>
-            <li>• 不同聯絡人請使用不同信箱；多人共用同一信箱時，QS 僅會寄送一次問卷邀請。</li>
-            <li>• 不可與去年名單重複；系統會擋下（僅顯示「與去年重複」）。</li>
-            <li>• 不可與<strong>今年已提交</strong>的信箱重複；系統會擋下並顯示是哪個單位／提交人。</li>
-            <li>• 不可含空白，亦不可含 <code class="rounded bg-white px-1">[ ] ( ) ; : , &lt; &gt; ' # ~ = +</code> 等符號。</li>
-          </ul>
-        </details>
-
-        <div class="card-panel space-y-4" id="email-check-panel">
-          <h2 class="panel-title">
-            <span class="panel-title-mark" aria-hidden="true"></span>
-            Email 快速檢查
-          </h2>
-          <p class="text-sm text-slate-600">
-            可貼上單筆或多筆信箱（換行、逗號、分號、空白皆可），檢查格式、去年重複、今年已提交，以及清單內重複。
+        <!-- 1. 學術聯絡人 -->
+        <section id="section-academic" class="section-academic">
+          <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-start gap-3">
+              <span class="section-icon section-icon--academic" aria-hidden="true">A</span>
+              <div>
+                <h2 class="text-lg font-semibold text-fgu-dark">學術聯絡人 (Academic)</h2>
+              </div>
+            </div>
+            <span id="academic-count" class="count-badge count-badge--academic">(0 / 100)</span>
+          </div>
+          <div id="academic-contacts-container" class="space-y-5"></div>
+          <p id="academic-empty-hint" class="hidden rounded-xl border border-dashed border-fgu/30 bg-white/70 px-4 py-8 text-center text-sm text-slate-500">
+            尚未新增學術聯絡人，請點下方按鈕新增。
           </p>
-          <label for="email-check-input" class="sr-only">貼上 Email</label>
-          <textarea
-            id="email-check-input"
-            class="input-field min-h-[8rem] font-mono text-sm"
-            placeholder="例：&#10;name@univ.edu.tw&#10;other@company.com&#10;或用逗號分隔：a@x.com, b@y.com"
-          ></textarea>
-          <div class="flex flex-wrap items-center gap-2">
-            <button type="button" id="btn-email-check" class="btn-primary">檢查信箱</button>
-            <button type="button" id="btn-email-check-clear" class="btn-secondary">清除</button>
-            <p id="email-check-summary" class="text-sm text-slate-600"></p>
+          <div class="mt-4 flex justify-end">
+            <button type="button" id="btn-add-academic" class="btn-primary">
+              <span aria-hidden="true">＋</span> 新增學術聯絡人
+            </button>
           </div>
-          <div id="email-check-result" class="email-check-result hidden" role="status" aria-live="polite"></div>
-        </div>
+        </section>
 
-        <div class="sticky-panel card-panel sticky top-0 z-20 space-y-4 supports-[backdrop-filter]:bg-white/95">
-          <h2 class="panel-title">
-            <span class="panel-title-mark" aria-hidden="true"></span>
-            提交資訊
-          </h2>
-          <div class="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label for="submitter-unit" class="mb-1.5 block text-sm font-medium text-slate-700">
-                提交單位 (Department / Unit) <span class="text-red-500">*</span>
-              </label>
-              <input id="submitter-unit" type="text" required placeholder="例如：歷史學系、永續辦公室、國際處..." class="input-field" />
+        <!-- 2. 雇主聯絡人 -->
+        <section id="section-employer" class="section-employer">
+          <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-start gap-3">
+              <span class="section-icon section-icon--employer" aria-hidden="true">E</span>
+              <div>
+                <h2 class="text-lg font-semibold text-amber-900">雇主聯絡人 (Employer)</h2>
+              </div>
             </div>
-            <div>
-              <label for="submitter-name" class="mb-1.5 block text-sm font-medium text-slate-700">
-                提交人姓名 (Submitter Name) <span class="text-red-500">*</span>
-              </label>
-              <input id="submitter-name" type="text" required placeholder="請輸入您的姓名" class="input-field" />
-            </div>
+            <span id="employer-count" class="count-badge count-badge--employer">(0 / 100)</span>
           </div>
-        </div>
+          <div id="employer-contacts-container" class="space-y-5"></div>
+          <p id="employer-empty-hint" class="hidden rounded-xl border border-dashed border-qs/40 bg-white/70 px-4 py-8 text-center text-sm text-slate-500">
+            尚未新增雇主聯絡人，請點下方按鈕新增。
+          </p>
+          <div class="mt-4 flex justify-end">
+            <button type="button" id="btn-add-employer" class="btn-qs">
+              <span aria-hidden="true">＋</span> 新增雇主聯絡人
+            </button>
+          </div>
+        </section>
 
+        <!-- 3. Excel 匯入 -->
         <div class="card-panel space-y-4" id="import-panel">
           <h2 class="panel-title">
             <span class="panel-title-mark" aria-hidden="true"></span>
@@ -222,50 +210,64 @@ const base = import.meta.env.BASE_URL;
           </div>
         </div>
 
-        <!-- 學術聯絡人 -->
-        <section id="section-academic" class="section-academic">
-          <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div class="flex items-start gap-3">
-              <span class="section-icon section-icon--academic" aria-hidden="true">A</span>
-              <div>
-                <h2 class="text-lg font-semibold text-fgu-dark">學術聯絡人 (Academic)</h2>
-              </div>
+        <!-- 4. 提交資訊 -->
+        <div class="sticky-panel card-panel sticky top-0 z-20 space-y-4 supports-[backdrop-filter]:bg-white/95">
+          <h2 class="panel-title">
+            <span class="panel-title-mark" aria-hidden="true"></span>
+            提交資訊
+          </h2>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label for="submitter-unit" class="mb-1.5 block text-sm font-medium text-slate-700">
+                提交單位 (Department / Unit) <span class="text-red-500">*</span>
+              </label>
+              <input id="submitter-unit" type="text" required placeholder="例如：歷史學系、永續辦公室、國際處..." class="input-field" />
             </div>
-            <span id="academic-count" class="count-badge count-badge--academic">(0 / 100)</span>
-          </div>
-          <div id="academic-contacts-container" class="space-y-5"></div>
-          <p id="academic-empty-hint" class="hidden rounded-xl border border-dashed border-fgu/30 bg-white/70 px-4 py-8 text-center text-sm text-slate-500">
-            尚未新增學術聯絡人，請點下方按鈕新增。
-          </p>
-          <div class="mt-4 flex justify-end">
-            <button type="button" id="btn-add-academic" class="btn-primary">
-              <span aria-hidden="true">＋</span> 新增學術聯絡人
-            </button>
-          </div>
-        </section>
-
-        <!-- 雇主聯絡人 -->
-        <section id="section-employer" class="section-employer">
-          <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div class="flex items-start gap-3">
-              <span class="section-icon section-icon--employer" aria-hidden="true">E</span>
-              <div>
-                <h2 class="text-lg font-semibold text-amber-900">雇主聯絡人 (Employer)</h2>
-              </div>
+            <div>
+              <label for="submitter-name" class="mb-1.5 block text-sm font-medium text-slate-700">
+                提交人姓名 (Submitter Name) <span class="text-red-500">*</span>
+              </label>
+              <input id="submitter-name" type="text" required placeholder="請輸入您的姓名" class="input-field" />
             </div>
-            <span id="employer-count" class="count-badge count-badge--employer">(0 / 100)</span>
           </div>
-          <div id="employer-contacts-container" class="space-y-5"></div>
-          <p id="employer-empty-hint" class="hidden rounded-xl border border-dashed border-qs/40 bg-white/70 px-4 py-8 text-center text-sm text-slate-500">
-            尚未新增雇主聯絡人，請點下方按鈕新增。
-          </p>
-          <div class="mt-4 flex justify-end">
-            <button type="button" id="btn-add-employer" class="btn-qs">
-              <span aria-hidden="true">＋</span> 新增雇主聯絡人
-            </button>
-          </div>
-        </section>
+        </div>
 
+        <!-- 5. Email 檢查 -->
+        <details class="details-panel">
+          <summary>Email 填寫說明（依 QS 方法論 §2.8）</summary>
+          <ul class="mt-3 space-y-2 text-xs leading-relaxed text-slate-600">
+            <li>• 請填寫聯絡人個人信箱或個人公務信箱，避免使用 team@、info@、admissions@ 等共用或團隊信箱。</li>
+            <li>• 每位聯絡人僅填一組 email。</li>
+            <li>• 不同聯絡人請使用不同信箱；多人共用同一信箱時，QS 僅會寄送一次問卷邀請。</li>
+            <li>• 不可與去年名單重複；系統會擋下（僅顯示「與去年重複」）。</li>
+            <li>• 不可與<strong>今年已提交</strong>的信箱重複；系統會擋下並顯示是哪個單位／提交人。</li>
+            <li>• 不可含空白，亦不可含 <code class="rounded bg-white px-1">[ ] ( ) ; : , &lt; &gt; ' # ~ = +</code> 等符號。</li>
+          </ul>
+        </details>
+
+        <div class="card-panel space-y-4" id="email-check-panel">
+          <h2 class="panel-title">
+            <span class="panel-title-mark" aria-hidden="true"></span>
+            Email 快速檢查
+          </h2>
+          <p class="text-sm text-slate-600">
+            可貼上單筆或多筆信箱（換行、逗號、分號、空白皆可），檢查格式、去年重複、今年已提交，以及清單內重複。
+          </p>
+          <label for="email-check-input" class="sr-only">貼上 Email</label>
+          <textarea
+            id="email-check-input"
+            class="input-field min-h-[8rem] font-mono text-sm"
+            placeholder="例：&#10;name@univ.edu.tw&#10;other@company.com&#10;或用逗號分隔：a@x.com, b@y.com"
+          ></textarea>
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" id="btn-email-check" class="btn-primary">檢查信箱</button>
+            <button type="button" id="btn-email-check-clear" class="btn-secondary">清除</button>
+            <p id="email-check-summary" class="text-sm text-slate-600"></p>
+          </div>
+          <div id="email-check-result" class="email-check-result hidden" role="status" aria-live="polite"></div>
+        </div>
+
+        <!-- 6. 預覽 -->
         <div class="action-bar" id="action-bar">
           <button type="button" id="btn-open-clear" class="btn-secondary px-5 py-2.5">
             清空所有欄位
