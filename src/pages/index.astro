@@ -96,19 +96,6 @@ const base = import.meta.env.BASE_URL;
 
       <!-- ========== STEP 1 ========== -->
       <section id="step-1" class="space-y-6">
-        <p class="info-banner">
-          學術聯絡人與雇主聯絡人各最多 100 筆。
-          可先於下方手動新增，或以
-          <a
-            href={`${import.meta.env.BASE_URL}templates/QS_聯絡人匯入樣板.xlsx`}
-            class="font-semibold text-fgu underline decoration-fgu/40 underline-offset-2 hover:text-fgu-dark"
-            download
-          >
-            Excel 樣板
-          </a>
-          整理後匯入（會先驗證再匯入）。提交前請填寫提交資訊，並可用 Email 檢查確認信箱。
-        </p>
-
         <!-- 1. 學術聯絡人 -->
         <section id="section-academic" class="section-academic">
           <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -152,6 +139,19 @@ const base = import.meta.env.BASE_URL;
             </button>
           </div>
         </section>
+
+        <p class="info-banner">
+          學術聯絡人與雇主聯絡人各最多 100 筆。
+          可先於上方手動新增，或以
+          <a
+            href={`${import.meta.env.BASE_URL}templates/QS_聯絡人匯入樣板.xlsx`}
+            class="font-semibold text-fgu underline decoration-fgu/40 underline-offset-2 hover:text-fgu-dark"
+            download
+          >
+            Excel 樣板
+          </a>
+          整理後匯入（會先驗證再匯入）。提交前請填寫提交資訊，並可用 Email 檢查確認信箱。
+        </p>
 
         <!-- 3. Excel 匯入 -->
         <div class="card-panel space-y-4" id="import-panel">
